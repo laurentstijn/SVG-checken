@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App - Klik en Sleep + Aanpassen</title>
+  <title>SVG Teken App - Klik, Sleep en Aanpassen</title>
   <style>
     body {
       margin: 0;
@@ -68,7 +68,7 @@
       display: block;
       box-sizing: border-box;
     }
-    /* Popup style */
+    /* Popup */
     #editPopup {
       position: absolute;
       top: 100px;
@@ -118,7 +118,7 @@
 </head>
 <body>
 
-<!-- 🖲️ Controlepaneel -->
+<!-- 🖲️ Menu -->
 <div id="controls">
   <div id="dragHandle">
     <div class="dot"></div>
@@ -126,18 +126,18 @@
     <div class="dot"></div>
   </div>
   <div id="buttons">
-    <button id="rectButton">&#11035;</button>    <!-- ⬛ Rechthoek -->
-    <button id="circleButton">&#9898;</button>   <!-- ⚪ Cirkel -->
-    <button id="eraserButton">&#128701;</button> <!-- 🧹 Gom -->
-    <button id="editButton">&#9998;</button>     <!-- 🖊️ Aanpassen -->
-    <button id="clearButton">&#128465;</button>  <!-- 🗑️ Alles wissen -->
+    <button id="rectButton">&#11035;</button> <!-- ⬛ -->
+    <button id="circleButton">&#9898;</button> <!-- ⚪ -->
+    <button id="eraserButton">&#128701;</button> <!-- 🧹 -->
+    <button id="editButton">&#9998;</button> <!-- 🖊️ -->
+    <button id="clearButton">&#128465;</button> <!-- 🗑️ -->
   </div>
 </div>
 
 <!-- SVG Canvas -->
 <svg id="drawingArea"></svg>
 
-<!-- Popup voor aanpassen -->
+<!-- Popup -->
 <div id="editPopup">
   <div id="editHeader">Vorm aanpassen ✏️</div>
   <label>Kleur:</label>
@@ -153,7 +153,7 @@
   <button id="closePopup">Sluiten</button>
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
@@ -180,7 +180,7 @@ const eraserButton = document.getElementById('eraserButton');
 const editButton = document.getElementById('editButton');
 const clearButton = document.getElementById('clearButton');
 
-// Popup controls
+// Popup
 const editPopup = document.getElementById('editPopup');
 const colorInput = document.getElementById('colorInput');
 const widthSlider = document.getElementById('widthSlider');
@@ -192,7 +192,7 @@ const editHeader = document.getElementById('editHeader');
 let mode = 'rect';
 let selectedElement = null;
 
-// Modes
+// Modus kiezen
 rectButton.addEventListener('click', () => mode = 'rect');
 circleButton.addEventListener('click', () => mode = 'circle');
 eraserButton.addEventListener('click', () => mode = 'erase');
@@ -225,9 +225,7 @@ let previewElement = null;
 let isDrawing = false;
 
 svg.addEventListener('mousedown', (e) => {
-  if (mode === 'erase') return;
-
-  if (mode === 'edit') return; // edit-modus doet niks bij mousedown
+  if (mode === 'erase' || mode === 'edit') return;
 
   startX = e.offsetX;
   startY = e.offsetY;
@@ -281,27 +279,33 @@ svg.addEventListener('mouseup', (e) => {
   previewElement = null;
 });
 
-// 📥 Popup aanpassen
+// 📥 Popup Vorm Aanpassen
 svg.addEventListener('click', (e) => {
   if (mode === 'edit') {
     const element = document.elementFromPoint(e.clientX, e.clientY);
     if (element && (element.tagName === 'rect' || element.tagName === 'circle')) {
       selectedElement = element;
+
+      editPopup.style.display = 'block';
       colorInput.value = rgbToHex(selectedElement.getAttribute('fill') || '#000000');
+
       if (selectedElement.tagName === 'rect') {
         widthSlider.value = selectedElement.getAttribute('width');
         heightSlider.value = selectedElement.getAttribute('height');
+        widthSlider.parentElement.style.display = 'block';
+        heightSlider.parentElement.style.display = 'block';
         radiusSlider.parentElement.style.display = 'none';
-      } else {
+      } else if (selectedElement.tagName === 'circle') {
         radiusSlider.value = selectedElement.getAttribute('r');
+        widthSlider.parentElement.style.display = 'none';
+        heightSlider.parentElement.style.display = 'none';
         radiusSlider.parentElement.style.display = 'block';
       }
-      editPopup.style.display = 'block';
     }
   }
 });
 
-// Live aanpassen
+// 📦 Live aanpassen
 colorInput.addEventListener('input', () => {
   if (selectedElement) selectedElement.setAttribute('fill', colorInput.value);
 });
@@ -325,7 +329,7 @@ closePopup.addEventListener('click', () => {
   selectedElement = null;
 });
 
-// Sleep popup
+// 🖱️ Popup slepen
 let isDraggingPopup = false;
 let offsetX = 0;
 let offsetY = 0;
@@ -345,12 +349,11 @@ document.addEventListener('mouseup', () => {
   isDraggingPopup = false;
 });
 
-// Kleur omzetten
+// 🎨 RGB naar HEX
 function rgbToHex(rgb) {
   if (!rgb) return "#000000";
   if (rgb.startsWith("#")) return rgb;
   const result = rgb.match(/\d+/g);
-  if (!result) return "#000000";
   return "#" + result.map(x => {
     const hex = parseInt(x).toString(16);
     return hex.length === 1 ? "0" + hex : hex;
