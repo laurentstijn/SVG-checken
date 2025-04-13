@@ -72,6 +72,65 @@
       });
   });
 </script>
+<script>
+  // Na je bestaande Firebase initialisatie
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const svg = document.getElementById('drawingArea');
+
+  // Deze functie haalt vormen op en tekent ze
+  function loadShapes() {
+    db.collection("shapes").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const shape = doc.data();
+
+        // Nu tekenen we de vorm
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', shape.x);
+        rect.setAttribute('y', shape.y);
+        rect.setAttribute('width', shape.width);
+        rect.setAttribute('height', shape.height);
+        rect.setAttribute('fill', shape.fill);
+        svg.appendChild(rect);
+      });
+      console.log("✅ Alle vormen geladen");
+    }).catch((error) => {
+      console.error("❌ Fout bij laden: ", error);
+    });
+  }
+
+  // 👇 Voeg deze regel toe zodat het automatisch laadt als de pagina opent
+  loadShapes();
+
+  // Blijft werken: klik om een nieuwe vorm te maken
+  svg.addEventListener('click', (e) => {
+    const shape = {
+      x: e.offsetX,
+      y: e.offsetY,
+      width: 50,
+      height: 50,
+      fill: 'skyblue',
+      type: 'rect',
+      createdAt: new Date()
+    };
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', shape.x);
+    rect.setAttribute('y', shape.y);
+    rect.setAttribute('width', shape.width);
+    rect.setAttribute('height', shape.height);
+    rect.setAttribute('fill', shape.fill);
+    svg.appendChild(rect);
+
+    db.collection('shapes').add(shape)
+      .then((docRef) => {
+        console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
+      })
+      .catch((error) => {
+        console.error("❌ Error bij opslaan: ", error);
+      });
+  });
+</script>
 
 </body>
 </html>
