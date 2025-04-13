@@ -275,6 +275,32 @@ svg.addEventListener('mouseup', (e) => {
 
   previewElement.setAttribute('fill', 'skyblue');
 
+  const endX = e.offsetX;
+  const endY = e.offsetY;
+
+  const width = Math.abs(endX - startX);
+  const height = Math.abs(endY - startY);
+
+  const shape = {
+    x: Math.min(startX, endX),
+    y: Math.min(startY, endY),
+    width: width,
+    height: height,
+    fill: 'skyblue',
+    type: mode,
+    createdAt: new Date()
+  };
+
+  // 🔥 Hier: voeg deze toe!
+  db.collection('shapes').add(shape)
+    .then((docRef) => {
+      console.log("✅ Vorm opgeslagen in Firestore met ID:", docRef.id);
+      previewElement.setAttribute('data-id', docRef.id); // handig voor later!
+    })
+    .catch((error) => {
+      console.error("❌ Fout bij opslaan:", error);
+    });
+
   isDrawing = false;
   previewElement = null;
 });
