@@ -2,52 +2,74 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Firestore Debug Test</title>
+  <title>SVG Firebase Compat</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    svg {
+      width: 100vw;
+      height: 100vh;
+      background-color: #f0f0f0;
+      cursor: crosshair;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Firestore Debug Test</h1>
-<button id="testButton">Sla testvorm op</button>
+<h1>SVG Test</h1>
+<svg id="drawingArea"></svg>
 
-<!-- Firebase Modular SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+<!-- Hier oude Firebase compatibele SDK's -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
+<script>
+  // Jouw Firebase configuratie
   const firebaseConfig = {
     apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
     authDomain: "tekensvg.firebaseapp.com",
     databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "tekensvg",
-    storageBucket: "tekensvg.appspot.com",  // Let op: appspot.com ipv firebasestorage.app
+    storageBucket: "tekensvg.appspot.com", // verbeterd
     messagingSenderId: "180262088073",
     appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // Firebase initialiseren
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  const testButton = document.getElementById('testButton');
+  const svg = document.getElementById('drawingArea');
 
-  testButton.addEventListener('click', async () => {
-    const testShape = {
-      x: 100,
-      y: 100,
+  svg.addEventListener('click', (e) => {
+    const shape = {
+      x: e.offsetX,
+      y: e.offsetY,
       width: 50,
       height: 50,
-      fill: 'red',
+      fill: 'skyblue',
       type: 'rect',
       createdAt: new Date()
     };
 
-    try {
-      const docRef = await addDoc(collection(db, "shapes"), testShape);
-      console.log("✅ Testvorm opgeslagen met ID:", docRef.id);
-      alert("✅ Testvorm opgeslagen!");
-    } catch (error) {
-      console.error("❌ Fout bij opslaan:", error);
-      alert("❌ Fout bij opslaan! Zie console voor details.");
-    }
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', shape.x);
+    rect.setAttribute('y', shape.y);
+    rect.setAttribute('width', shape.width);
+    rect.setAttribute('height', shape.height);
+    rect.setAttribute('fill', shape.fill);
+    svg.appendChild(rect);
+
+    db.collection('shapes').add(shape)
+      .then((docRef) => {
+        console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
+      })
+      .catch((error) => {
+        console.error("❌ Error bij opslaan: ", error);
+      });
   });
 </script>
 
