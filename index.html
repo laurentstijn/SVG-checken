@@ -2,25 +2,12 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App + Firebase Modular</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-    svg {
-      width: 100vw;
-      height: 100vh;
-      background-color: #f0f0f0;
-      cursor: crosshair;
-    }
-  </style>
+  <title>Firestore Debug Test</title>
 </head>
 <body>
 
-<!-- SVG Canvas -->
-<svg id="drawingArea"></svg>
+<h1>Firestore Debug Test</h1>
+<button id="testButton">Sla testvorm op</button>
 
 <!-- Firebase Modular SDK -->
 <script type="module">
@@ -32,7 +19,7 @@
     authDomain: "tekensvg.firebaseapp.com",
     databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "tekensvg",
-    storageBucket: "tekensvg.firebasestorage.app",
+    storageBucket: "tekensvg.appspot.com",  <!-- Let op: appspot.com ipv firebasestorage.app -->
     messagingSenderId: "180262088073",
     appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
   };
@@ -40,32 +27,26 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const svg = document.getElementById('drawingArea');
+  const testButton = document.getElementById('testButton');
 
-  svg.addEventListener('click', async (e) => {
-    const shape = {
-      x: e.offsetX,
-      y: e.offsetY,
+  testButton.addEventListener('click', async () => {
+    const testShape = {
+      x: 100,
+      y: 100,
       width: 50,
       height: 50,
-      fill: 'skyblue',
+      fill: 'red',
       type: 'rect',
       createdAt: new Date()
     };
 
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', shape.x);
-    rect.setAttribute('y', shape.y);
-    rect.setAttribute('width', shape.width);
-    rect.setAttribute('height', shape.height);
-    rect.setAttribute('fill', shape.fill);
-    svg.appendChild(rect);
-
     try {
-      const docRef = await addDoc(collection(db, "shapes"), shape);
-      console.log("Vorm opgeslagen met ID: ", docRef.id);
+      const docRef = await addDoc(collection(db, "shapes"), testShape);
+      console.log("✅ Testvorm opgeslagen met ID:", docRef.id);
+      alert("✅ Testvorm opgeslagen!");
     } catch (error) {
-      console.error("Error bij opslaan: ", error);
+      console.error("❌ Fout bij opslaan:", error);
+      alert("❌ Fout bij opslaan! Zie console voor details.");
     }
   });
 </script>
