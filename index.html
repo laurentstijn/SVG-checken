@@ -9,15 +9,32 @@
       padding: 0;
       overflow: hidden;
     }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
     svg {
       width: 100vw;
       height: 100vh;
       background-color: #f0f0f0;
       cursor: crosshair;
+      border: 5px solid black; /* 👈 Voeg deze regel toe */
+      box-sizing: border-box;   /* Zorg dat border binnen de pagina blijft */
     }
   </style>
 </head>
 <body>
+
+<!-- 🖲️ Controlepaneel -->
+<div id="controls">
+  <button id="clearButton">Alles wissen</button>
+</div>
 
 <svg id="drawingArea"></svg>
 
@@ -32,22 +49,22 @@
     authDomain: "tekensvg.firebaseapp.com",
     databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "tekensvg",
-    storageBucket: "tekensvg.appspot.com", // Goed geschreven
+    storageBucket: "tekensvg.appspot.com",
     messagingSenderId: "180262088073",
     appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
   };
 
-  // 🔥 Firebase initialiseren
+  // Firebase initialiseren
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const svg = document.getElementById('drawingArea');
+  const clearButton = document.getElementById('clearButton');
 
   // 🔵 Functie: Alle vormen ophalen en tekenen
   function loadShapes() {
     db.collection("shapes").get().then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
         const shape = doc.data();
-
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', shape.x);
         rect.setAttribute('y', shape.y);
@@ -62,10 +79,10 @@
     });
   }
 
-  // 🚀 Laad de vormen als de pagina opent
+  // 🚀 Laad alle vormen bij openen
   loadShapes();
 
-  // 🔵 Event: Klik om een nieuwe vorm toe te voegen
+  // 🔵 Klik op SVG: nieuwe vorm maken + opslaan
   svg.addEventListener('click', (e) => {
     const shape = {
       x: e.offsetX,
@@ -85,7 +102,6 @@
     rect.setAttribute('fill', shape.fill);
     svg.appendChild(rect);
 
-    // 🔥 Opslaan in Firestore
     db.collection('shapes').add(shape)
       .then((docRef) => {
         console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
@@ -93,6 +109,27 @@
       .catch((error) => {
         console.error("❌ Error bij opslaan: ", error);
       });
+  });
+
+  // 🧹 Alles wissen
+  clearButton.addEventListener('click', () => {
+    if (confirm("Weet je zeker dat je alles wilt wissen?")) {
+      db.collection("shapes").get().then((querySnapshot) => {
+        let batch = db.batch();
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        return batch.commit();
+      }).then(() => {
+        console.log("🧹 Alles gewist!");
+        // SVG canvas leegmaken
+        while (svg.firstChild) {
+          svg.removeChild(svg.firstChild);
+        }
+      }).catch((error) => {
+        console.error("❌ Fout bij wissen: ", error);
+      });
+    }
   });
 </script>
 
