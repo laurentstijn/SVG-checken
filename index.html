@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App + Firebase</title>
+  <title>SVG Teken App + Firebase Modular</title>
   <style>
     body {
       margin: 0;
@@ -16,39 +16,33 @@
       cursor: crosshair;
     }
   </style>
-  <link rel="icon" href="data:,">
 </head>
 <body>
 
 <!-- SVG Canvas -->
 <svg id="drawingArea"></svg>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<!-- Firebase Modular SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-<script>
-  // 🔥 Firebase Configuratie - Vul deze met jouw eigen gegevens uit Firebase Console
-const firebaseConfig = {
-  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
-  authDomain: "tekensvg.firebaseapp.com",
-  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "tekensvg",
-  storageBucket: "tekensvg.firebasestorage.app",
-  messagingSenderId: "180262088073",
-  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
-};
-  // Firebase initialiseren
-  firebase.initializeApp(firebaseConfig);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+    authDomain: "tekensvg.firebaseapp.com",
+    databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "tekensvg",
+    storageBucket: "tekensvg.firebasestorage.app",
+    messagingSenderId: "180262088073",
+    appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+  };
 
-  // Verbind Firestore
-  const db = firebase.firestore();
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  // Pak de SVG canvas
   const svg = document.getElementById('drawingArea');
 
-  // Event: Klik om vorm te tekenen en op te slaan
-  svg.addEventListener('click', (e) => {
+  svg.addEventListener('click', async (e) => {
     const shape = {
       x: e.offsetX,
       y: e.offsetY,
@@ -59,7 +53,6 @@ const firebaseConfig = {
       createdAt: new Date()
     };
 
-    // Vorm toevoegen aan het canvas
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('x', shape.x);
     rect.setAttribute('y', shape.y);
@@ -68,14 +61,12 @@ const firebaseConfig = {
     rect.setAttribute('fill', shape.fill);
     svg.appendChild(rect);
 
-    // Vorm opslaan in Firestore
-    db.collection('shapes').add(shape)
-      .then((docRef) => {
-        console.log('Vorm opgeslagen met ID: ', docRef.id);
-      })
-      .catch((error) => {
-        console.error('Error bij opslaan: ', error);
-      });
+    try {
+      const docRef = await addDoc(collection(db, "shapes"), shape);
+      console.log("Vorm opgeslagen met ID: ", docRef.id);
+    } catch (error) {
+      console.error("Error bij opslaan: ", error);
+    }
   });
 </script>
 
