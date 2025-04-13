@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Firebase Compat</title>
+  <title>SVG Teken App met Firebase</title>
   <style>
     body {
       margin: 0;
@@ -19,72 +19,35 @@
 </head>
 <body>
 
-<h1>SVG Test</h1>
 <svg id="drawingArea"></svg>
 
-<!-- Hier oude Firebase compatibele SDK's -->
+<!-- Firebase Compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // Jouw Firebase configuratie
+  // 🔥 Jouw Firebase Configuratie
   const firebaseConfig = {
     apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
     authDomain: "tekensvg.firebaseapp.com",
     databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "tekensvg",
-    storageBucket: "tekensvg.appspot.com", // verbeterd
+    storageBucket: "tekensvg.appspot.com", // Goed geschreven
     messagingSenderId: "180262088073",
     appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
   };
 
-  // Firebase initialiseren
+  // 🔥 Firebase initialiseren
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-
   const svg = document.getElementById('drawingArea');
 
-  svg.addEventListener('click', (e) => {
-    const shape = {
-      x: e.offsetX,
-      y: e.offsetY,
-      width: 50,
-      height: 50,
-      fill: 'skyblue',
-      type: 'rect',
-      createdAt: new Date()
-    };
-
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', shape.x);
-    rect.setAttribute('y', shape.y);
-    rect.setAttribute('width', shape.width);
-    rect.setAttribute('height', shape.height);
-    rect.setAttribute('fill', shape.fill);
-    svg.appendChild(rect);
-
-    db.collection('shapes').add(shape)
-      .then((docRef) => {
-        console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
-      })
-      .catch((error) => {
-        console.error("❌ Error bij opslaan: ", error);
-      });
-  });
-</script>
-<script>
-  // Na je bestaande Firebase initialisatie
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  
-
-  // Deze functie haalt vormen op en tekent ze
+  // 🔵 Functie: Alle vormen ophalen en tekenen
   function loadShapes() {
     db.collection("shapes").get().then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
         const shape = doc.data();
 
-        // Nu tekenen we de vorm
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', shape.x);
         rect.setAttribute('y', shape.y);
@@ -93,16 +56,16 @@
         rect.setAttribute('fill', shape.fill);
         svg.appendChild(rect);
       });
-      console.log("✅ Alle vormen geladen");
+      console.log("✅ Alle vormen geladen.");
     }).catch((error) => {
       console.error("❌ Fout bij laden: ", error);
     });
   }
 
-  // 👇 Voeg deze regel toe zodat het automatisch laadt als de pagina opent
+  // 🚀 Laad de vormen als de pagina opent
   loadShapes();
 
-  // Blijft werken: klik om een nieuwe vorm te maken
+  // 🔵 Event: Klik om een nieuwe vorm toe te voegen
   svg.addEventListener('click', (e) => {
     const shape = {
       x: e.offsetX,
@@ -122,6 +85,7 @@
     rect.setAttribute('fill', shape.fill);
     svg.appendChild(rect);
 
+    // 🔥 Opslaan in Firestore
     db.collection('shapes').add(shape)
       .then((docRef) => {
         console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
