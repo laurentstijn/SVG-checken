@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App - Klik, Sleep en Aanpassen</title>
+  <title>SVG Teken App - Volledige versie</title>
   <style>
     body {
       margin: 0;
@@ -59,7 +59,7 @@
     svg {
       width: 95vw;
       height: 90vh;
-      background-color: #CCFFFF;
+      background-color: #f9f9f9;
       cursor: crosshair;
       border: 5px solid black;
       border-radius: 20px;
@@ -68,7 +68,6 @@
       display: block;
       box-sizing: border-box;
     }
-    /* Popup */
     #editPopup {
       position: absolute;
       top: 100px;
@@ -79,7 +78,7 @@
       border-radius: 10px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       z-index: 20;
-      width: 200px;
+      width: 220px;
       user-select: none;
       display: none;
     }
@@ -92,13 +91,11 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
-    #editPopup input[type="range"] {
+    #editPopup input[type="range"], 
+    #editPopup input[type="color"], 
+    #editPopup input[type="text"] {
       width: 100%;
-    }
-    #editPopup input[type="color"] {
-      width: 100%;
-      height: 30px;
-      border: none;
+      margin-bottom: 10px;
     }
     #closePopup {
       margin-top: 10px;
@@ -114,11 +111,15 @@
     #closePopup:hover {
       background: #ff2c2c;
     }
+    .resize-handle {
+      fill: red;
+      cursor: nwse-resize;
+    }
   </style>
 </head>
 <body>
 
-<!-- 🖲️ Menu -->
+<!-- 🖲️ Controlepaneel -->
 <div id="controls">
   <div id="dragHandle">
     <div class="dot"></div>
@@ -126,39 +127,43 @@
     <div class="dot"></div>
   </div>
   <div id="buttons">
-    <button id="rectButton">&#11035;</button> <!-- ⬛ -->
-    <button id="circleButton">&#9898;</button> <!-- ⚪ -->
-    <button id="eraserButton">&#128701;</button> <!-- 🧹 -->
-    <button id="editButton">&#9998;</button> <!-- 🖊️ -->
-    <button id="clearButton">&#128465;</button> <!-- 🗑️ -->
+    <button id="rectButton">&#11035;</button> 
+    <button id="circleButton">&#9898;</button> 
+    <button id="eraserButton">&#128701;</button> 
+    <button id="editButton">&#9998;</button> 
+    <button id="moveButton">&#129525;</button> 
+    <button id="clearButton">&#128465;</button> 
   </div>
 </div>
 
-<!-- SVG Canvas -->
 <svg id="drawingArea"></svg>
 
 <!-- Popup -->
 <div id="editPopup">
   <div id="editHeader">Vorm aanpassen ✏️</div>
   <label>Kleur:</label>
-  <input type="color" id="colorInput"><br><br>
+  <input type="color" id="colorInput">
+  <label>Naam:</label>
+  <input type="text" id="nameInput" placeholder="Naam van de vorm">
+  <label><input type="checkbox" id="lockCheckbox"> Vergrendelen 🔒</label>
   <div id="sizeControls">
     <label>Breedte:</label>
-    <input type="range" id="widthSlider" min="10" max="500"><br>
+    <input type="range" id="widthSlider" min="10" max="500">
     <label>Hoogte:</label>
-    <input type="range" id="heightSlider" min="10" max="500"><br>
+    <input type="range" id="heightSlider" min="10" max="500">
     <label>Straal:</label>
-    <input type="range" id="radiusSlider" min="5" max="250"><br>
+    <input type="range" id="radiusSlider" min="5" max="250">
   </div>
   <button id="closePopup">Sluiten</button>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase (zet jouw config hier) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-// 🔥 Firebase Configuratie
+/* hier komt de javascript met alles (Firebase init, tekenen, popup, verplaatsen, aanpassen) */
+  // 🔥 Firebase Configuratie
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
   authDomain: "tekensvg.firebaseapp.com",
@@ -168,7 +173,6 @@ const firebaseConfig = {
   messagingSenderId: "180262088073",
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const svg = document.getElementById('drawingArea');
@@ -178,11 +182,14 @@ const rectButton = document.getElementById('rectButton');
 const circleButton = document.getElementById('circleButton');
 const eraserButton = document.getElementById('eraserButton');
 const editButton = document.getElementById('editButton');
+const moveButton = document.getElementById('moveButton');
 const clearButton = document.getElementById('clearButton');
 
-// Popup
+// Popup controls
 const editPopup = document.getElementById('editPopup');
 const colorInput = document.getElementById('colorInput');
+const nameInput = document.getElementById('nameInput');
+const lockCheckbox = document.getElementById('lockCheckbox');
 const widthSlider = document.getElementById('widthSlider');
 const heightSlider = document.getElementById('heightSlider');
 const radiusSlider = document.getElementById('radiusSlider');
@@ -191,149 +198,144 @@ const editHeader = document.getElementById('editHeader');
 
 let mode = 'rect';
 let selectedElement = null;
+let resizeHandle = null;
 
-// Modus kiezen
 rectButton.addEventListener('click', () => mode = 'rect');
 circleButton.addEventListener('click', () => mode = 'circle');
 eraserButton.addEventListener('click', () => mode = 'erase');
 editButton.addEventListener('click', () => mode = 'edit');
+moveButton.addEventListener('click', () => mode = 'move');
 clearButton.addEventListener('click', clearAll);
 
 function clearAll() {
-  if (confirm("Weet je zeker dat je alles wilt wissen?")) {
-    db.collection("shapes").get().then((querySnapshot) => {
+  if (confirm("Alles wissen?")) {
+    db.collection("shapes").get().then(snapshot => {
       let batch = db.batch();
-      querySnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
+      snapshot.forEach(doc => batch.delete(doc.ref));
       return batch.commit();
     }).then(() => {
-      console.log("🧹 Alles gewist!");
-      while (svg.firstChild) {
-        svg.removeChild(svg.firstChild);
-      }
-    }).catch((error) => {
-      console.error("❌ Fout bij wissen: ", error);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
     });
   }
 }
 
-// 🎨 Tekenen
-let startX = 0;
-let startY = 0;
-let previewElement = null;
-let isDrawing = false;
+// Tekenen
+let startX = 0, startY = 0, previewElement = null, isDrawing = false;
 
 svg.addEventListener('mousedown', (e) => {
-  if (mode === 'erase' || mode === 'edit') return;
+  if (mode === 'rect' || mode === 'circle') {
+    startX = e.offsetX;
+    startY = e.offsetY;
+    isDrawing = true;
 
-  startX = e.offsetX;
-  startY = e.offsetY;
-  isDrawing = true;
-
-  if (mode === 'rect') {
-    previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    previewElement.setAttribute('x', startX);
-    previewElement.setAttribute('y', startY);
-    previewElement.setAttribute('width', 1);
-    previewElement.setAttribute('height', 1);
-    previewElement.setAttribute('fill', 'rgba(135, 206, 235, 0.5)');
-    svg.appendChild(previewElement);
-  } else if (mode === 'circle') {
-    previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    previewElement.setAttribute('cx', startX);
-    previewElement.setAttribute('cy', startY);
-    previewElement.setAttribute('r', 1);
-    previewElement.setAttribute('fill', 'rgba(135, 206, 235, 0.5)');
+    if (mode === 'rect') {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      previewElement.setAttribute('x', startX);
+      previewElement.setAttribute('y', startY);
+      previewElement.setAttribute('width', 1);
+      previewElement.setAttribute('height', 1);
+    } else {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      previewElement.setAttribute('cx', startX);
+      previewElement.setAttribute('cy', startY);
+      previewElement.setAttribute('r', 1);
+    }
+    previewElement.setAttribute('fill', 'skyblue');
     svg.appendChild(previewElement);
   }
 });
 
 svg.addEventListener('mousemove', (e) => {
-  if (!isDrawing || !previewElement) return;
+  if (isDrawing && previewElement) {
+    const currentX = e.offsetX;
+    const currentY = e.offsetY;
 
-  const currentX = e.offsetX;
-  const currentY = e.offsetY;
-
-  if (mode === 'rect') {
-    const width = Math.abs(currentX - startX);
-    const height = Math.abs(currentY - startY);
-    previewElement.setAttribute('width', width);
-    previewElement.setAttribute('height', height);
-    previewElement.setAttribute('x', Math.min(currentX, startX));
-    previewElement.setAttribute('y', Math.min(currentY, startY));
-  } else if (mode === 'circle') {
-    const dx = currentX - startX;
-    const dy = currentY - startY;
-    const radius = Math.sqrt(dx * dx + dy * dy) / 2;
-    previewElement.setAttribute('r', radius);
-  }
-});
-
-svg.addEventListener('mouseup', (e) => {
-  if (!isDrawing || !previewElement) return;
-
-  previewElement.setAttribute('fill', 'skyblue');
-
-  const endX = e.offsetX;
-  const endY = e.offsetY;
-
-  const width = Math.abs(endX - startX);
-  const height = Math.abs(endY - startY);
-
-  const shape = {
-    x: Math.min(startX, endX),
-    y: Math.min(startY, endY),
-    width: width,
-    height: height,
-    fill: 'skyblue',
-    type: mode,
-    createdAt: new Date()
-  };
-
-  // 🔥 Hier: voeg deze toe!
-  db.collection('shapes').add(shape)
-    .then((docRef) => {
-      console.log("✅ Vorm opgeslagen in Firestore met ID:", docRef.id);
-      previewElement.setAttribute('data-id', docRef.id); // handig voor later!
-    })
-    .catch((error) => {
-      console.error("❌ Fout bij opslaan:", error);
-    });
-
-  isDrawing = false;
-  previewElement = null;
-});
-
-// 📥 Popup Vorm Aanpassen
-svg.addEventListener('click', (e) => {
-  if (mode === 'edit') {
-    const element = document.elementFromPoint(e.clientX, e.clientY);
-    if (element && (element.tagName === 'rect' || element.tagName === 'circle')) {
-      selectedElement = element;
-
-      editPopup.style.display = 'block';
-      colorInput.value = rgbToHex(selectedElement.getAttribute('fill') || '#000000');
-
-      if (selectedElement.tagName === 'rect') {
-        widthSlider.value = selectedElement.getAttribute('width');
-        heightSlider.value = selectedElement.getAttribute('height');
-        widthSlider.parentElement.style.display = 'block';
-        heightSlider.parentElement.style.display = 'block';
-        radiusSlider.parentElement.style.display = 'none';
-      } else if (selectedElement.tagName === 'circle') {
-        radiusSlider.value = selectedElement.getAttribute('r');
-        widthSlider.parentElement.style.display = 'none';
-        heightSlider.parentElement.style.display = 'none';
-        radiusSlider.parentElement.style.display = 'block';
-      }
+    if (mode === 'rect') {
+      previewElement.setAttribute('width', Math.abs(currentX - startX));
+      previewElement.setAttribute('height', Math.abs(currentY - startY));
+      previewElement.setAttribute('x', Math.min(startX, currentX));
+      previewElement.setAttribute('y', Math.min(startY, currentY));
+    } else if (mode === 'circle') {
+      const dx = currentX - startX;
+      const dy = currentY - startY;
+      previewElement.setAttribute('r', Math.sqrt(dx*dx + dy*dy) / 2);
     }
   }
 });
 
-// 📦 Live aanpassen
+svg.addEventListener('mouseup', (e) => {
+  if (isDrawing && previewElement) {
+    db.collection('shapes').add({
+      x: previewElement.getAttribute('x') || previewElement.getAttribute('cx'),
+      y: previewElement.getAttribute('y') || previewElement.getAttribute('cy'),
+      width: previewElement.getAttribute('width') || null,
+      height: previewElement.getAttribute('height') || null,
+      r: previewElement.getAttribute('r') || null,
+      fill: previewElement.getAttribute('fill'),
+      type: mode,
+      name: "",
+      locked: false,
+      createdAt: new Date()
+    });
+    previewElement = null;
+    isDrawing = false;
+  }
+});
+
+// Popup aanpassen
+svg.addEventListener('click', (e) => {
+  if (mode === 'edit') {
+    const element = document.elementFromPoint(e.clientX, e.clientY);
+    if (!element || (element.tagName !== 'rect' && element.tagName !== 'circle')) return;
+
+    if (element.getAttribute('data-locked') === "true") return;
+
+    selectedElement = element;
+
+    editPopup.style.display = 'block';
+    colorInput.value = rgbToHex(selectedElement.getAttribute('fill') || '#000000');
+    nameInput.value = selectedElement.getAttribute('data-name') || "";
+    lockCheckbox.checked = selectedElement.getAttribute('data-locked') === "true";
+
+    if (selectedElement.tagName === 'rect') {
+      widthSlider.value = selectedElement.getAttribute('width');
+      heightSlider.value = selectedElement.getAttribute('height');
+      radiusSlider.parentElement.style.display = 'none';
+    } else {
+      radiusSlider.value = selectedElement.getAttribute('r');
+      widthSlider.parentElement.style.display = 'none';
+      heightSlider.parentElement.style.display = 'none';
+    }
+
+    if (resizeHandle) resizeHandle.remove();
+    resizeHandle = createResizeHandle(selectedElement);
+  }
+});
+
+function createResizeHandle(target) {
+  const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  handle.setAttribute('r', 6);
+  handle.setAttribute('class', 'resize-handle');
+  if (target.tagName === 'rect') {
+    handle.setAttribute('cx', parseFloat(target.getAttribute('x')) + parseFloat(target.getAttribute('width')));
+    handle.setAttribute('cy', parseFloat(target.getAttribute('y')) + parseFloat(target.getAttribute('height')));
+  } else {
+    handle.setAttribute('cx', parseFloat(target.getAttribute('cx')) + parseFloat(target.getAttribute('r')));
+    handle.setAttribute('cy', parseFloat(target.getAttribute('cy')));
+  }
+  svg.appendChild(handle);
+  return handle;
+}
+
+// Popup inputs
 colorInput.addEventListener('input', () => {
   if (selectedElement) selectedElement.setAttribute('fill', colorInput.value);
+});
+nameInput.addEventListener('input', () => {
+  if (selectedElement) selectedElement.setAttribute('data-name', nameInput.value);
+});
+lockCheckbox.addEventListener('change', () => {
+  if (selectedElement) selectedElement.setAttribute('data-locked', lockCheckbox.checked);
 });
 widthSlider.addEventListener('input', () => {
   if (selectedElement && selectedElement.tagName === 'rect') {
@@ -352,14 +354,76 @@ radiusSlider.addEventListener('input', () => {
 });
 closePopup.addEventListener('click', () => {
   editPopup.style.display = 'none';
-  selectedElement = null;
+  if (resizeHandle) resizeHandle.remove();
 });
 
-// 🖱️ Popup slepen
+// Handle slepen
+let activeHandle = null;
+svg.addEventListener('mousedown', (e) => {
+  if (e.target.classList.contains('resize-handle')) {
+    activeHandle = e.target;
+  }
+});
+svg.addEventListener('mousemove', (e) => {
+  if (activeHandle && selectedElement) {
+    if (selectedElement.getAttribute('data-locked') === "true") return;
+
+    if (selectedElement.tagName === 'rect') {
+      const x = parseFloat(selectedElement.getAttribute('x'));
+      const y = parseFloat(selectedElement.getAttribute('y'));
+      selectedElement.setAttribute('width', e.offsetX - x);
+      selectedElement.setAttribute('height', e.offsetY - y);
+      activeHandle.setAttribute('cx', e.offsetX);
+      activeHandle.setAttribute('cy', e.offsetY);
+    } else {
+      const cx = parseFloat(selectedElement.getAttribute('cx'));
+      const r = Math.abs(e.offsetX - cx);
+      selectedElement.setAttribute('r', r);
+      activeHandle.setAttribute('cx', cx + r);
+    }
+  }
+});
+svg.addEventListener('mouseup', () => {
+  activeHandle = null;
+});
+
+// Verplaatsen modus
+let isMoving = false;
+let offsetMoveX = 0;
+let offsetMoveY = 0;
+svg.addEventListener('mousedown', (e) => {
+  if (mode === 'move' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    if (e.target.getAttribute('data-locked') === "true") return;
+    selectedElement = e.target;
+    isMoving = true;
+    if (selectedElement.tagName === 'rect') {
+      offsetMoveX = e.offsetX - parseFloat(selectedElement.getAttribute('x'));
+      offsetMoveY = e.offsetY - parseFloat(selectedElement.getAttribute('y'));
+    } else {
+      offsetMoveX = e.offsetX - parseFloat(selectedElement.getAttribute('cx'));
+      offsetMoveY = e.offsetY - parseFloat(selectedElement.getAttribute('cy'));
+    }
+  }
+});
+svg.addEventListener('mousemove', (e) => {
+  if (isMoving && selectedElement) {
+    if (selectedElement.tagName === 'rect') {
+      selectedElement.setAttribute('x', e.offsetX - offsetMoveX);
+      selectedElement.setAttribute('y', e.offsetY - offsetMoveY);
+    } else {
+      selectedElement.setAttribute('cx', e.offsetX - offsetMoveX);
+      selectedElement.setAttribute('cy', e.offsetY - offsetMoveY);
+    }
+  }
+});
+svg.addEventListener('mouseup', () => {
+  isMoving = false;
+});
+
+// Popup slepen
 let isDraggingPopup = false;
 let offsetX = 0;
 let offsetY = 0;
-
 editHeader.addEventListener('mousedown', (e) => {
   isDraggingPopup = true;
   offsetX = e.clientX - editPopup.offsetLeft;
@@ -375,7 +439,7 @@ document.addEventListener('mouseup', () => {
   isDraggingPopup = false;
 });
 
-// 🎨 RGB naar HEX
+// Helper
 function rgbToHex(rgb) {
   if (!rgb) return "#000000";
   if (rgb.startsWith("#")) return rgb;
@@ -385,6 +449,7 @@ function rgbToHex(rgb) {
     return hex.length === 1 ? "0" + hex : hex;
   }).join("");
 }
+
 </script>
 
 </body>
