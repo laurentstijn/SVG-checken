@@ -22,19 +22,62 @@
 <svg id="drawingArea"></svg>
 
 <script>
-  // Hier gaan we straks vormen toevoegen
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔥 Hier zet je je eigen Firebase config neer (van je project)
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+  authDomain: "tekensvg.firebaseapp.com",
+  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tekensvg",
+  storageBucket: "tekensvg.firebasestorage.app",
+  messagingSenderId: "180262088073",
+  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+  // Database koppelen
+  const db = firebase.firestore();
+</script>
+
+<script>
   const svg = document.getElementById('drawingArea');
 
-svg.addEventListener('click', (e) => {
-  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  rect.setAttribute('x', e.offsetX);
-  rect.setAttribute('y', e.offsetY);
-  rect.setAttribute('width', 50);
-  rect.setAttribute('height', 50);
-  rect.setAttribute('fill', 'skyblue');
-  svg.appendChild(rect);
-});
+  svg.addEventListener('click', (e) => {
+    const shape = {
+      x: e.offsetX,
+      y: e.offsetY,
+      width: 50,
+      height: 50,
+      fill: 'skyblue',
+      type: 'rect',
+      createdAt: new Date()
+    };
 
+    // Vorm tekenen
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', shape.x);
+    rect.setAttribute('y', shape.y);
+    rect.setAttribute('width', shape.width);
+    rect.setAttribute('height', shape.height);
+    rect.setAttribute('fill', shape.fill);
+    svg.appendChild(rect);
+
+    // Vorm opslaan in Firestore
+    db.collection('shapes').add(shape)
+      .then((docRef) => {
+        console.log('Vorm opgeslagen met ID: ', docRef.id);
+      })
+      .catch((error) => {
+        console.error('Error bij opslaan: ', error);
+      });
+  });
 </script>
 
 </body>
