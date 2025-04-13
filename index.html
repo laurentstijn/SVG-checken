@@ -77,3 +77,211 @@
   <div id="dragHandle">
     <div class="dot"></div>
     <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div id="buttons">
+    <button id="rectButton">&#11035;</button>    <!-- ⬛ Rechthoek -->
+    <button id="circleButton">&#9898;</button>   <!-- ⚪ Cirkel -->
+    <button id="eraserButton">&#128701;</button> <!-- 🧹 Gom -->
+    <button id="clearButton">&#128465;</button>  <!-- 🗑️ Alles wissen -->
+  </div>
+</div>
+
+<svg id="drawingArea"></svg>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔥 Firebase Configuratie
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+    authDomain: "tekensvg.firebaseapp.com",
+    databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "tekensvg",
+    storageBucket: "tekensvg.appspot.com",
+    messagingSenderId: "180262088073",
+    appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const svg = document.getElementById('drawingArea');
+
+  const rectButton = document.getElementById('rectButton');
+  const circleButton = document.getElementById('circleButton');
+  const eraserButton = document.getElementById('eraserButton');
+  const clearButton = document.getElementById('clearButton');
+
+  let mode = 'rect';
+
+  rectButton.addEventListener('click', () => mode = 'rect');
+  circleButton.addEventListener('click', () => mode = 'circle');
+  eraserButton.addEventListener('click', () => mode = 'erase');
+
+  clearButton.addEventListener('click', () => {
+    if (confirm("Weet je zeker dat je alles wilt wissen?")) {
+      db.collection("shapes").get().then((querySnapshot) => {
+        let batch = db.batch();
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        return batch.commit();
+      }).then(() => {
+        console.log("🧹 Alles gewist!");
+        while (svg.firstChild) {
+          svg.removeChild(svg.firstChild);
+        }
+      }).catch((error) => {
+        console.error("❌ Fout bij wissen: ", error);
+      });
+    }
+  });
+
+  // 🎨 Klik en Sleep Tekenen
+  let startX = 0;
+  let startY = 0;
+  let previewElement = null;
+  let isDrawing = false;
+
+  svg.addEventListener('mousedown', (e) => {
+    if (mode === 'erase') return;
+
+    startX = e.offsetX;
+    startY = e.offsetY;
+    isDrawing = true;
+
+    if (mode === 'rect') {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      previewElement.setAttribute('x', startX);
+      previewElement.setAttribute('y', startY);
+      previewElement.setAttribute('width', 1);
+      previewElement.setAttribute('height', 1);
+      previewElement.setAttribute('fill', 'rgba(135, 206, 235, 0.5)');
+      svg.appendChild(previewElement);
+    } else if (mode === 'circle') {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      previewElement.setAttribute('cx', startX);
+      previewElement.setAttribute('cy', startY);
+      previewElement.setAttribute('r', 1);
+      previewElement.setAttribute('fill', 'rgba(135, 206, 235, 0.5)');
+      svg.appendChild(previewElement);
+    }
+  });
+
+  svg.addEventListener('mousemove', (e) => {
+    if (!isDrawing || !previewElement) return;
+
+    const currentX = e.offsetX;
+    const currentY = e.offsetY;
+
+    if (mode === 'rect') {
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+      previewElement.setAttribute('width', width);
+      previewElement.setAttribute('height', height);
+      previewElement.setAttribute('x', Math.min(currentX, startX));
+      previewElement.setAttribute('y', Math.min(currentY, startY));
+    } else if (mode === 'circle') {
+      const dx = currentX - startX;
+      const dy = currentY - startY;
+      const radius = Math.sqrt(dx * dx + dy * dy) / 2;
+      previewElement.setAttribute('r', radius);
+    }
+  });
+
+  svg.addEventListener('mouseup', (e) => {
+    if (!isDrawing || !previewElement) return;
+
+    const endX = e.offsetX;
+    const endY = e.offsetY;
+
+    const width = Math.abs(endX - startX);
+    const height = Math.abs(endY - startY);
+
+    let shape = {
+      x: Math.min(startX, endX),
+      y: Math.min(startY, endY),
+      width: width,
+      height: height,
+      fill: 'skyblue',
+      type: mode,
+      createdAt: new Date()
+    };
+
+    previewElement.setAttribute('fill', 'skyblue');
+
+    db.collection('shapes').add(shape)
+      .then((docRef) => {
+        console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
+      })
+      .catch((error) => {
+        console.error("❌ Error bij opslaan: ", error);
+      });
+
+    previewElement = null;
+    isDrawing = false;
+  });
+
+  // 📥 Vormen Laden
+  function loadShapes() {
+    db.collection("shapes").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const shape = doc.data();
+        let element;
+
+        if (shape.type === 'rect') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          element.setAttribute('x', shape.x);
+          element.setAttribute('y', shape.y);
+          element.setAttribute('width', shape.width);
+          element.setAttribute('height', shape.height);
+          element.setAttribute('fill', shape.fill);
+        } else if (shape.type === 'circle') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          element.setAttribute('cx', shape.x);
+          element.setAttribute('cy', shape.y);
+          element.setAttribute('r', shape.width / 2);
+          element.setAttribute('fill', shape.fill);
+        }
+
+        if (element) {
+          svg.appendChild(element);
+        }
+      });
+      console.log("✅ Alle vormen geladen.");
+    }).catch((error) => {
+      console.error("❌ Fout bij laden: ", error);
+    });
+  }
+
+  loadShapes();
+
+  // 🖱️ Sleep Menu via 3 Bolletjes
+  const controls = document.getElementById('controls');
+  const dragHandle = document.getElementById('dragHandle');
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  dragHandle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragOffsetX = e.clientX - controls.offsetLeft;
+    dragOffsetY = e.clientY - controls.offsetTop;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      controls.style.left = (e.clientX - dragOffsetX) + 'px';
+      controls.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+</script>
+
+</body>
+</html>
