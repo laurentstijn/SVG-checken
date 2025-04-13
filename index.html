@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App met Draggable Menu</title>
+  <title>SVG Teken App met Draggable Menu via Bolletjes</title>
   <style>
     body {
       margin: 0;
@@ -16,16 +16,34 @@
       left: 10px;
       z-index: 10;
       background: white;
-      padding: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      user-select: none;
+      width: 150px;
+    }
+    #dragHandle {
+      background: #f0f0f0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      padding: 5px;
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      cursor: grab;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #888;
+      border-radius: 50%;
+    }
+    #buttons {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      cursor: move; /* 👈 maakt visueel duidelijk dat je kunt slepen */
-      user-select: none;
+      padding: 10px;
     }
-    #controls button {
+    #buttons button {
       padding: 10px 15px;
       border: none;
       background-color: #ffffff;
@@ -35,7 +53,7 @@
       font-weight: bold;
       transition: background 0.2s;
     }
-    #controls button:hover {
+    #buttons button:hover {
       background-color: #f0f0f0;
     }
     svg {
@@ -56,10 +74,17 @@
 
 <!-- 🖲️ Controlepaneel -->
 <div id="controls">
-  <button id="rectButton">Rechthoek</button>
-  <button id="circleButton">Cirkel</button>
-  <button id="eraserButton">Gom</button>
-  <button id="clearButton">Alles wissen</button>
+  <div id="dragHandle">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div id="buttons">
+    <button id="rectButton">Rechthoek</button>
+    <button id="circleButton">Cirkel</button>
+    <button id="eraserButton">Gom</button>
+    <button id="clearButton">Alles wissen</button>
+  </div>
 </div>
 
 <svg id="drawingArea"></svg>
@@ -99,4 +124,129 @@
     if (confirm("Weet je zeker dat je alles wilt wissen?")) {
       db.collection("shapes").get().then((querySnapshot) => {
         let batch = db.batch();
-        querySnapshot.forEach((doc)
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        return batch.commit();
+      }).then(() => {
+        console.log("🧹 Alles gewist!");
+        while (svg.firstChild) {
+          svg.removeChild(svg.firstChild);
+        }
+      }).catch((error) => {
+        console.error("❌ Fout bij wissen: ", error);
+      });
+    }
+  });
+
+  svg.addEventListener('click', (e) => {
+    const x = e.offsetX;
+    const y = e.offsetY;
+
+    if (mode === 'erase') {
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      if (element && element.tagName !== 'svg') {
+        element.remove();
+      }
+      return;
+    }
+
+    let newElement;
+    const shape = {
+      x,
+      y,
+      width: 50,
+      height: 50,
+      fill: 'skyblue',
+      type: mode,
+      createdAt: new Date()
+    };
+
+    if (mode === 'rect') {
+      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      newElement.setAttribute('x', x);
+      newElement.setAttribute('y', y);
+      newElement.setAttribute('width', shape.width);
+      newElement.setAttribute('height', shape.height);
+      newElement.setAttribute('fill', shape.fill);
+    } else if (mode === 'circle') {
+      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      newElement.setAttribute('cx', x);
+      newElement.setAttribute('cy', y);
+      newElement.setAttribute('r', 25);
+      newElement.setAttribute('fill', shape.fill);
+    }
+
+    if (newElement) {
+      svg.appendChild(newElement);
+
+      db.collection('shapes').add(shape)
+        .then((docRef) => {
+          console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
+        })
+        .catch((error) => {
+          console.error("❌ Error bij opslaan: ", error);
+        });
+    }
+  });
+
+  function loadShapes() {
+    db.collection("shapes").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const shape = doc.data();
+        let element;
+
+        if (shape.type === 'rect') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          element.setAttribute('x', shape.x);
+          element.setAttribute('y', shape.y);
+          element.setAttribute('width', shape.width);
+          element.setAttribute('height', shape.height);
+          element.setAttribute('fill', shape.fill);
+        } else if (shape.type === 'circle') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          element.setAttribute('cx', shape.x);
+          element.setAttribute('cy', shape.y);
+          element.setAttribute('r', 25);
+          element.setAttribute('fill', shape.fill);
+        }
+
+        if (element) {
+          svg.appendChild(element);
+        }
+      });
+      console.log("✅ Alle vormen geladen.");
+    }).catch((error) => {
+      console.error("❌ Fout bij laden: ", error);
+    });
+  }
+
+  loadShapes();
+
+  // 🖱️ Alleen de bolletjes zijn dragbaar
+  const controls = document.getElementById('controls');
+  const dragHandle = document.getElementById('dragHandle');
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  dragHandle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragOffsetX = e.clientX - controls.offsetLeft;
+    dragOffsetY = e.clientY - controls.offsetTop;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      controls.style.left = (e.clientX - dragOffsetX) + 'px';
+      controls.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+</script>
+
+</body>
+</html>
