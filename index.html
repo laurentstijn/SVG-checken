@@ -23,7 +23,18 @@
 
 <script>
   // Hier gaan we straks vormen toevoegen
-  console.log('App klaar om te tekenen!');
+  const svg = document.getElementById('drawingArea');
+
+svg.addEventListener('click', (e) => {
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', e.offsetX);
+  rect.setAttribute('y', e.offsetY);
+  rect.setAttribute('width', 50);
+  rect.setAttribute('height', 50);
+  rect.setAttribute('fill', 'skyblue');
+  svg.appendChild(rect);
+});
+
 </script>
 
 </body>
