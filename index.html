@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App met Vormen en Gom</title>
+  <title>SVG Teken App met Draggable Menu</title>
   <style>
     body {
       margin: 0;
@@ -22,6 +22,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      cursor: move; /* 👈 maakt visueel duidelijk dat je kunt slepen */
+      user-select: none;
     }
     #controls button {
       padding: 10px 15px;
@@ -87,119 +89,14 @@
   const eraserButton = document.getElementById('eraserButton');
   const clearButton = document.getElementById('clearButton');
 
-  // Tekening modus: standaard 'rect'
   let mode = 'rect';
 
   rectButton.addEventListener('click', () => mode = 'rect');
   circleButton.addEventListener('click', () => mode = 'circle');
   eraserButton.addEventListener('click', () => mode = 'erase');
 
-  // 🧹 Alles wissen
   clearButton.addEventListener('click', () => {
     if (confirm("Weet je zeker dat je alles wilt wissen?")) {
       db.collection("shapes").get().then((querySnapshot) => {
         let batch = db.batch();
-        querySnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        return batch.commit();
-      }).then(() => {
-        console.log("🧹 Alles gewist!");
-        while (svg.firstChild) {
-          svg.removeChild(svg.firstChild);
-        }
-      }).catch((error) => {
-        console.error("❌ Fout bij wissen: ", error);
-      });
-    }
-  });
-
-  // ⬇️ Klik op SVG: nieuwe vorm maken of gom
-  svg.addEventListener('click', (e) => {
-    const x = e.offsetX;
-    const y = e.offsetY;
-
-    if (mode === 'erase') {
-      const element = document.elementFromPoint(e.clientX, e.clientY);
-      if (element && element.tagName !== 'svg') {
-        element.remove();
-      }
-      return;
-    }
-
-    let newElement;
-    const shape = {
-      x,
-      y,
-      width: 50,
-      height: 50,
-      fill: 'skyblue',
-      type: mode,
-      createdAt: new Date()
-    };
-
-    if (mode === 'rect') {
-      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      newElement.setAttribute('x', x);
-      newElement.setAttribute('y', y);
-      newElement.setAttribute('width', shape.width);
-      newElement.setAttribute('height', shape.height);
-      newElement.setAttribute('fill', shape.fill);
-    } else if (mode === 'circle') {
-      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      newElement.setAttribute('cx', x);
-      newElement.setAttribute('cy', y);
-      newElement.setAttribute('r', 25);
-      newElement.setAttribute('fill', shape.fill);
-    }
-
-    if (newElement) {
-      svg.appendChild(newElement);
-
-      db.collection('shapes').add(shape)
-        .then((docRef) => {
-          console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
-        })
-        .catch((error) => {
-          console.error("❌ Error bij opslaan: ", error);
-        });
-    }
-  });
-
-  // 📥 Vormen laden bij openen
-  function loadShapes() {
-    db.collection("shapes").get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const shape = doc.data();
-        let element;
-
-        if (shape.type === 'rect') {
-          element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          element.setAttribute('x', shape.x);
-          element.setAttribute('y', shape.y);
-          element.setAttribute('width', shape.width);
-          element.setAttribute('height', shape.height);
-          element.setAttribute('fill', shape.fill);
-        } else if (shape.type === 'circle') {
-          element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          element.setAttribute('cx', shape.x);
-          element.setAttribute('cy', shape.y);
-          element.setAttribute('r', 25);
-          element.setAttribute('fill', shape.fill);
-        }
-
-        if (element) {
-          svg.appendChild(element);
-        }
-      });
-      console.log("✅ Alle vormen geladen.");
-    }).catch((error) => {
-      console.error("❌ Fout bij laden: ", error);
-    });
-  }
-
-  loadShapes();
-</script>
-
-</body>
-</html>
+        querySnapshot.forEach((doc)
