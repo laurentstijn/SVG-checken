@@ -2,12 +2,13 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Teken App met Firebase</title>
+  <title>SVG Teken App met Vormen en Gom</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background-color: #e0e0e0;
     }
     #controls {
       position: absolute;
@@ -18,6 +19,22 @@
       padding: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #controls button {
+      padding: 10px 15px;
+      border: none;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    #controls button:hover {
+      background-color: #f0f0f0;
     }
     svg {
       width: 95vw;
@@ -25,8 +42,8 @@
       background-color: #f9f9f9;
       cursor: crosshair;
       border: 5px solid black;
-      border-radius: 20px; /* 🎯 Ronde hoeken! */
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* 🎨 Mooie schaduw */
+      border-radius: 20px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
       margin: 20px auto;
       display: block;
       box-sizing: border-box;
@@ -37,6 +54,9 @@
 
 <!-- 🖲️ Controlepaneel -->
 <div id="controls">
+  <button id="rectButton">Rechthoek</button>
+  <button id="circleButton">Cirkel</button>
+  <button id="eraserButton">Gom</button>
   <button id="clearButton">Alles wissen</button>
 </div>
 
@@ -47,7 +67,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // 🔥 Jouw Firebase Configuratie
+  // 🔥 Firebase Configuratie
   const firebaseConfig = {
     apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
     authDomain: "tekensvg.firebaseapp.com",
@@ -58,62 +78,21 @@
     appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
   };
 
-  // Firebase initialiseren
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const svg = document.getElementById('drawingArea');
+
+  const rectButton = document.getElementById('rectButton');
+  const circleButton = document.getElementById('circleButton');
+  const eraserButton = document.getElementById('eraserButton');
   const clearButton = document.getElementById('clearButton');
 
-  // 🔵 Functie: Alle vormen ophalen en tekenen
-  function loadShapes() {
-    db.collection("shapes").get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const shape = doc.data();
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', shape.x);
-        rect.setAttribute('y', shape.y);
-        rect.setAttribute('width', shape.width);
-        rect.setAttribute('height', shape.height);
-        rect.setAttribute('fill', shape.fill);
-        svg.appendChild(rect);
-      });
-      console.log("✅ Alle vormen geladen.");
-    }).catch((error) => {
-      console.error("❌ Fout bij laden: ", error);
-    });
-  }
+  // Tekening modus: standaard 'rect'
+  let mode = 'rect';
 
-  // 🚀 Laad alle vormen bij openen
-  loadShapes();
-
-  // 🔵 Klik op SVG: nieuwe vorm maken + opslaan
-  svg.addEventListener('click', (e) => {
-    const shape = {
-      x: e.offsetX,
-      y: e.offsetY,
-      width: 50,
-      height: 50,
-      fill: 'skyblue',
-      type: 'rect',
-      createdAt: new Date()
-    };
-
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', shape.x);
-    rect.setAttribute('y', shape.y);
-    rect.setAttribute('width', shape.width);
-    rect.setAttribute('height', shape.height);
-    rect.setAttribute('fill', shape.fill);
-    svg.appendChild(rect);
-
-    db.collection('shapes').add(shape)
-      .then((docRef) => {
-        console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
-      })
-      .catch((error) => {
-        console.error("❌ Error bij opslaan: ", error);
-      });
-  });
+  rectButton.addEventListener('click', () => mode = 'rect');
+  circleButton.addEventListener('click', () => mode = 'circle');
+  eraserButton.addEventListener('click', () => mode = 'erase');
 
   // 🧹 Alles wissen
   clearButton.addEventListener('click', () => {
@@ -126,7 +105,6 @@
         return batch.commit();
       }).then(() => {
         console.log("🧹 Alles gewist!");
-        // SVG canvas leegmaken
         while (svg.firstChild) {
           svg.removeChild(svg.firstChild);
         }
@@ -135,6 +113,92 @@
       });
     }
   });
+
+  // ⬇️ Klik op SVG: nieuwe vorm maken of gom
+  svg.addEventListener('click', (e) => {
+    const x = e.offsetX;
+    const y = e.offsetY;
+
+    if (mode === 'erase') {
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      if (element && element.tagName !== 'svg') {
+        element.remove();
+      }
+      return;
+    }
+
+    let newElement;
+    const shape = {
+      x,
+      y,
+      width: 50,
+      height: 50,
+      fill: 'skyblue',
+      type: mode,
+      createdAt: new Date()
+    };
+
+    if (mode === 'rect') {
+      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      newElement.setAttribute('x', x);
+      newElement.setAttribute('y', y);
+      newElement.setAttribute('width', shape.width);
+      newElement.setAttribute('height', shape.height);
+      newElement.setAttribute('fill', shape.fill);
+    } else if (mode === 'circle') {
+      newElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      newElement.setAttribute('cx', x);
+      newElement.setAttribute('cy', y);
+      newElement.setAttribute('r', 25);
+      newElement.setAttribute('fill', shape.fill);
+    }
+
+    if (newElement) {
+      svg.appendChild(newElement);
+
+      db.collection('shapes').add(shape)
+        .then((docRef) => {
+          console.log("✅ Vorm opgeslagen met ID: ", docRef.id);
+        })
+        .catch((error) => {
+          console.error("❌ Error bij opslaan: ", error);
+        });
+    }
+  });
+
+  // 📥 Vormen laden bij openen
+  function loadShapes() {
+    db.collection("shapes").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const shape = doc.data();
+        let element;
+
+        if (shape.type === 'rect') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          element.setAttribute('x', shape.x);
+          element.setAttribute('y', shape.y);
+          element.setAttribute('width', shape.width);
+          element.setAttribute('height', shape.height);
+          element.setAttribute('fill', shape.fill);
+        } else if (shape.type === 'circle') {
+          element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          element.setAttribute('cx', shape.x);
+          element.setAttribute('cy', shape.y);
+          element.setAttribute('r', 25);
+          element.setAttribute('fill', shape.fill);
+        }
+
+        if (element) {
+          svg.appendChild(element);
+        }
+      });
+      console.log("✅ Alle vormen geladen.");
+    }).catch((error) => {
+      console.error("❌ Fout bij laden: ", error);
+    });
+  }
+
+  loadShapes();
 </script>
 
 </body>
