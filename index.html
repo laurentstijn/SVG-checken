@@ -363,6 +363,22 @@ svg.addEventListener('click', (e) => {
   }
 });
 
+  function updateLabelPosition(shape, label) {
+  if (!shape || !label) return;
+
+  if (shape.tagName === 'rect') {
+    const x = parseFloat(shape.getAttribute('x')) + 5;
+    const y = parseFloat(shape.getAttribute('y')) - 5;
+    label.setAttribute('x', x);
+    label.setAttribute('y', y);
+  } else if (shape.tagName === 'circle') {
+    const x = parseFloat(shape.getAttribute('cx')) + 5;
+    const y = parseFloat(shape.getAttribute('cy')) - 10;
+    label.setAttribute('x', x);
+    label.setAttribute('y', y);
+  }
+}
+
 // --- Live popup aanpassen en opslaan ---
 function updateShapeInDB() {
   if (!selectedElement) return;
@@ -449,7 +465,8 @@ svg.addEventListener('mouseup', () => {
   isDraggingShape = false;
 });
 
-  
+  updateLabelPosition(selectedElement, document.getElementById(selectedElement.getAttribute('data-id') + '-label'));
+
 
 // --- Helper: rgb naar hex ---
 function rgbToHex(rgb) {
