@@ -205,13 +205,10 @@ let mode = 'rect';
 let selectedElement = null;
 let isDrawing = false;
 let startX = 0, startY = 0, previewElement = null;
-let isMoving = false, offsetMoveX = 0, offsetMoveY = 0;
-let isDraggingPopup = false, popupOffsetX = 0, popupOffsetY = 0;
-let isDraggingMenu = false, menuOffsetX = 0, menuOffsetY = 0;
-let activeHandle = null;
-let resizeHandle = null;
+let isDraggingShape = false;
+let offsetMoveX = 0, offsetMoveY = 0;
 
-// Modus kiezen
+// Modus knoppen
 rectButton.addEventListener('click', () => mode = 'rect');
 circleButton.addEventListener('click', () => mode = 'circle');
 eraserButton.addEventListener('click', () => mode = 'erase');
@@ -219,7 +216,7 @@ editButton.addEventListener('click', () => mode = 'edit');
 moveButton.addEventListener('click', () => mode = 'move');
 clearButton.addEventListener('click', clearAll);
 
-// --- Teken nieuwe vormen ---
+// --- Teken nieuwe vorm ---
 svg.addEventListener('mousedown', (e) => {
   if (mode === 'rect' || mode === 'circle') {
     startX = e.offsetX;
@@ -270,7 +267,7 @@ svg.addEventListener('mouseup', () => {
 
 // --- Vorm opslaan in Firestore ---
 function saveShape(element) {
-  const data = {
+  const shape = {
     type: element.tagName,
     fill: element.getAttribute('fill'),
     x: element.getAttribute('x') || element.getAttribute('cx'),
@@ -282,10 +279,12 @@ function saveShape(element) {
     locked: false,
     createdAt: new Date()
   };
-  db.collection('shapes').add(data);
+  db.collection('shapes').add(shape).then(docRef => {
+    element.setAttribute('data-id', docRef.id); // ⭐ belangrijk: id toevoegen
+  });
 }
 
-// --- Vormen laden ---
+// --- Vormen laden uit Firestore ---
 function loadShapes() {
   db.collection('shapes').get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -306,12 +305,13 @@ function loadShapes() {
       }
 
       element.setAttribute('fill', shape.fill || 'skyblue');
+      element.setAttribute('data-id', doc.id); // ⭐ id toevoegen!
       element.setAttribute('data-locked', shape.locked ? "true" : "false");
       element.setAttribute('data-name', shape.name || "");
 
       svg.appendChild(element);
     });
-    console.log('✅ Vormen geladen!');
+    console.log('✅ Vormen geladen uit Firestore!');
   }).catch((error) => {
     console.error('❌ Fout bij laden vormen:', error);
   });
@@ -320,47 +320,90 @@ loadShapes();
 
 // --- Popup aanpassen ---
 svg.addEventListener('click', (e) => {
-  if (mode === 'edit') {
-    if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
-      if (e.target.getAttribute('data-locked') === "true") return;
+  if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    selectedElement = e.target;
 
-      selectedElement = e.target;
-      editPopup.style.display = 'block';
+    editPopup.style.display = 'block';
+    colorInput.value = rgbToHex(selectedElement.getAttribute('fill'));
+    nameInput.value = selectedElement.getAttribute('data-name') || "";
+    lockCheckbox.checked = selectedElement.getAttribute('data-locked') === "true";
+  }
 
-      colorInput.value = rgbToHex(selectedElement.getAttribute('fill'));
-      nameInput.value = selectedElement.getAttribute('data-name') || "";
-      lockCheckbox.checked = selectedElement.getAttribute('data-locked') === "true";
-
-      if (selectedElement.tagName === 'rect') {
-        widthSlider.value = selectedElement.getAttribute('width');
-        heightSlider.value = selectedElement.getAttribute('height');
-        radiusSlider.parentElement.style.display = 'none';
-      } else {
-        radiusSlider.value = selectedElement.getAttribute('r');
-        widthSlider.parentElement.style.display = 'none';
-        heightSlider.parentElement.style.display = 'none';
-      }
+  if (mode === 'erase' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    if (confirm("Vorm verwijderen?")) {
+      const id = e.target.getAttribute('data-id');
+      db.collection('shapes').doc(id).delete();
+      svg.removeChild(e.target);
     }
   }
 });
 
-// --- Verplaatsen van vormen ---
-let isDraggingShape = false;
+// --- Live popup aanpassen en opslaan ---
+function updateShapeInDB() {
+  if (!selectedElement) return;
+  const id = selectedElement.getAttribute('data-id');
+  const update = {
+    fill: selectedElement.getAttribute('fill'),
+    name: selectedElement.getAttribute('data-name'),
+    locked: selectedElement.getAttribute('data-locked') === "true",
+    x: selectedElement.getAttribute('x') || selectedElement.getAttribute('cx'),
+    y: selectedElement.getAttribute('y') || selectedElement.getAttribute('cy'),
+    width: selectedElement.getAttribute('width') || null,
+    height: selectedElement.getAttribute('height') || null,
+    r: selectedElement.getAttribute('r') || null,
+  };
+  db.collection('shapes').doc(id).update(update);
+}
+
+colorInput.addEventListener('input', () => {
+  if (selectedElement) {
+    selectedElement.setAttribute('fill', colorInput.value);
+    updateShapeInDB();
+  }
+});
+nameInput.addEventListener('input', () => {
+  if (selectedElement) {
+    selectedElement.setAttribute('data-name', nameInput.value);
+    updateShapeInDB();
+  }
+});
+lockCheckbox.addEventListener('change', () => {
+  if (selectedElement) {
+    selectedElement.setAttribute('data-locked', lockCheckbox.checked);
+    updateShapeInDB();
+  }
+});
+widthSlider.addEventListener('input', () => {
+  if (selectedElement && selectedElement.tagName === 'rect') {
+    selectedElement.setAttribute('width', widthSlider.value);
+    updateShapeInDB();
+  }
+});
+heightSlider.addEventListener('input', () => {
+  if (selectedElement && selectedElement.tagName === 'rect') {
+    selectedElement.setAttribute('height', heightSlider.value);
+    updateShapeInDB();
+  }
+});
+radiusSlider.addEventListener('input', () => {
+  if (selectedElement && selectedElement.tagName === 'circle') {
+    selectedElement.setAttribute('r', radiusSlider.value);
+    updateShapeInDB();
+  }
+});
+closePopup.addEventListener('click', () => {
+  editPopup.style.display = 'none';
+});
+
+// --- Verplaatsen vormen ---
 svg.addEventListener('mousedown', (e) => {
   if (mode === 'move' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
-    if (e.target.getAttribute('data-locked') === "true") return;
     selectedElement = e.target;
     isDraggingShape = true;
-    if (selectedElement.tagName === 'rect') {
-      offsetMoveX = e.offsetX - parseFloat(selectedElement.getAttribute('x'));
-      offsetMoveY = e.offsetY - parseFloat(selectedElement.getAttribute('y'));
-    } else {
-      offsetMoveX = e.offsetX - parseFloat(selectedElement.getAttribute('cx'));
-      offsetMoveY = e.offsetY - parseFloat(selectedElement.getAttribute('cy'));
-    }
+    offsetMoveX = e.offsetX - (parseFloat(selectedElement.getAttribute('x')) || parseFloat(selectedElement.getAttribute('cx')));
+    offsetMoveY = e.offsetY - (parseFloat(selectedElement.getAttribute('y')) || parseFloat(selectedElement.getAttribute('cy')));
   }
 });
-
 svg.addEventListener('mousemove', (e) => {
   if (isDraggingShape && selectedElement) {
     if (selectedElement.tagName === 'rect') {
@@ -370,83 +413,38 @@ svg.addEventListener('mousemove', (e) => {
       selectedElement.setAttribute('cx', e.offsetX - offsetMoveX);
       selectedElement.setAttribute('cy', e.offsetY - offsetMoveY);
     }
+    updateShapeInDB();
   }
 });
-
 svg.addEventListener('mouseup', () => {
   isDraggingShape = false;
 });
 
-// --- Gummen (verwijderen) ---
-svg.addEventListener('click', (e) => {
-  if (mode === 'erase' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
-    if (confirm("Vorm verwijderen?")) {
-      svg.removeChild(e.target);
-    }
-  }
-});
-
-// --- Popup live aanpassen ---
-colorInput.addEventListener('input', () => {
-  if (selectedElement) selectedElement.setAttribute('fill', colorInput.value);
-});
-nameInput.addEventListener('input', () => {
-  if (selectedElement) selectedElement.setAttribute('data-name', nameInput.value);
-});
-lockCheckbox.addEventListener('change', () => {
-  if (selectedElement) selectedElement.setAttribute('data-locked', lockCheckbox.checked);
-});
-widthSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'rect') {
-    selectedElement.setAttribute('width', widthSlider.value);
-  }
-});
-heightSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'rect') {
-    selectedElement.setAttribute('height', heightSlider.value);
-  }
-});
-radiusSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'circle') {
-    selectedElement.setAttribute('r', radiusSlider.value);
-  }
-});
-closePopup.addEventListener('click', () => {
-  editPopup.style.display = 'none';
-});
-
-// --- Helper rgb naar hex ---
+// --- Helper: rgb naar hex ---
 function rgbToHex(rgb) {
-  if (!rgb || typeof rgb !== 'string') return "#000000"; // extra controle
+  if (!rgb || typeof rgb !== 'string') return "#000000";
   if (rgb.startsWith("#")) return rgb;
   const result = rgb.match(/\d+/g);
-  if (!result) return "#000000"; // als match mislukt, veilige waarde geven
+  if (!result) return "#000000";
   return "#" + result.map(x => {
     const hex = parseInt(x).toString(16);
     return hex.length === 1 ? "0" + hex : hex;
   }).join("");
 }
 
-
-// Alles wissen
+// --- Alles wissen ---
 function clearAll() {
-  if (confirm("Weet je zeker dat je alles wilt wissen?")) {
-    db.collection('shapes').get().then((snapshot) => {
-      let batch = db.batch();
-      snapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
+  if (confirm("Alles wissen?")) {
+    db.collection('shapes').get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
       return batch.commit();
     }).then(() => {
-      console.log('🧹 Alle vormen gewist uit database!');
-      while (svg.firstChild) {
-        svg.removeChild(svg.firstChild);
-      }
-    }).catch((error) => {
-      console.error('❌ Fout bij wissen:', error);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
     });
   }
 }
+
   
 </script>
 
