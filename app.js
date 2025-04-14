@@ -35,6 +35,19 @@ let offsetMoveX = 0, offsetMoveY = 0;
 let activeResizeHandle = null;
 let resizingElement = null;
 
+function clearAll() {
+  if (confirm("Alles wissen?")) {
+    db.collection('shapes').get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    }).then(() => {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      console.log("✅ Alles gewist!");
+    });
+  }
+}
+
 // Helper functies
 function bringLabelToFront(label) {
   if (label && label.parentNode) {
