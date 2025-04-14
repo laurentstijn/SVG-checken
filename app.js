@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🎯 Basis variabelen
+// 🎯 Variabelen
 const svg = document.getElementById('drawingArea');
 const rectButton = document.getElementById('rectButton');
 const circleButton = document.getElementById('circleButton');
@@ -76,6 +76,7 @@ function addResizeHandle(shape) {
   handle.classList.add('resize-handle');
   handle.setAttribute('r', 6);
   handle.setAttribute('fill', 'red');
+  handle.style.display = 'none'; // Default verborgen!
 
   if (shape.tagName === 'rect') {
     handle.setAttribute('cx', parseFloat(shape.getAttribute('x')) + parseFloat(shape.getAttribute('width')));
@@ -87,17 +88,29 @@ function addResizeHandle(shape) {
 
   svg.appendChild(handle);
   handle.setAttribute('data-shape-id', shape.getAttribute('data-id'));
-
   return handle;
 }
 
+// 🖌️ Handles tonen en verbergen
+function showHandles() {
+  document.querySelectorAll('.resize-handle').forEach(handle => {
+    handle.style.display = 'block';
+  });
+}
+
+function hideHandles() {
+  document.querySelectorAll('.resize-handle').forEach(handle => {
+    handle.style.display = 'none';
+  });
+}
+
 // 🔘 Modus wisselen
-rectButton.addEventListener('click', () => mode = 'rect');
-circleButton.addEventListener('click', () => mode = 'circle');
-eraserButton.addEventListener('click', () => mode = 'erase');
-editButton.addEventListener('click', () => mode = 'edit');
-moveButton.addEventListener('click', () => mode = 'move');
-clearButton.addEventListener('click', clearAll);
+rectButton.addEventListener('click', () => { mode = 'rect'; hideHandles(); });
+circleButton.addEventListener('click', () => { mode = 'circle'; hideHandles(); });
+eraserButton.addEventListener('click', () => { mode = 'erase'; hideHandles(); });
+editButton.addEventListener('click', () => { mode = 'edit'; showHandles(); });
+moveButton.addEventListener('click', () => { mode = 'move'; showHandles(); });
+clearButton.addEventListener('click', () => { clearAll(); hideHandles(); });
 
 // 🖌️ Tekenen
 svg.addEventListener('mousedown', (e) => {
@@ -118,9 +131,21 @@ svg.addEventListener('mousedown', (e) => {
       previewElement.setAttribute('cy', startY);
       previewElement.setAttribute('r', 1);
     }
-
     previewElement.setAttribute('fill', 'skyblue');
     svg.appendChild(previewElement);
+  }
+
+  if (e.target.classList.contains('resize-handle')) {
+    activeResizeHandle = e.target;
+    const shapeId = activeResizeHandle.getAttribute('data-shape-id');
+    resizingElement = document.querySelector(`[data-id='${shapeId}']`);
+  }
+
+  if (mode === 'move' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    selectedElement = e.target;
+    isDraggingShape = true;
+    offsetMoveX = e.offsetX - (parseFloat(selectedElement.getAttribute('x')) || parseFloat(selectedElement.getAttribute('cx')));
+    offsetMoveY = e.offsetY - (parseFloat(selectedElement.getAttribute('y')) || parseFloat(selectedElement.getAttribute('cy')));
   }
 });
 
@@ -146,7 +171,6 @@ svg.addEventListener('mousemove', (e) => {
       const startY = parseFloat(resizingElement.getAttribute('y'));
       resizingElement.setAttribute('width', Math.max(10, e.offsetX - startX));
       resizingElement.setAttribute('height', Math.max(10, e.offsetY - startY));
-
       activeResizeHandle.setAttribute('cx', startX + parseFloat(resizingElement.getAttribute('width')));
       activeResizeHandle.setAttribute('cy', startY + parseFloat(resizingElement.getAttribute('height')));
     } else if (resizingElement.tagName === 'circle') {
@@ -215,7 +239,7 @@ function saveShape(element) {
   });
 }
 
-// 🖱️ Popup bewerken
+// 🖱️ Klik op vorm: popup openen of verwijderen
 svg.addEventListener('click', (e) => {
   if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
     selectedElement = e.target;
@@ -233,17 +257,13 @@ svg.addEventListener('click', (e) => {
       svg.removeChild(e.target);
       const label = document.getElementById(id + '-label');
       if (label) label.remove();
+      const handle = document.querySelector(`.resize-handle[data-shape-id='${id}']`);
+      if (handle) handle.remove();
     }
-  }
-
-  if (e.target.classList.contains('resize-handle')) {
-    activeResizeHandle = e.target;
-    const shapeId = activeResizeHandle.getAttribute('data-shape-id');
-    resizingElement = document.querySelector(`[data-id='${shapeId}']`);
   }
 });
 
-// 🧽 Popup inputs
+// 🎨 Popup aanpassen
 colorInput.addEventListener('input', () => {
   if (selectedElement) {
     selectedElement.setAttribute('fill', colorInput.value);
@@ -281,6 +301,7 @@ showLabelCheckbox.addEventListener('change', () => {
   if (selectedElement) {
     const labelId = selectedElement.getAttribute('data-id') + '-label';
     let label = document.getElementById(labelId);
+
     if (showLabelCheckbox.checked) {
       selectedElement.setAttribute('data-show-label', "true");
       if (!label) {
@@ -305,7 +326,7 @@ closePopup.addEventListener('click', () => {
   editPopup.style.display = 'none';
 });
 
-// 🔄 Alles laden uit Firestore
+// 🔄 Vormen laden bij opstart
 function loadShapes() {
   db.collection('shapes').get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -361,7 +382,7 @@ function clearAll() {
   }
 }
 
-// 🖱️ Menu verplaatsen
+// 🖱️ Menu slepen
 const controls = document.getElementById('controls');
 const dragHandle = document.getElementById('dragHandle');
 
