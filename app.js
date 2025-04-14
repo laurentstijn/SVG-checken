@@ -47,8 +47,8 @@ function updateLabelPosition(shape, label) {
     label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
   } else {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 5);
-    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 10);
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
+    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
   }
 }
 
