@@ -150,6 +150,7 @@ const firebaseConfig = {
   messagingSenderId: "180262088073",
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -168,7 +169,6 @@ const nameInput = document.getElementById('nameInput');
 const lockCheckbox = document.getElementById('lockCheckbox');
 const showLabelCheckbox = document.getElementById('showLabelCheckbox');
 const closePopup = document.getElementById('closePopup');
-const editHeader = document.getElementById('editHeader');
 
 let mode = 'rect';
 let selectedElement = null;
@@ -216,8 +216,14 @@ function updateLabelPosition(shape, label) {
     label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
   } else if (shape.tagName === 'circle') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
-    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 5);
+    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 10);
+  }
+}
+
+function bringLabelToFront(label) {
+  if (label && label.parentNode) {
+    label.parentNode.append(label);
   }
 }
 
@@ -314,7 +320,7 @@ function saveShape(element) {
     element.setAttribute('data-id', docRef.id);
   });
 }
-
+  
 // 🖱️ Klik op vorm
 svg.addEventListener('click', (e) => {
   if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
@@ -334,11 +340,13 @@ svg.addEventListener('click', (e) => {
       const id = e.target.getAttribute('data-id');
       db.collection('shapes').doc(id).delete();
       svg.removeChild(e.target);
+      const label = document.getElementById(id + '-label');
+      if (label) label.remove();
     }
   }
 });
 
-// 🖊️ Popup aanpassingen
+// ✏️ Popup input events
 colorInput.addEventListener('input', () => {
   if (selectedElement) {
     selectedElement.setAttribute('fill', colorInput.value);
@@ -351,7 +359,10 @@ nameInput.addEventListener('input', () => {
     selectedElement.setAttribute('data-name', nameInput.value);
     const labelId = selectedElement.getAttribute('data-id') + '-label';
     const label = document.getElementById(labelId);
-    if (label) label.textContent = nameInput.value;
+    if (label) {
+      label.textContent = nameInput.value;
+      bringLabelToFront(label); // label on top
+    }
     updateShapeInDB();
   }
 });
@@ -379,6 +390,7 @@ showLabelCheckbox.addEventListener('change', () => {
       }
       label.textContent = selectedElement.getAttribute('data-name');
       updateLabelPosition(selectedElement, label);
+      bringLabelToFront(label);
     } else {
       selectedElement.setAttribute('data-show-label', "false");
       if (label) label.remove();
@@ -414,6 +426,12 @@ svg.addEventListener('mousemove', (e) => {
       const cx = parseFloat(selectedElement.getAttribute('cx'));
       selectedElement.setAttribute('r', Math.abs(e.offsetX - cx));
     }
+    const labelId = selectedElement.getAttribute('data-id') + '-label';
+    const label = document.getElementById(labelId);
+    if (label) {
+      updateLabelPosition(selectedElement, label);
+      bringLabelToFront(label);
+    }
     updateShapeInDB();
   }
   if (isDraggingShape && selectedElement) {
@@ -426,7 +444,10 @@ svg.addEventListener('mousemove', (e) => {
     }
     const labelId = selectedElement.getAttribute('data-id') + '-label';
     const label = document.getElementById(labelId);
-    if (label) updateLabelPosition(selectedElement, label);
+    if (label) {
+      updateLabelPosition(selectedElement, label);
+      bringLabelToFront(label);
+    }
     updateShapeInDB();
   }
 });
