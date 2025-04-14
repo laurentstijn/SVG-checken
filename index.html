@@ -150,6 +150,8 @@
   <label>Naam:</label>
   <input type="text" id="nameInput" placeholder="Naam van de vorm"><br><br>
 
+  <label><input type="checkbox" id="showLabelCheckbox"> Toon label 🏷️</label><br><br>
+
   <label><input type="checkbox" id="lockCheckbox"> Vergrendelen 🔒</label><br><br>
 
   <button id="closePopup">Sluiten</button>
@@ -190,9 +192,10 @@ const editPopup = document.getElementById('editPopup');
 const colorInput = document.getElementById('colorInput');
 const nameInput = document.getElementById('nameInput');
 const lockCheckbox = document.getElementById('lockCheckbox');
-const widthSlider = document.getElementById('widthSlider');
-const heightSlider = document.getElementById('heightSlider');
-const radiusSlider = document.getElementById('radiusSlider');
+const showLabelCheckbox = document.getElementById('showLabelCheckbox');
+//const widthSlider = document.getElementById('widthSlider');
+//const heightSlider = document.getElementById('heightSlider');
+//const radiusSlider = document.getElementById('radiusSlider');
 const closePopup = document.getElementById('closePopup');
 const editHeader = document.getElementById('editHeader');
 
@@ -323,6 +326,29 @@ svg.addEventListener('click', (e) => {
     colorInput.value = rgbToHex(selectedElement.getAttribute('fill'));
     nameInput.value = selectedElement.getAttribute('data-name') || "";
     lockCheckbox.checked = selectedElement.getAttribute('data-locked') === "true";
+
+    showLabelCheckbox.addEventListener('change', () => {
+  if (selectedElement) {
+    const labelId = selectedElement.getAttribute('data-id') + '-label';
+    let label = document.getElementById(labelId);
+
+    if (showLabelCheckbox.checked) {
+      if (!label) {
+        label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('id', labelId);
+        label.setAttribute('font-size', '12');
+        label.setAttribute('fill', 'black');
+        svg.appendChild(label);
+      }
+      label.textContent = selectedElement.getAttribute('data-name');
+      updateLabelPosition(selectedElement, label);
+    } else {
+      if (label) {
+        label.remove();
+      }
+    }
+  }
+});
 
     // 🔥 Hier de handle maken!
     createResizeHandle(selectedElement);
