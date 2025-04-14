@@ -426,6 +426,26 @@ function rgbToHex(rgb) {
   }).join("");
 }
 
+// Alles wissen
+function clearAll() {
+  if (confirm("Weet je zeker dat je alles wilt wissen?")) {
+    db.collection('shapes').get().then((snapshot) => {
+      let batch = db.batch();
+      snapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      return batch.commit();
+    }).then(() => {
+      console.log('🧹 Alle vormen gewist uit database!');
+      while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+      }
+    }).catch((error) => {
+      console.error('❌ Fout bij wissen:', error);
+    });
+  }
+}
+  
 </script>
 
 </body>
