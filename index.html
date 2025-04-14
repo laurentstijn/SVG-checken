@@ -417,14 +417,16 @@ closePopup.addEventListener('click', () => {
 
 // --- Helper rgb naar hex ---
 function rgbToHex(rgb) {
-  if (!rgb) return "#000000";
+  if (!rgb || typeof rgb !== 'string') return "#000000"; // extra controle
   if (rgb.startsWith("#")) return rgb;
   const result = rgb.match(/\d+/g);
+  if (!result) return "#000000"; // als match mislukt, veilige waarde geven
   return "#" + result.map(x => {
     const hex = parseInt(x).toString(16);
     return hex.length === 1 ? "0" + hex : hex;
   }).join("");
 }
+
 
 // Alles wissen
 function clearAll() {
