@@ -8,6 +8,7 @@ const firebaseConfig = {
   messagingSenderId: "180262088073",
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -49,155 +50,6 @@ function updateLabelPosition(shape, label) {
   } else {
     label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 10);
-  }
-}
-
-function updateShapeInDB() {
-  if (!selectedElement) return;
-  const id = selectedElement.getAttribute('data-id');
-  const update = {
-    fill: selectedElement.getAttribute('fill'),
-    name: selectedElement.getAttribute('data-name'),
-    locked: selectedElement.getAttribute('data-locked') === "true",
-    showLabel: selectedElement.getAttribute('data-show-label') === "true",
-    x: selectedElement.getAttribute('x') || selectedElement.getAttribute('cx'),
-    y: selectedElement.getAttribute('y') || selectedElement.getAttribute('cy'),
-    width: selectedElement.getAttribute('width') || null,
-    height: selectedElement.getAttribute('height') || null,
-    r: selectedElement.getAttribute('r') || null,
-  };
-  db.collection('shapes').doc(id).update(update);
-}
-
-// 🔘 Modus wisselen
-rectButton.addEventListener('click', () => mode = 'rect');
-circleButton.addEventListener('click', () => mode = 'circle');
-eraserButton.addEventListener('click', () => mode = 'erase');
-editButton.addEventListener('click', () => mode = 'edit');
-moveButton.addEventListener('click', () => mode = 'move');
-clearButton.addEventListener('click', clearAll);
-
-// 🖌️ Tekenen van vormen
-svg.addEventListener('mousedown', (e) => {
-  if (mode === 'rect' || mode === 'circle') {
-    startX = e.offsetX;
-    startY = e.offsetY;
-    isDrawing = true;
-
-    if (mode === 'rect') {
-      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      previewElement.setAttribute('x', startX);
-      previewElement.setAttribute('y', startY);
-      previewElement.setAttribute('width', 1);
-      previewElement.setAttribute('height', 1);
-    } else {
-      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      previewElement.setAttribute('cx', startX);
-      previewElement.setAttribute('cy', startY);
-      previewElement.setAttribute('r', 1);
-    }
-
-    previewElement.setAttribute('fill', 'skyblue');
-    svg.appendChild(previewElement);
-  }
-});
-
-svg.addEventListener('mousemove', (e) => {
-  if (isDrawing && previewElement) {
-    const currentX = e.offsetX;
-    const currentY = e.offsetY;
-    if (mode === 'rect') {
-      previewElement.setAttribute('width', Math.abs(currentX - startX));
-      previewElement.setAttribute('height', Math.abs(currentY - startY));
-      previewElement.setAttribute('x', Math.min(startX, currentX));
-      previewElement.setAttribute('y', Math.min(startY, currentY));
-    } else {
-      const dx = currentX - startX;
-      const dy = currentY - startY;
-      previewElement.setAttribute('r', Math.sqrt(dx * dx + dy * dy) / 2);
-    }
-  }
-});
-
-svg.addEventListener('mouseup', () => {
-  if (isDrawing && previewElement) {
-    saveShape(previewElement);
-    previewElement = null;
-    isDrawing = false;
-  }
-});
-
-// 💾 Vorm opslaan in database
-function saveShape(element) {
-  const shape = {
-    type: element.tagName,
-    fill: element.getAttribute('fill'),
-    x: element.getAttribute('x') || element.getAttribute('cx'),
-    y: element.getAttribute('y') || element.getAttribute('cy'),
-    width: element.getAttribute('width') || null,
-    height: element.getAttribute('height') || null,
-    r: element.getAttribute('r') || null,
-    name: '',
-    locked: false,
-    showLabel: false,
-    createdAt: new Date()
-  };
-  db.collection('shapes').add(shape).then(docRef => {
-    element.setAttribute('data-id', docRef.id);
-  });
-}
-
-// 🔥 Firebase configuratie (vervang door je eigen gegevens)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// 🎯 Variabelen
-const svg = document.getElementById('drawingArea');
-const rectButton = document.getElementById('rectButton');
-const circleButton = document.getElementById('circleButton');
-const eraserButton = document.getElementById('eraserButton');
-const editButton = document.getElementById('editButton');
-const moveButton = document.getElementById('moveButton');
-const clearButton = document.getElementById('clearButton');
-const editPopup = document.getElementById('editPopup');
-const colorInput = document.getElementById('colorInput');
-const nameInput = document.getElementById('nameInput');
-const lockCheckbox = document.getElementById('lockCheckbox');
-const showLabelCheckbox = document.getElementById('showLabelCheckbox');
-const closePopup = document.getElementById('closePopup');
-
-let mode = 'rect';
-let selectedElement = null;
-let isDrawing = false;
-let startX = 0, startY = 0, previewElement = null;
-let isDraggingShape = false;
-let offsetMoveX = 0, offsetMoveY = 0;
-let activeResizeHandle = null;
-
-// 🎯 Helper functies
-function bringLabelToFront(label) {
-  if (label && label.parentNode) {
-    label.parentNode.append(label);
-  }
-}
-
-function updateLabelPosition(shape, label) {
-  if (!shape || !label) return;
-  if (shape.tagName === 'rect') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
-    label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
-  } else {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
-    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
   }
 }
 
@@ -494,4 +346,3 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => {
   isDraggingMenu = false;
 });
-
