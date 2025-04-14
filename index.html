@@ -178,6 +178,201 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ... (nu voeg ik direct de volledige JavaScript in de volgende boodschap toe, anders is dit bericht te lang!)
+// --- Firebase Configuratie ---
+const db = firebase.firestore();
+const svg = document.getElementById('drawingArea');
+
+// Buttons
+const rectButton = document.getElementById('rectButton');
+const circleButton = document.getElementById('circleButton');
+const eraserButton = document.getElementById('eraserButton');
+const editButton = document.getElementById('editButton');
+const moveButton = document.getElementById('moveButton');
+const clearButton = document.getElementById('clearButton');
+
+// Popup
+const editPopup = document.getElementById('editPopup');
+const colorInput = document.getElementById('colorInput');
+const nameInput = document.getElementById('nameInput');
+const lockCheckbox = document.getElementById('lockCheckbox');
+const widthSlider = document.getElementById('widthSlider');
+const heightSlider = document.getElementById('heightSlider');
+const radiusSlider = document.getElementById('radiusSlider');
+const closePopup = document.getElementById('closePopup');
+const editHeader = document.getElementById('editHeader');
+
+// Variabelen
+let mode = 'rect';
+let selectedElement = null;
+let isDrawing = false;
+let startX = 0, startY = 0, previewElement = null;
+let isMoving = false, offsetMoveX = 0, offsetMoveY = 0;
+let isDraggingPopup = false, popupOffsetX = 0, popupOffsetY = 0;
+let isDraggingMenu = false, menuOffsetX = 0, menuOffsetY = 0;
+let resizeHandle = null;
+let activeHandle = null;
+
+// --- Modus instellen ---
+rectButton.addEventListener('click', () => mode = 'rect');
+circleButton.addEventListener('click', () => mode = 'circle');
+eraserButton.addEventListener('click', () => mode = 'erase');
+editButton.addEventListener('click', () => mode = 'edit');
+moveButton.addEventListener('click', () => mode = 'move');
+clearButton.addEventListener('click', clearAll);
+
+// --- Teken logica ---
+svg.addEventListener('mousedown', (e) => {
+  if (mode === 'rect' || mode === 'circle') {
+    startX = e.offsetX;
+    startY = e.offsetY;
+    isDrawing = true;
+    if (mode === 'rect') {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      previewElement.setAttribute('x', startX);
+      previewElement.setAttribute('y', startY);
+      previewElement.setAttribute('width', 1);
+      previewElement.setAttribute('height', 1);
+    } else {
+      previewElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      previewElement.setAttribute('cx', startX);
+      previewElement.setAttribute('cy', startY);
+      previewElement.setAttribute('r', 1);
+    }
+    previewElement.setAttribute('fill', 'skyblue');
+    svg.appendChild(previewElement);
+  }
+});
+
+svg.addEventListener('mousemove', (e) => {
+  if (isDrawing && previewElement) {
+    const currentX = e.offsetX;
+    const currentY = e.offsetY;
+    if (mode === 'rect') {
+      previewElement.setAttribute('width', Math.abs(currentX - startX));
+      previewElement.setAttribute('height', Math.abs(currentY - startY));
+      previewElement.setAttribute('x', Math.min(startX, currentX));
+      previewElement.setAttribute('y', Math.min(startY, currentY));
+    } else if (mode === 'circle') {
+      const dx = currentX - startX;
+      const dy = currentY - startY;
+      previewElement.setAttribute('r', Math.sqrt(dx*dx + dy*dy) / 2);
+    }
+  }
+});
+
+svg.addEventListener('mouseup', () => {
+  if (isDrawing && previewElement) {
+    saveShape(previewElement);
+    previewElement = null;
+    isDrawing = false;
+  }
+});
+
+// --- Vorm opslaan in Firestore ---
+function saveShape(element) {
+  let data = {
+    fill: element.getAttribute('fill'),
+    type: element.tagName === 'rect' ? 'rect' : 'circle',
+    createdAt: new Date()
+  };
+  if (element.tagName === 'rect') {
+    data.x = element.getAttribute('x');
+    data.y = element.getAttribute('y');
+    data.width = element.getAttribute('width');
+    data.height = element.getAttribute('height');
+  } else if (element.tagName === 'circle') {
+    data.x = element.getAttribute('cx');
+    data.y = element.getAttribute('cy');
+    data.r = element.getAttribute('r');
+  }
+  db.collection('shapes').add(data);
+}
+
+// --- Vormen laden bij opstart ---
+function loadShapes() {
+  db.collection('shapes').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const shape = doc.data();
+      let element;
+      if (shape.type === 'rect') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        element.setAttribute('x', shape.x);
+        element.setAttribute('y', shape.y);
+        element.setAttribute('width', shape.width);
+        element.setAttribute('height', shape.height);
+      } else {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        element.setAttribute('cx', shape.x);
+        element.setAttribute('cy', shape.y);
+        element.setAttribute('r', shape.r);
+      }
+      element.setAttribute('fill', shape.fill || 'skyblue');
+      svg.appendChild(element);
+    });
+    console.log('✅ Vormen geladen!');
+  }).catch((error) => {
+    console.error('❌ Fout bij laden vormen:', error);
+  });
+}
+loadShapes();
+
+// --- Clear All ---
+function clearAll() {
+  if (confirm("Alles wissen?")) {
+    db.collection('shapes').get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    }).then(() => {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    });
+  }
+}
+
+// --- Menu slepen ---
+const controls = document.getElementById('controls');
+const dragHandle = document.getElementById('dragHandle');
+dragHandle.addEventListener('mousedown', (e) => {
+  isDraggingMenu = true;
+  menuOffsetX = e.clientX - controls.offsetLeft;
+  menuOffsetY = e.clientY - controls.offsetTop;
+});
+document.addEventListener('mousemove', (e) => {
+  if (isDraggingMenu) {
+    controls.style.left = (e.clientX - menuOffsetX) + 'px';
+    controls.style.top = (e.clientY - menuOffsetY) + 'px';
+  }
+});
+document.addEventListener('mouseup', () => {
+  isDraggingMenu = false;
+});
+
+// --- Popup slepen ---
+editHeader.addEventListener('mousedown', (e) => {
+  isDraggingPopup = true;
+  popupOffsetX = e.clientX - editPopup.offsetLeft;
+  popupOffsetY = e.clientY - editPopup.offsetTop;
+});
+document.addEventListener('mousemove', (e) => {
+  if (isDraggingPopup) {
+    editPopup.style.left = (e.clientX - popupOffsetX) + 'px';
+    editPopup.style.top = (e.clientY - popupOffsetY) + 'px';
+  }
+});
+document.addEventListener('mouseup', () => {
+  isDraggingPopup = false;
+});
+
+// --- Helperfunctie: rgb naar hex ---
+function rgbToHex(rgb) {
+  if (!rgb) return "#000000";
+  if (rgb.startsWith("#")) return rgb;
+  const result = rgb.match(/\d+/g);
+  return "#" + result.map(x => {
+    const hex = parseInt(x).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }).join("");
+}
 
 </script>
 
