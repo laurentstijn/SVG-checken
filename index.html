@@ -142,13 +142,13 @@
 <script>
 // 🔥 Firebase Configuratie
 const firebaseConfig = {
-  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
-  authDomain: "tekensvg.firebaseapp.com",
-  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "tekensvg",
-  storageBucket: "tekensvg.appspot.com",
-  messagingSenderId: "180262088073",
-  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -178,7 +178,7 @@ let isDraggingShape = false;
 let offsetMoveX = 0, offsetMoveY = 0;
 let activeResizeHandle = null;
 
-// 🔧 Helper functies
+// 🛠️ Helper functies
 function rgbToHex(rgb) {
   if (!rgb || typeof rgb !== 'string') return "#000000";
   if (rgb.startsWith("#")) return rgb;
@@ -207,7 +207,7 @@ function createResizeHandle(target) {
     handle.setAttribute('cy', parseFloat(target.getAttribute('cy')));
   }
 
-  svg.appendChild(handle);
+  svg.append(handle);
 }
 
 function updateLabelPosition(shape, label) {
@@ -216,8 +216,8 @@ function updateLabelPosition(shape, label) {
     label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
   } else if (shape.tagName === 'circle') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 11);
-    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 11);
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 5);
+    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 10);
   }
 }
 
@@ -295,7 +295,7 @@ svg.addEventListener('mouseup', () => {
   }
 });
 
-// 💾 Opslaan nieuwe vorm
+// 💾 Vorm opslaan
 function saveShape(element) {
   const shape = {
     type: element.tagName,
@@ -315,7 +315,7 @@ function saveShape(element) {
   });
 }
 
-// 🖱️ Klikken
+// 🖱️ Klik op vorm
 svg.addEventListener('click', (e) => {
   if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
     selectedElement = e.target;
@@ -338,7 +338,7 @@ svg.addEventListener('click', (e) => {
   }
 });
 
-// 🛠️ Popup inputs
+// 🖊️ Popup aanpassingen
 colorInput.addEventListener('input', () => {
   if (selectedElement) {
     selectedElement.setAttribute('fill', colorInput.value);
@@ -391,7 +391,7 @@ closePopup.addEventListener('click', () => {
   editPopup.style.display = 'none';
 });
 
-// 🖱️ Hendel en verplaatsen
+// 🖱️ Hendel slepen + verplaatsen
 svg.addEventListener('mousedown', (e) => {
   if (e.target.classList.contains('resize-handle')) {
     activeResizeHandle = e.target;
@@ -476,31 +476,6 @@ function loadShapes() {
   });
 }
 loadShapes();
-
-  // 🖱️ Menu slepen
-const controls = document.getElementById('controls');
-const dragHandle = document.getElementById('dragHandle');
-
-let isDraggingMenu = false;
-let menuOffsetX = 0;
-let menuOffsetY = 0;
-
-dragHandle.addEventListener('mousedown', (e) => {
-  isDraggingMenu = true;
-  menuOffsetX = e.clientX - controls.offsetLeft;
-  menuOffsetY = e.clientY - controls.offsetTop;
-});
-
-document.addEventListener('mousemove', (e) => {
-  if (isDraggingMenu) {
-    controls.style.left = (e.clientX - menuOffsetX) + 'px';
-    controls.style.top = (e.clientY - menuOffsetY) + 'px';
-  }
-});
-
-document.addEventListener('mouseup', () => {
-  isDraggingMenu = false;
-});
 
 // 🗑️ Alles wissen
 function clearAll() {
