@@ -474,6 +474,31 @@ function loadShapes() {
 }
 loadShapes();
 
+  // 🖱️ Menu slepen
+const controls = document.getElementById('controls');
+const dragHandle = document.getElementById('dragHandle');
+
+let isDraggingMenu = false;
+let menuOffsetX = 0;
+let menuOffsetY = 0;
+
+dragHandle.addEventListener('mousedown', (e) => {
+  isDraggingMenu = true;
+  menuOffsetX = e.clientX - controls.offsetLeft;
+  menuOffsetY = e.clientY - controls.offsetTop;
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (isDraggingMenu) {
+    controls.style.left = (e.clientX - menuOffsetX) + 'px';
+    controls.style.top = (e.clientY - menuOffsetY) + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  isDraggingMenu = false;
+});
+
 // 🗑️ Alles wissen
 function clearAll() {
   if (confirm("Alles wissen?")) {
