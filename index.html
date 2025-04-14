@@ -372,7 +372,7 @@ showLabelCheckbox.addEventListener('change', () => {
         label.setAttribute('id', labelId);
         label.setAttribute('font-size', '12');
         label.setAttribute('fill', 'black');
-        svg.appendChild(label);
+        svg.append(label);
       }
       label.textContent = selectedElement.getAttribute('data-name');
       updateLabelPosition(selectedElement, label);
@@ -467,7 +467,7 @@ function loadShapes() {
         label.setAttribute('fill', 'black');
         label.textContent = shape.name;
         updateLabelPosition(element, label);
-        svg.appendChild(label);
+        svg.append(label);
       }
     });
   });
