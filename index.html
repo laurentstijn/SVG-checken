@@ -137,7 +137,7 @@
 
 <!-- 🚀 Script volgt hieronder! -->
 <script>
-  // 🔥 Firebase Configuratie
+// 🔥 Firebase Configuratie
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
   authDomain: "tekensvg.firebaseapp.com",
@@ -175,7 +175,7 @@ let isDraggingShape = false;
 let offsetMoveX = 0, offsetMoveY = 0;
 let activeResizeHandle = null;
 
-// --- Helper functies
+// 🔧 Helper functies
 function rgbToHex(rgb) {
   if (!rgb || typeof rgb !== 'string') return "#000000";
   if (rgb.startsWith("#")) return rgb;
@@ -213,7 +213,7 @@ function updateLabelPosition(shape, label) {
     label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
   } else if (shape.tagName === 'circle') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 10);
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 5);
     label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 10);
   }
 }
@@ -225,6 +225,7 @@ function updateShapeInDB() {
     fill: selectedElement.getAttribute('fill'),
     name: selectedElement.getAttribute('data-name'),
     locked: selectedElement.getAttribute('data-locked') === "true",
+    showLabel: selectedElement.getAttribute('data-show-label') === "true",
     x: selectedElement.getAttribute('x') || selectedElement.getAttribute('cx'),
     y: selectedElement.getAttribute('y') || selectedElement.getAttribute('cy'),
     width: selectedElement.getAttribute('width') || null,
@@ -234,7 +235,7 @@ function updateShapeInDB() {
   db.collection('shapes').doc(id).update(update);
 }
 
-// --- Modus knoppen
+// 🔘 Modus wisselen
 rectButton.addEventListener('click', () => mode = 'rect');
 circleButton.addEventListener('click', () => mode = 'circle');
 eraserButton.addEventListener('click', () => mode = 'erase');
@@ -242,7 +243,7 @@ editButton.addEventListener('click', () => mode = 'edit');
 moveButton.addEventListener('click', () => mode = 'move');
 clearButton.addEventListener('click', clearAll);
 
-// --- Tekenen
+// ✏️ Tekenen
 svg.addEventListener('mousedown', (e) => {
   if (mode === 'rect' || mode === 'circle') {
     startX = e.offsetX;
@@ -291,7 +292,7 @@ svg.addEventListener('mouseup', () => {
   }
 });
 
-// --- Opslaan nieuwe vorm
+// 💾 Opslaan nieuwe vorm
 function saveShape(element) {
   const shape = {
     type: element.tagName,
@@ -303,6 +304,7 @@ function saveShape(element) {
     r: element.getAttribute('r') || null,
     name: '',
     locked: false,
+    showLabel: false,
     createdAt: new Date()
   };
   db.collection('shapes').add(shape).then(docRef => {
@@ -310,7 +312,7 @@ function saveShape(element) {
   });
 }
 
-// --- Vorm klikken
+// 🖱️ Klikken
 svg.addEventListener('click', (e) => {
   if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
     selectedElement = e.target;
@@ -319,6 +321,7 @@ svg.addEventListener('click', (e) => {
     colorInput.value = rgbToHex(selectedElement.getAttribute('fill'));
     nameInput.value = selectedElement.getAttribute('data-name') || "";
     lockCheckbox.checked = selectedElement.getAttribute('data-locked') === "true";
+    showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === "true";
 
     createResizeHandle(selectedElement);
   }
@@ -332,7 +335,7 @@ svg.addEventListener('click', (e) => {
   }
 });
 
-// --- Popup aanpassen
+// 🛠️ Popup inputs
 colorInput.addEventListener('input', () => {
   if (selectedElement) {
     selectedElement.setAttribute('fill', colorInput.value);
@@ -345,9 +348,7 @@ nameInput.addEventListener('input', () => {
     selectedElement.setAttribute('data-name', nameInput.value);
     const labelId = selectedElement.getAttribute('data-id') + '-label';
     const label = document.getElementById(labelId);
-    if (label) {
-      label.textContent = nameInput.value;
-    }
+    if (label) label.textContent = nameInput.value;
     updateShapeInDB();
   }
 });
@@ -365,6 +366,7 @@ showLabelCheckbox.addEventListener('change', () => {
     let label = document.getElementById(labelId);
 
     if (showLabelCheckbox.checked) {
+      selectedElement.setAttribute('data-show-label', "true");
       if (!label) {
         label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         label.setAttribute('id', labelId);
@@ -375,8 +377,10 @@ showLabelCheckbox.addEventListener('change', () => {
       label.textContent = selectedElement.getAttribute('data-name');
       updateLabelPosition(selectedElement, label);
     } else {
+      selectedElement.setAttribute('data-show-label', "false");
       if (label) label.remove();
     }
+    updateShapeInDB();
   }
 });
 
@@ -384,7 +388,7 @@ closePopup.addEventListener('click', () => {
   editPopup.style.display = 'none';
 });
 
-// --- Vormen verplaatsen en hendel vergroten
+// 🖱️ Hendel en verplaatsen
 svg.addEventListener('mousedown', (e) => {
   if (e.target.classList.contains('resize-handle')) {
     activeResizeHandle = e.target;
@@ -419,9 +423,7 @@ svg.addEventListener('mousemove', (e) => {
     }
     const labelId = selectedElement.getAttribute('data-id') + '-label';
     const label = document.getElementById(labelId);
-    if (label) {
-      updateLabelPosition(selectedElement, label);
-    }
+    if (label) updateLabelPosition(selectedElement, label);
     updateShapeInDB();
   }
 });
@@ -431,7 +433,7 @@ svg.addEventListener('mouseup', () => {
   isDraggingShape = false;
 });
 
-// --- Vormen laden
+// 📥 Vormen laden
 function loadShapes() {
   db.collection('shapes').get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -455,10 +457,10 @@ function loadShapes() {
       element.setAttribute('data-id', doc.id);
       element.setAttribute('data-name', shape.name || "");
       element.setAttribute('data-locked', shape.locked ? "true" : "false");
+      element.setAttribute('data-show-label', shape.showLabel ? "true" : "false");
       svg.appendChild(element);
 
-      // Label tonen als naam bestaat
-      if (shape.name) {
+      if (shape.showLabel && shape.name) {
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         label.setAttribute('id', doc.id + '-label');
         label.setAttribute('font-size', '12');
@@ -472,7 +474,7 @@ function loadShapes() {
 }
 loadShapes();
 
-// --- Alles wissen
+// 🗑️ Alles wissen
 function clearAll() {
   if (confirm("Alles wissen?")) {
     db.collection('shapes').get().then(snapshot => {
