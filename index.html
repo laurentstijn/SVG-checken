@@ -143,19 +143,15 @@
 <!-- 📋 Popup -->
 <div id="editPopup">
   <div id="editHeader">Vorm aanpassen ✏️</div>
+
   <label>Kleur:</label>
-  <input type="color" id="colorInput">
+  <input type="color" id="colorInput"><br><br>
+
   <label>Naam:</label>
-  <input type="text" id="nameInput" placeholder="Naam van de vorm">
-  <label><input type="checkbox" id="lockCheckbox"> Vergrendelen 🔒</label>
-  <div id="sizeControls">
-    <label>Breedte:</label>
-    <input type="range" id="widthSlider" min="10" max="500">
-    <label>Hoogte:</label>
-    <input type="range" id="heightSlider" min="10" max="500">
-    <label>Straal:</label>
-    <input type="range" id="radiusSlider" min="5" max="250">
-  </div>
+  <input type="text" id="nameInput" placeholder="Naam van de vorm"><br><br>
+
+  <label><input type="checkbox" id="lockCheckbox"> Vergrendelen 🔒</label><br><br>
+
   <button id="closePopup">Sluiten</button>
 </div>
 
@@ -373,24 +369,6 @@ nameInput.addEventListener('input', () => {
 lockCheckbox.addEventListener('change', () => {
   if (selectedElement) {
     selectedElement.setAttribute('data-locked', lockCheckbox.checked);
-    updateShapeInDB();
-  }
-});
-widthSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'rect') {
-    selectedElement.setAttribute('width', widthSlider.value);
-    updateShapeInDB();
-  }
-});
-heightSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'rect') {
-    selectedElement.setAttribute('height', heightSlider.value);
-    updateShapeInDB();
-  }
-});
-radiusSlider.addEventListener('input', () => {
-  if (selectedElement && selectedElement.tagName === 'circle') {
-    selectedElement.setAttribute('r', radiusSlider.value);
     updateShapeInDB();
   }
 });
