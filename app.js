@@ -266,3 +266,86 @@ svg.addEventListener('mouseup', () => {
   resizingElement = null;
   isDraggingShape = false;
 });
+
+// Alles laden bij opstart
+function loadShapes() {
+  db.collection('shapes').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const shape = doc.data();
+      let element;
+
+      if (shape.type === 'rect') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        element.setAttribute('x', shape.x);
+        element.setAttribute('y', shape.y);
+        element.setAttribute('width', shape.width);
+        element.setAttribute('height', shape.height);
+      } else {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        element.setAttribute('cx', shape.x);
+        element.setAttribute('cy', shape.y);
+        element.setAttribute('r', shape.r);
+      }
+
+      element.setAttribute('fill', shape.fill || 'skyblue');
+      element.setAttribute('data-id', doc.id);
+      element.setAttribute('data-name', shape.name || "");
+      element.setAttribute('data-locked', shape.locked ? "true" : "false");
+      element.setAttribute('data-show-label', shape.showLabel ? "true" : "false");
+      svg.appendChild(element);
+
+      addResizeHandle(element);
+
+      if (shape.showLabel && shape.name) {
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('id', doc.id + '-label');
+        label.setAttribute('font-size', '12');
+        label.setAttribute('fill', 'black');
+        label.textContent = shape.name;
+        updateLabelPosition(element, label);
+        svg.append(label);
+        bringLabelToFront(label);
+      }
+    });
+  });
+}
+loadShapes(); // 🚀 Automatisch laden
+
+// Alles wissen
+function clearAll() {
+  if (confirm("Alles wissen?")) {
+    db.collection('shapes').get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    }).then(() => {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      console.log("✅ Alles gewist!");
+    });
+  }
+}
+
+// Menu verplaatsen
+const controls = document.getElementById('controls');
+const dragHandle = document.getElementById('dragHandle');
+
+let isDraggingMenu = false;
+let menuOffsetX = 0;
+let menuOffsetY = 0;
+
+dragHandle.addEventListener('mousedown', (e) => {
+  isDraggingMenu = true;
+  menuOffsetX = e.clientX - controls.offsetLeft;
+  menuOffsetY = e.clientY - controls.offsetTop;
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (isDraggingMenu) {
+    controls.style.left = (e.clientX - menuOffsetX) + 'px';
+    controls.style.top = (e.clientY - menuOffsetY) + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  isDraggingMenu = false;
+});
