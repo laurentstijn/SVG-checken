@@ -199,6 +199,7 @@ svg.addEventListener('mousedown', (e) => {
   }
 });
 
+// Vormen verplaatsen (inclusief label)
 svg.addEventListener('mousemove', (e) => {
   if (isDraggingShape && selectedElement) {
     if (selectedElement.tagName === 'rect') {
@@ -208,7 +209,14 @@ svg.addEventListener('mousemove', (e) => {
       selectedElement.setAttribute('cx', e.offsetX - offsetMoveX);
       selectedElement.setAttribute('cy', e.offsetY - offsetMoveY);
     }
-    updateShapeInDB();
+
+    // Update de positie van het label
+    const label = document.getElementById(`${selectedElement.getAttribute('data-id')}-label`);
+    if (label) {
+      updateLabelPosition(selectedElement, label);
+    }
+
+    updateShapeInDB(); // Werk de vorm bij in de database
   }
 });
 
