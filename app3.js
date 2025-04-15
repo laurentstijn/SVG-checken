@@ -1,15 +1,3 @@
-  // Initialiseer Firebase met de nieuwste versie van de Firebase SDK
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
-  import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
-  import { getStorage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js';
-
-  // Initialiseer Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); // Verkrijg de Firestore-database
-  const storage = getStorage(app); // Verkrijg Firebase Storage
-
-
-
 // 🔥 Firebase configuratie
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
@@ -25,9 +13,6 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig); // Initialiseer Firebase-app
 const db = firebase.firestore(); // Firestore
 const storage = firebase.storage(); // Firebase Storage
- const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); // Verkrijg de Firestore-database
-  const storage = getStorage(app); // Verkrijg Firebase Storage
 
 // 🎯 Variabelen
 const svg = document.getElementById('drawingArea');
