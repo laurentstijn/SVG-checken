@@ -289,7 +289,7 @@ function clearAll() {
     });
   }
 }
-//vanaf hier
+
 // Slepen van het menu inschakelen
 const dragHandle = document.getElementById('dragHandle');
 const controls = document.getElementById('controls');
@@ -316,5 +316,32 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => {
   isDragging = false;
   dragHandle.style.cursor = 'grab';  // Reset cursor na het slepen
+});
+//vanaf hier
+// Functie om een vorm te verwijderen
+function deleteShape(element) {
+  const id = element.getAttribute('data-id');
+  
+  // Verwijder de vorm uit de Firestore-database
+  db.collection('shapes').doc(id).delete().then(() => {
+    console.log(`Vorm ${id} succesvol verwijderd uit de database.`);
+  }).catch((error) => {
+    console.error("Fout bij verwijderen van vorm uit de database: ", error);
+  });
+
+  // Verwijder de vorm uit de SVG
+  svg.removeChild(element);
+}
+
+// Event listener voor gum knop
+eraserButton.addEventListener('click', () => {
+  mode = 'erase'; // Zet de modus naar 'erase'
+});
+
+// Voeg de logica toe voor het verwijderen van de vorm als de gum-modus actief is
+svg.addEventListener('click', (e) => {
+  if (mode === 'erase' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    deleteShape(e.target);
+  }
 });
 
