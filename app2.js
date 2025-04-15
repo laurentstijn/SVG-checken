@@ -317,7 +317,7 @@ document.addEventListener('mouseup', () => {
   isDragging = false;
   dragHandle.style.cursor = 'grab';  // Reset cursor na het slepen
 });
-//vanaf hier
+
 // Functie om een vorm te verwijderen
 function deleteShape(element) {
   const id = element.getAttribute('data-id');
@@ -342,6 +342,76 @@ eraserButton.addEventListener('click', () => {
 svg.addEventListener('click', (e) => {
   if (mode === 'erase' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
     deleteShape(e.target);
+  }
+});
+//vanaf hier
+// Functie om de geselecteerde vorm te bewerken
+function editShape(element) {
+  // Vul de popup met de huidige gegevens van de vorm
+  const shapeId = element.getAttribute('data-id');
+  const shapeName = element.getAttribute('data-name');
+  const shapeFill = element.getAttribute('fill');
+  const shapeLocked = element.getAttribute('data-locked') === "true";
+  const shapeShowLabel = element.getAttribute('data-show-label') === "true";
+
+  // Zet de waarde van de naam, kleur en andere eigenschappen in de popup
+  nameInput.value = shapeName;
+  colorInput.value = shapeFill;
+  lockCheckbox.checked = shapeLocked;
+  showLabelCheckbox.checked = shapeShowLabel;
+
+  // Open de popup
+  editPopup.style.display = 'block';
+
+  // Voeg de ID van de vorm toe aan de popup zodat we deze later kunnen gebruiken
+  editPopup.setAttribute('data-id', shapeId);
+}
+
+// Event listener voor de 'Edit' knop
+editButton.addEventListener('click', () => {
+  mode = 'edit'; // Zet de modus naar 'edit'
+});
+
+// Event listener voor het klikken op een vorm in de SVG (in edit-modus)
+svg.addEventListener('click', (e) => {
+  if (mode === 'edit' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
+    editShape(e.target); // Open de edit-popup voor de geselecteerde vorm
+  }
+});
+
+// Event listener voor het opslaan van de wijzigingen in de vorm
+closePopup.addEventListener('click', () => {
+  const shapeId = editPopup.getAttribute('data-id');
+  const shapeElement = document.querySelector(`[data-id="${shapeId}"]`);
+
+  if (shapeElement) {
+    // Verkrijg de gewijzigde gegevens uit de popup
+    const newName = nameInput.value.trim();
+    const newColor = colorInput.value;
+    const isLocked = lockCheckbox.checked;
+    const showLabel = showLabelCheckbox.checked;
+
+    // Update de SVG met de nieuwe gegevens
+    shapeElement.setAttribute('fill', newColor);
+    shapeElement.setAttribute('data-name', newName);
+    shapeElement.setAttribute('data-locked', isLocked);
+    shapeElement.setAttribute('data-show-label', showLabel);
+
+    // Update de labelpositie als dat nodig is
+    const label = document.getElementById(`${shapeId}-label`);
+    if (label && showLabel) {
+      label.textContent = newName;
+      updateLabelPosition(shapeElement, label);
+      bringLabelToFront(label);
+    } else if (label && !showLabel) {
+      label.remove(); // Verwijder het label als showLabel is uitgeschakeld
+    }
+
+    // Werk de vorm bij in de Firestore-database
+    updateShapeInDB(shapeElement);
+
+    // Sluit de popup
+    editPopup.style.display = 'none';
   }
 });
 
