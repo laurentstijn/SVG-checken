@@ -9,10 +9,10 @@ const firebaseConfig = {
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
 
-// **Zorg ervoor dat de initializeApp hier maar 1 keer wordt aangeroepen**
-const app = firebase.initializeApp(firebaseConfig); // Initializeer alleen een keer de app
-const db = firebase.firestore();
-const storage = firebase.storage();
+// Firebase initialiseren
+const app = firebase.initializeApp(firebaseConfig); // Initialiseer Firebase-app
+const db = firebase.firestore(); // Firestore
+const storage = firebase.storage(); // Firebase Storage
 
 // 🎯 Variabelen
 const svg = document.getElementById('drawingArea');
@@ -35,7 +35,6 @@ let isDrawing = false;
 let startX = 0, startY = 0, previewElement = null;
 let isDraggingShape = false;
 let offsetMoveX = 0, offsetMoveY = 0;
-let activeResizeHandle = null;
 
 // 🎯 Helper functies
 function bringLabelToFront(label) {
@@ -56,31 +55,23 @@ function saveSVG() {
     const svgString = serializer.serializeToString(svgElement);
     const blob = new Blob([svgString], { type: "image/svg+xml" });
 
-    // Haal de bestandsnaam op uit het inputveld
     const fileName = document.getElementById('fileNameInput').value.trim();
     
-    // Als er geen naam is opgegeven, geef dan een foutmelding
     if (!fileName) {
         alert("Geef een naam op voor het bestand.");
         return;
     }
 
-    // Sla de SVG op onder de naam die de gebruiker heeft ingevoerd
     const storageRef = storage.ref(`svg_files/${fileName}.svg`);
 
-    // Upload naar Firebase Storage
     storageRef.put(blob).then((snapshot) => {
-        console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`, snapshot);
         storageRef.getDownloadURL().then((url) => {
-            console.log("SVG URL:", url);
-            // Voeg de URL toe aan de Firestore database
             db.collection('shapes').add({
                 fileName: fileName,
                 url: url,
                 createdAt: new Date()
             });
         });
-        // Sluit de popup na succesvolle upload
         document.getElementById('namePopup').style.display = 'none';
     }).catch((error) => {
         console.error('Fout bij opslaan SVG:', error);
@@ -176,7 +167,7 @@ function saveShape(element) {
   });
 }
 
-// Verplaatsen van vormen
+// Vormen verplaatsen
 svg.addEventListener('mousedown', (e) => {
   if (mode === 'move' && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
     selectedElement = e.target;
@@ -221,70 +212,7 @@ function updateShapeInDB() {
   db.collection('shapes').doc(id).update(update);
 }
 
-// Popup aanpassen
-colorInput.addEventListener('input', () => {
-  if (selectedElement) {
-    selectedElement.setAttribute('fill', colorInput.value);
-    updateShapeInDB();
-  }
-});
-
-nameInput.addEventListener('input', () => {
-  if (selectedElement) {
-    selectedElement.setAttribute('data-name', nameInput.value);
-    const labelId = selectedElement.getAttribute('data-id') + '-label';
-    let label = document.getElementById(labelId);
-    if (!label) {
-      label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      label.setAttribute('id', labelId);
-      label.setAttribute('font-size', '12');
-      label.setAttribute('fill', 'black');
-      svg.append(label);
-    }
-    label.textContent = nameInput.value;
-    updateLabelPosition(selectedElement, label);
-    bringLabelToFront(label);
-    updateShapeInDB();
-  }
-});
-
-lockCheckbox.addEventListener('change', () => {
-  if (selectedElement) {
-    selectedElement.setAttribute('data-locked', lockCheckbox.checked);
-    updateShapeInDB();
-  }
-});
-
-showLabelCheckbox.addEventListener('change', () => {
-  if (selectedElement) {
-    const labelId = selectedElement.getAttribute('data-id') + '-label';
-    let label = document.getElementById(labelId);
-
-    if (showLabelCheckbox.checked) {
-      selectedElement.setAttribute('data-show-label', "true");
-      if (!label) {
-        label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('id', labelId);
-        label.setAttribute('font-size', '12');
-        label.setAttribute('fill', 'black');
-        svg.append(label);
-      }
-      label.textContent = selectedElement.getAttribute('data-name');
-      updateLabelPosition(selectedElement, label);
-      bringLabelToFront(label);
-    } else {
-      selectedElement.setAttribute('data-show-label', "false");
-      if (label) label.remove();
-    }
-    updateShapeInDB();
-  }
-});
-
-closePopup.addEventListener('click', () => {
-  editPopup.style.display = 'none';
-});
-
-// Laad vormen bij het opstarten
+// Laad vormen uit de database
 function loadShapes() {
   db.collection('shapes').get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -324,6 +252,7 @@ function loadShapes() {
     });
   });
 }
+
 loadShapes();
 
 // Functie om alles te wissen
@@ -336,5 +265,18 @@ function clearAll() {
     }).then(() => {
       while (svg.firstChild) svg.removeChild(svg.firstChild);
     });
+  }
+}
+
+// Functie om labels bij te werken
+function updateLabelPosition(shape, label) {
+  if (!shape || !label) return;
+
+  if (shape.tagName === 'rect') {
+    label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
+    label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
+  } else if (shape.tagName === 'circle') {
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
+    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
   }
 }
