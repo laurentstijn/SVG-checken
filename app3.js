@@ -461,17 +461,29 @@ nameInput.addEventListener('input', () => {
     // Verander de naam van de geselecteerde vorm
     shapeElement.setAttribute('data-name', newName);
 
-    // Werk de label bij, indien van toepassing
+    // Werk het label bij, indien van toepassing
     const label = document.getElementById(`${shapeId}-label`);
     if (label) {
+      // Als het label bestaat, werk het bij
       label.textContent = newName; // Update de naam in het label
       updateLabelPosition(shapeElement, label); // Update de positie van het label
+    } else {
+      // Als het label nog niet bestaat, maak het dan aan
+      const newLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      newLabel.setAttribute('id', `${shapeId}-label`);
+      newLabel.setAttribute('font-size', '12');
+      newLabel.setAttribute('fill', 'black');
+      newLabel.textContent = newName;
+      updateLabelPosition(shapeElement, newLabel); // Zet de juiste positie van het label
+      svg.appendChild(newLabel);
+      bringLabelToFront(newLabel); // Breng het label naar voren
     }
 
     // Werk de vorm bij in de Firestore-database
     updateShapeInDB(shapeElement);
   }
 });
+
 
 // Event listener voor de showLabelCheckbox
 showLabelCheckbox.addEventListener('change', () => {
