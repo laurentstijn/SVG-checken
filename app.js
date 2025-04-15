@@ -10,7 +10,6 @@ const firebaseConfig = {
 };
 
 // Firebase initialiseren
-firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const app = firebase.initializeApp(firebaseConfig);
 const storage = firebase.storage();
