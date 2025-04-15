@@ -37,13 +37,29 @@ let isDraggingShape = false;
 let offsetMoveX = 0, offsetMoveY = 0;
 
 // 🎯 Helper functies
+
+// Functie om de labelpositie van een vorm bij te werken
+function updateLabelPosition(shape, label) {
+  if (!shape || !label) return;
+
+  // Bijwerken van de positie van een label op een rechthoekige vorm
+  if (shape.tagName === 'rect') {
+    label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
+    label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
+  } else if (shape.tagName === 'circle') { // Bijwerken van de positie van een label op een cirkelvorm
+    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
+    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
+  }
+}
+
+// Functie om de label voor een vorm naar voren te brengen in de weergave
 function bringLabelToFront(label) {
   if (label && label.parentNode) {
     label.parentNode.append(label);
   }
 }
 
-// Functie om de popup te tonen
+// Functie om de popup te tonen voor het opslaan van de SVG
 function showSavePopup() {
     document.getElementById('namePopup').style.display = 'block';
 }
@@ -84,7 +100,7 @@ function cancelSave() {
     document.getElementById('namePopup').style.display = 'none';
 }
 
-// Event listeners
+// Event listeners voor de knoppen
 document.getElementById('saveButton').addEventListener('click', showSavePopup);
 document.getElementById('confirmSaveButton').addEventListener('click', saveSVG);
 document.getElementById('cancelSaveButton').addEventListener('click', cancelSave);
@@ -265,18 +281,5 @@ function clearAll() {
     }).then(() => {
       while (svg.firstChild) svg.removeChild(svg.firstChild);
     });
-  }
-}
-
-// Functie om labels bij te werken
-function updateLabelPosition(shape, label) {
-  if (!shape || !label) return;
-
-  if (shape.tagName === 'rect') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('x')) + 5);
-    label.setAttribute('y', parseFloat(shape.getAttribute('y')) - 5);
-  } else if (shape.tagName === 'circle') {
-    label.setAttribute('x', parseFloat(shape.getAttribute('cx')) + 12);
-    label.setAttribute('y', parseFloat(shape.getAttribute('cy')) - 12);
   }
 }
