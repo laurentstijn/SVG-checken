@@ -45,6 +45,16 @@
   <button id="closePopup">Sluiten</button>
 </div>
 
+  <!-- Popup voor Bestandsnaam -->
+<div id="namePopup" style="display:none;">
+  <div style="padding: 20px; background: white; border: 2px solid #333; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 300px;">
+    <h3>Voer de bestandsnaam in</h3>
+    <input type="text" id="fileNameInput" placeholder="Naam van het bestand">
+    <button id="confirmSaveButton">Opslaan</button>
+    <button id="cancelSaveButton">Annuleren</button>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
