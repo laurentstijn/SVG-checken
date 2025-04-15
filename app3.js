@@ -36,7 +36,56 @@ let startX = 0, startY = 0, previewElement = null;
 let isDraggingShape = false;
 let offsetMoveX = 0, offsetMoveY = 0;
 
-// 🎯 Helper functies
+// Laad vormen uit de database
+function loadShapes() {
+  db.collection('shapes').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const shape = doc.data();
+      let element;
+
+      // Controleer of de vorm een rechthoek of een cirkel is
+      if (shape.type === 'rect') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        element.setAttribute('x', shape.x);
+        element.setAttribute('y', shape.y);
+        element.setAttribute('width', shape.width);
+        element.setAttribute('height', shape.height);
+      } else if (shape.type === 'circle') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        element.setAttribute('cx', shape.x);
+        element.setAttribute('cy', shape.y);
+        element.setAttribute('r', shape.r);
+      }
+
+      // Zet de eigenschappen van de vorm, zoals kleur
+      element.setAttribute('fill', shape.fill || 'skyblue');
+      element.setAttribute('data-id', doc.id);
+      element.setAttribute('data-name', shape.name || "");
+      element.setAttribute('data-locked', shape.locked ? "true" : "false");
+      element.setAttribute('data-show-label', shape.showLabel ? "true" : "false");
+
+      // Voeg de vorm toe aan de SVG
+      svg.appendChild(element);
+
+      // Voeg het label toe als de vorm een naam heeft en als het label zichtbaar is
+      if (shape.showLabel && shape.name) {
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('id', doc.id + '-label');
+        label.setAttribute('font-size', '12');
+        label.setAttribute('fill', 'black');
+        label.textContent = shape.name;
+        updateLabelPosition(element, label); // Zet de juiste positie van het label
+        svg.appendChild(label);
+        bringLabelToFront(label); // Breng het label naar voren
+      }
+    });
+  }).catch(error => {
+    console.error("Er is een fout opgetreden bij het laden van de vormen:", error);
+  });
+}
+
+// Zorg ervoor dat de vormen geladen worden zodra de pagina is geladen
+window.addEventListener('load', loadShapes);
 
 // Functie om de labelpositie van een vorm bij te werken
 function updateLabelPosition(shape, label) {
