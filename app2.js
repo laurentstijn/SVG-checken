@@ -213,10 +213,11 @@ svg.addEventListener('mousemove', (e) => {
     // Update de positie van het label
     const label = document.getElementById(`${selectedElement.getAttribute('data-id')}-label`);
     if (label) {
-      updateLabelPosition(selectedElement, label);
+      updateLabelPosition(selectedElement, label);  // Update labelpositie bij verplaatsen
     }
 
-    updateShapeInDB(); // Werk de vorm bij in de database
+    // Werk de vorm bij in de database met de nieuwe positie
+    updateShapeInDB(selectedElement);
   }
 });
 
@@ -426,7 +427,7 @@ closePopup.addEventListener('click', () => {
 // Bijwerken van de geselecteerde vorm in de Firestore-database
 function updateShapeInDB(shapeElement) {
   const shapeId = shapeElement.getAttribute('data-id');
-  const updatedData = {
+  const update = {
     fill: shapeElement.getAttribute('fill'),
     name: shapeElement.getAttribute('data-name'),
     locked: shapeElement.getAttribute('data-locked') === "true",
@@ -437,8 +438,8 @@ function updateShapeInDB(shapeElement) {
     height: shapeElement.getAttribute('height') || null,
     r: shapeElement.getAttribute('r') || null,
   };
-  
-  db.collection('shapes').doc(shapeId).update(updatedData)
+
+  db.collection('shapes').doc(shapeId).update(update)
     .then(() => {
       console.log(`Vorm ${shapeId} succesvol bijgewerkt in de database.`);
     })
@@ -498,14 +499,14 @@ closePopup.addEventListener('click', () => {
     shapeElement.setAttribute('data-locked', isLocked);
     shapeElement.setAttribute('data-show-label', showLabel);
 
-    // Update de labelpositie als dat nodig is
+    // Werk de label bij op basis van de showLabel waarde
     const label = document.getElementById(`${shapeId}-label`);
     if (label && showLabel) {
       label.textContent = newName;
       updateLabelPosition(shapeElement, label);
       bringLabelToFront(label);
     } else if (label && !showLabel) {
-      label.remove(); // Verwijder het label als showLabel is uitgeschakeld
+      label.remove();  // Verwijder het label als de optie is uitgeschakeld
     }
 
     // Werk de vorm bij in de Firestore-database
