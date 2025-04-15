@@ -1,4 +1,4 @@
-// 🔥 Firebase configuratie
+// 🔥 Firebase configuratie//
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
   authDomain: "tekensvg.firebaseapp.com",
