@@ -9,8 +9,11 @@ const firebaseConfig = {
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
 
+// Firebase initialiseren
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const app = firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
 
 // 🎯 Variabelen
 const svg = document.getElementById('drawingArea');
@@ -41,21 +44,8 @@ function bringLabelToFront(label) {
     label.parentNode.append(label);
   }
 }
+
 // vanaf hier
-const firebaseConfig = {
-  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
-  authDomain: "tekensvg.firebaseapp.com",
-  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "tekensvg",
-  storageBucket: "tekensvg.firebasestorage.app",
-  messagingSenderId: "180262088073",
-  appId: "1:180262088073:web:4488e7381b743261ef8558"
-};
-
-// Firebase initialiseren
-const app = firebase.initializeApp(firebaseConfig);
-const storage = firebase.storage();
-
 // Functie om de popup te tonen
 function showSavePopup() {
     document.getElementById('namePopup').style.display = 'block';
