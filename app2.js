@@ -61,7 +61,7 @@ function bringLabelToFront(label) {
 
 // Functie om de popup te tonen voor het opslaan van de SVG
 function showSavePopup() {
-    document.getElementById('namePopup').style.display = 'block';
+    document.getElementById('namePopup').style.display = 'block'; // Maak de pop-up zichtbaar
 }
 
 // Functie om de SVG op te slaan naar Firebase Storage met een opgegeven naam
@@ -80,7 +80,11 @@ function saveSVG() {
 
     const storageRef = storage.ref(`svg_files/${fileName}.svg`);
 
+    // Uploaden van de SVG naar Firebase Storage
     storageRef.put(blob).then((snapshot) => {
+        console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`, snapshot);
+
+        // Haal de URL van de opgeslagen SVG op
         storageRef.getDownloadURL().then((url) => {
             db.collection('shapes').add({
                 fileName: fileName,
@@ -88,6 +92,8 @@ function saveSVG() {
                 createdAt: new Date()
             });
         });
+
+        // Sluit de pop-up na succesvolle upload
         document.getElementById('namePopup').style.display = 'none';
     }).catch((error) => {
         console.error('Fout bij opslaan SVG:', error);
@@ -95,15 +101,15 @@ function saveSVG() {
     });
 }
 
-// Functie om de popup te verbergen
+// Functie om de popup te verbergen (annuleren)
 function cancelSave() {
-    document.getElementById('namePopup').style.display = 'none';
+    document.getElementById('namePopup').style.display = 'none'; // Verberg de pop-up zonder op te slaan
 }
 
 // Event listeners voor de knoppen
-document.getElementById('saveButton').addEventListener('click', showSavePopup);
-document.getElementById('confirmSaveButton').addEventListener('click', saveSVG);
-document.getElementById('cancelSaveButton').addEventListener('click', cancelSave);
+document.getElementById('saveButton').addEventListener('click', showSavePopup); // Wanneer de 'Save' knop wordt geklikt
+document.getElementById('confirmSaveButton').addEventListener('click', saveSVG); // Wanneer de gebruiker op 'Confirm' klikt in de pop-up
+document.getElementById('cancelSaveButton').addEventListener('click', cancelSave); // Wanneer de gebruiker op 'Cancel' klikt in de pop-up
 
 // Modus wisselen
 rectButton.addEventListener('click', () => mode = 'rect');
