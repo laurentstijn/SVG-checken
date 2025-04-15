@@ -65,30 +65,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-  <!-- Voeg de Firebase SDK-modules toe voor je project -->
-<script type="module">
-  // Initialiseer Firebase met de nieuwste versie van de Firebase SDK
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
-  import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
-  import { getStorage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js';
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
 
-// 🔥 Firebase configuratie
-const firebaseConfig = {
-  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
-  authDomain: "tekensvg.firebaseapp.com",
-  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "tekensvg",
-  storageBucket: "tekensvg.firebasestorage.app",
-  messagingSenderId: "180262088073",
-  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
-};
-
-  // Initialiseer Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); // Verkrijg de Firestore-database
-  const storage = getStorage(app); // Verkrijg Firebase Storage
-</script>
-
+ 
 <script src="app3.js"></script>
 
 </body>
