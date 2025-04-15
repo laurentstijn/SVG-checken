@@ -42,6 +42,60 @@ function bringLabelToFront(label) {
   }
 }
 
+// Firebase initialiseren
+const app = firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
+
+// Functie om de popup te tonen
+function showSavePopup() {
+    document.getElementById('namePopup').style.display = 'block';
+}
+
+// Functie om de SVG op te slaan naar Firebase Storage met een opgegeven naam
+function saveSVG() {
+    const svgElement = document.getElementById('drawingArea');
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElement);
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+
+    // Haal de bestandsnaam op uit het inputveld
+    const fileName = document.getElementById('fileNameInput').value.trim();
+    
+    // Als er geen naam is opgegeven, geef dan een foutmelding
+    if (!fileName) {
+        alert("Geef een naam op voor het bestand.");
+        return;
+    }
+
+    // Sla de SVG op onder de naam die de gebruiker heeft ingevoerd
+    const storageRef = storage.ref(`svg_files/${fileName}.svg`);
+
+    // Upload naar Firebase Storage
+    storageRef.put(blob).then((snapshot) => {
+        console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`, snapshot);
+        // Sluit de popup na succesvolle upload
+        document.getElementById('namePopup').style.display = 'none';
+    }).catch((error) => {
+        console.error('Fout bij opslaan SVG:', error);
+        alert("Er is een fout opgetreden bij het opslaan van het bestand.");
+    });
+}
+
+// Functie om de popup te verbergen
+function cancelSave() {
+    document.getElementById('namePopup').style.display = 'none';
+}
+
+// Event listener voor de opslaan knop
+document.getElementById('saveButton').addEventListener('click', showSavePopup);
+
+// Event listener voor de bevestigingsknop in de popup
+document.getElementById('confirmSaveButton').addEventListener('click', saveSVG);
+
+// Event listener voor de annuleerknop in de popup
+document.getElementById('cancelSaveButton').addEventListener('click', cancelSave);
+
+// Label positie
 function updateLabelPosition(shape, label) {
   if (!shape || !label) return;
   if (shape.tagName === 'rect') {
