@@ -435,3 +435,79 @@ closePopup.addEventListener('click', () => {
     editPopup.style.display = 'none';
   }
 });
+
+// Event listener voor de kleurinput
+colorInput.addEventListener('input', () => {
+  const shapeId = editPopup.getAttribute('data-id');
+  const shapeElement = document.querySelector(`[data-id="${shapeId}"]`);
+  const newColor = colorInput.value;
+
+  if (shapeElement) {
+    // Verander de kleur van de geselecteerde vorm
+    shapeElement.setAttribute('fill', newColor);
+    
+    // Werk de vorm bij in de Firestore-database
+    updateShapeInDB(shapeElement);
+  }
+});
+
+// Event listener voor de naaminput
+nameInput.addEventListener('input', () => {
+  const shapeId = editPopup.getAttribute('data-id');
+  const shapeElement = document.querySelector(`[data-id="${shapeId}"]`);
+  const newName = nameInput.value.trim();
+
+  if (shapeElement) {
+    // Verander de naam van de geselecteerde vorm
+    shapeElement.setAttribute('data-name', newName);
+
+    // Werk de label bij, indien van toepassing
+    const label = document.getElementById(`${shapeId}-label`);
+    if (label) {
+      label.textContent = newName; // Update de naam in het label
+      updateLabelPosition(shapeElement, label); // Update de positie van het label
+    }
+
+    // Werk de vorm bij in de Firestore-database
+    updateShapeInDB(shapeElement);
+  }
+});
+
+// Event listener voor de showLabelCheckbox
+showLabelCheckbox.addEventListener('change', () => {
+  const shapeId = editPopup.getAttribute('data-id');
+  const shapeElement = document.querySelector(`[data-id="${shapeId}"]`);
+  const showLabel = showLabelCheckbox.checked;
+
+  if (shapeElement) {
+    const label = document.getElementById(`${shapeId}-label`);
+
+    if (label) {
+      // Maak het label zichtbaar of verberg het op basis van de checkbox
+      if (showLabel) {
+        label.style.display = 'inline'; // Maak label zichtbaar
+        updateLabelPosition(shapeElement, label); // Update de positie van het label
+        bringLabelToFront(label); // Breng het label naar voren
+      } else {
+        label.style.display = 'none'; // Verberg label
+      }
+    }
+
+    // Werk de vorm bij in de Firestore-database
+    updateShapeInDB(shapeElement);
+  }
+});
+
+// Event listener voor de lockCheckbox
+lockCheckbox.addEventListener('change', () => {
+  const shapeId = editPopup.getAttribute('data-id');
+  const shapeElement = document.querySelector(`[data-id="${shapeId}"]`);
+  const isLocked = lockCheckbox.checked;
+
+  if (shapeElement) {
+    shapeElement.setAttribute('data-locked', isLocked ? "true" : "false");
+
+    // Werk de vorm bij in de Firestore-database
+    updateShapeInDB(shapeElement);
+  }
+});
