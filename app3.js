@@ -113,6 +113,9 @@ function showSavePopup() {
     document.getElementById('namePopup').style.display = 'block'; // Maak de pop-up zichtbaar
 }
 
+// Event listener voor de 'Save' knop
+document.getElementById('saveButton').addEventListener('click', showSavePopup); // Wanneer de 'Save' knop wordt geklikt
+
 // Functie om de SVG op te slaan naar Firebase Storage met een opgegeven naam
 function saveSVG() {
     const svgElement = document.getElementById('drawingArea');
@@ -150,10 +153,16 @@ function saveSVG() {
     });
 }
 
+// Event listener voor de 'Confirm' knop in de save pop-up
+document.getElementById('confirmSaveButton').addEventListener('click', saveSVG); // Wanneer de gebruiker op 'Confirm' klikt in de pop-up
+
 // Functie om de popup te verbergen (annuleren)
 function cancelSave() {
     document.getElementById('namePopup').style.display = 'none'; // Verberg de pop-up zonder op te slaan
 }
+
+// Event listener voor de 'Cancel' knop in de save pop-up
+document.getElementById('cancelSaveButton').addEventListener('click', cancelSave); // Wanneer de gebruiker op 'Cancel' klikt in de pop-up
 
 // Event listeners voor de knoppen
 document.getElementById('saveButton').addEventListener('click', showSavePopup); // Wanneer de 'Save' knop wordt geklikt
