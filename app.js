@@ -11,7 +11,6 @@ const firebaseConfig = {
 
 // Firebase initialiseren
 const db = firebase.firestore();
-const app = firebase.initializeApp(firebaseConfig);
 const storage = firebase.storage();
 
 // 🎯 Variabelen
