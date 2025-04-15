@@ -289,3 +289,32 @@ function clearAll() {
     });
   }
 }
+//vanaf hier
+// Slepen van het menu inschakelen
+const dragHandle = document.getElementById('dragHandle');
+const controls = document.getElementById('controls');
+
+let isDragging = false;
+let offsetX, offsetY;
+
+dragHandle.addEventListener('mousedown', (e) => {
+  // Sla de offset op tussen de muispositie en het menu
+  isDragging = true;
+  offsetX = e.clientX - controls.getBoundingClientRect().left;
+  offsetY = e.clientY - controls.getBoundingClientRect().top;
+  dragHandle.style.cursor = 'grabbing';  // Verander cursor tijdens het slepen
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    // Verplaats het menu terwijl de muis wordt bewogen
+    controls.style.left = (e.clientX - offsetX) + 'px';
+    controls.style.top = (e.clientY - offsetY) + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  dragHandle.style.cursor = 'grab';  // Reset cursor na het slepen
+});
+
