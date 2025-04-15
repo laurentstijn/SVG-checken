@@ -9,7 +9,8 @@ const firebaseConfig = {
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
 
-// Firebase initialiseren
+// **Zorg ervoor dat de initializeApp hier maar 1 keer wordt aangeroepen**
+const app = firebase.initializeApp(firebaseConfig); // Initializeer alleen een keer de app
 const db = firebase.firestore();
 const storage = firebase.storage();
 
