@@ -41,6 +41,16 @@ function bringLabelToFront(label) {
     label.parentNode.append(label);
   }
 }
+// vanaf hier
+const firebaseConfig = {
+  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+  authDomain: "tekensvg.firebaseapp.com",
+  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tekensvg",
+  storageBucket: "tekensvg.firebasestorage.app",
+  messagingSenderId: "180262088073",
+  appId: "1:180262088073:web:4488e7381b743261ef8558"
+};
 
 // Firebase initialiseren
 const app = firebase.initializeApp(firebaseConfig);
@@ -94,7 +104,7 @@ document.getElementById('confirmSaveButton').addEventListener('click', saveSVG);
 
 // Event listener voor de annuleerknop in de popup
 document.getElementById('cancelSaveButton').addEventListener('click', cancelSave);
-
+// tot hier
 
 // Label positie
 function updateLabelPosition(shape, label) {
