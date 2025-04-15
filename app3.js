@@ -38,6 +38,57 @@ let offsetMoveX = 0, offsetMoveY = 0;
 
 // 🎯 Helper functies
 
+// Functie om de vormen correct te laden uit de Firestore-database
+function loadShapes() {
+  db.collection('shapes').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const shape = doc.data();
+      let element;
+
+      // Maak het juiste SVG-element op basis van het type van de vorm
+      if (shape.type === 'rect') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        element.setAttribute('x', shape.x);
+        element.setAttribute('y', shape.y);
+        element.setAttribute('width', shape.width);
+        element.setAttribute('height', shape.height);
+      } else if (shape.type === 'circle') {
+        element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        element.setAttribute('cx', shape.x);
+        element.setAttribute('cy', shape.y);
+        element.setAttribute('r', shape.r);
+      }
+
+      // Stel de fill, naam en andere gegevens in op basis van de Firestore-database
+      element.setAttribute('fill', shape.fill || 'skyblue');
+      element.setAttribute('data-id', doc.id);
+      element.setAttribute('data-name', shape.name || "");
+      element.setAttribute('data-locked', shape.locked ? "true" : "false");
+      element.setAttribute('data-show-label', shape.showLabel ? "true" : "false");
+
+      // Voeg de vorm toe aan de SVG
+      svg.appendChild(element);
+
+      // Voeg label toe als showLabel is ingeschakeld
+      if (shape.showLabel && shape.name) {
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('id', doc.id + '-label');
+        label.setAttribute('font-size', '12');
+        label.setAttribute('fill', 'black');
+        label.textContent = shape.name;
+        updateLabelPosition(element, label);
+        svg.appendChild(label);
+        bringLabelToFront(label);
+      }
+    });
+  }).catch((error) => {
+    console.error("Fout bij het laden van vormen uit Firestore: ", error);
+  });
+}
+
+loadShapes(); // Roep de functie aan om de vormen bij het laden van de pagina op te halen
+
+
 // Functie om de labelpositie van een vorm bij te werken
 function updateLabelPosition(shape, label) {
   if (!shape || !label) return;
