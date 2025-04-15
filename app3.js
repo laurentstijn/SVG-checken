@@ -118,11 +118,12 @@ document.getElementById('saveButton').addEventListener('click', showSavePopup); 
 
 // Functie om de SVG op te slaan naar Firebase Storage met een opgegeven naam
 function saveSVG() {
-    const svgElement = document.getElementById('drawingArea');
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svgElement);
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const svgElement = document.getElementById('drawingArea'); // Pak het SVG-element
+    const serializer = new XMLSerializer(); // Maakt een XML-structuur van de SVG
+    const svgString = serializer.serializeToString(svgElement); // Zet de SVG om naar een string
+    const blob = new Blob([svgString], { type: "image/svg+xml" }); // Zet de string om naar een blob (bestandsobject)
 
+    // Vraag de gebruiker om een naam voor het bestand in te voeren
     const fileName = document.getElementById('fileNameInput').value.trim();
     
     if (!fileName) {
@@ -130,14 +131,18 @@ function saveSVG() {
         return;
     }
 
-    const storageRef = storage.ref(`svg_files/${fileName}.svg`);
+    // Firebase Storage referentie
+    const storageRef = storage.ref(`svg_files/${fileName}.svg`); // Verwijst naar de locatie waar je het bestand wilt opslaan
 
-    // Uploaden van de SVG naar Firebase Storage
+    // Upload het bestand naar Firebase Storage
     storageRef.put(blob).then((snapshot) => {
         console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`, snapshot);
 
-        // Haal de URL van de opgeslagen SVG op
+        // Haal de download-URL van het opgeslagen bestand op
         storageRef.getDownloadURL().then((url) => {
+            console.log('Bestand opgeslagen op Firebase: ', url);
+
+            // Je kunt de URL opslaan in de Firestore-database of ergens anders gebruiken
             db.collection('shapes').add({
                 fileName: fileName,
                 url: url,
@@ -153,21 +158,6 @@ function saveSVG() {
     });
 }
 
-// Event listener voor de 'Confirm' knop in de save pop-up
-document.getElementById('confirmSaveButton').addEventListener('click', saveSVG); // Wanneer de gebruiker op 'Confirm' klikt in de pop-up
-
-// Functie om de popup te verbergen (annuleren)
-function cancelSave() {
-    document.getElementById('namePopup').style.display = 'none'; // Verberg de pop-up zonder op te slaan
-}
-
-// Event listener voor de 'Cancel' knop in de save pop-up
-document.getElementById('cancelSaveButton').addEventListener('click', cancelSave); // Wanneer de gebruiker op 'Cancel' klikt in de pop-up
-
-// Event listeners voor de knoppen
-document.getElementById('saveButton').addEventListener('click', showSavePopup); // Wanneer de 'Save' knop wordt geklikt
-document.getElementById('confirmSaveButton').addEventListener('click', saveSVG); // Wanneer de gebruiker op 'Confirm' klikt in de pop-up
-document.getElementById('cancelSaveButton').addEventListener('click', cancelSave); // Wanneer de gebruiker op 'Cancel' klikt in de pop-up
 
 // Modus wisselen
 rectButton.addEventListener('click', () => mode = 'rect');
