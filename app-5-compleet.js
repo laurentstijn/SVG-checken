@@ -12,7 +12,7 @@ const firebaseConfig = {
 // Firebase initialiseren
 const app = firebase.initializeApp(firebaseConfig); // Initialiseer Firebase-app
 const db = firebase.firestore(); // Firestore
-const storage = firebase.storage(); // Firebase Storage
+// const storage = firebase.storage(); // Firebase Storage
 
 // 🎯 Variabelen
 const svg = document.getElementById('drawingArea');
