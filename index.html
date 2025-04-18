@@ -17,6 +17,18 @@
     .resize-handle { fill: red; cursor: nwse-resize; }
     #namePopup {position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; display: none;}
     #drawingArea text {font-size: 12px; fill: black;}
+
+     #svgContainer svg {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 10px;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -65,6 +77,19 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
+<!-- vanaf hier -->
+   <!-- Dropdown voor bestaande SVG's -->
+  <label for="svgDropdown">Kies een opgeslagen SVG:</label>
+  <select id="svgDropdown">
+    <option value="">-- Laden... --</option>
+  </select>
+
+  <!-- Container voor getekende of nieuwe SVG -->
+  <div id="svgContainer"></div>
+
+  <!-- Actieknoppen -->
+  <button onclick="maakNieuweSVG()">➕ Nieuwe SVG</button>
+  <button onclick="slimOpslaanSVG()">💾 Opslaan</button>
 
 
  
