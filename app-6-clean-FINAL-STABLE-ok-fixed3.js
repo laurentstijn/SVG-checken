@@ -81,7 +81,10 @@ function loadShapes() {
 
 
 // Zorg ervoor dat de vormen geladen worden zodra de pagina is geladen
-window.addEventListener('load', loadShapes);
+window.addEventListener('load', () => {
+  laadSVGKeuzes();
+});
+
 
 // Functie om de labelpositie van een vorm bij te werken
 function updateLabelPosition(shape, label) {
