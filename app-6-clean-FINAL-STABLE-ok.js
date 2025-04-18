@@ -300,9 +300,8 @@ function updateShapeInDB(shapeElement) {
   db.collection('shapes').doc(shapeId).update(update)
     .then(() => {
       console.log(`Vorm ${shapeId} succesvol bijgewerkt in de database.`);
-    })
     });
-}
+
 
 // Functie om alles te wissen
 function clearAll() {
