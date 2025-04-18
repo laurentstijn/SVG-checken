@@ -144,7 +144,7 @@ function saveSVG() {
                 url: url,
                 createdAt: new Date()
             });
-        });
+    
 
         // Sluit de pop-up na succesvolle upload
         document.getElementById('namePopup').style.display = 'none';
