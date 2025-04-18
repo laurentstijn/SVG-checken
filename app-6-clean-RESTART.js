@@ -77,8 +77,7 @@ function loadShapes() {
         svg.appendChild(label);
         bringLabelToFront(label); // Breng het label naar voren
       }
-    });
-}
+    }
 
 // Zorg ervoor dat de vormen geladen worden zodra de pagina is geladen
 window.addEventListener('load', () => {
