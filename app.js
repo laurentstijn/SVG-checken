@@ -205,4 +205,33 @@ async function laadSVGKeuzes() {
   });
 }
 
+const controls = document.getElementById("controls");
+const dragHandle = document.getElementById("dragHandle");
+
+let isDraggingControls = false;
+let offsetControlsX = 0;
+let offsetControlsY = 0;
+
+dragHandle.addEventListener("mousedown", (e) => {
+  isDraggingControls = true;
+  const rect = controls.getBoundingClientRect();
+  offsetControlsX = e.clientX - rect.left;
+  offsetControlsY = e.clientY - rect.top;
+  dragHandle.style.cursor = "grabbing";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isDraggingControls) return;
+  controls.style.left = `${e.clientX - offsetControlsX}px`;
+  controls.style.top = `${e.clientY - offsetControlsY}px`;
+});
+
+document.addEventListener("mouseup", () => {
+  if (isDraggingControls) {
+    isDraggingControls = false;
+    dragHandle.style.cursor = "grab";
+  }
+});
+
+
 laadSVGKeuzes();
