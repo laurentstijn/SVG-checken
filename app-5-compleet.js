@@ -132,7 +132,7 @@ function saveSVG() {
     }
 
     // Firebase Storage referentie
-    const storageRef = storage.ref(`svg_files/${fileName}.svg`); // Verwijst naar de locatie waar je het bestand wilt opslaan
+   // const storageRef = storage.ref(`svg_files/${fileName}.svg`); // Verwijst naar de locatie waar je het bestand wilt opslaan
 
     // Upload het bestand naar Firebase Storage
     storageRef.put(blob).then((snapshot) => {
