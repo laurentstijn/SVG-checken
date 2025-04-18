@@ -131,7 +131,7 @@ function saveSVG() {
     // Firebase Storage referentie
 
     // Upload het bestand naar Firebase Storage
-        console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`, snapshot);
+        console.log(`SVG succesvol opgeslagen als ${fileName}.svg:`);
 
         // Haal de download-URL van het opgeslagen bestand op
             console.log('Bestand opgeslagen op Firebase: ', url);
