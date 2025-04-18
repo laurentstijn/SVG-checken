@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SVG Opslaan in Firebase</title>
+  <title>SVG Opslaan met Onthouden Naam</title>
   <style>
     #mijnSVG {
       border: 1px solid #ccc;
       margin-top: 10px;
     }
   </style>
+
   <!-- Firebase SDK's -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // === Firebase configuratie (vervang door jouw eigen gegevens) ===
- const firebaseConfig = {
+    // Firebase configuratie (vervang door jouw gegevens)
+   const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
   authDomain: "tekensvg.firebaseapp.com",
   databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
@@ -22,36 +23,57 @@
   storageBucket: "tekensvg.firebasestorage.app",
   messagingSenderId: "180262088073",
   appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
-};
+  };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // === Functie: SVG opslaan met naam via prompt ===
-    async function opslaanSVG() {
+    // Variabele om bestandsnaam te onthouden
+    let laatstGebruikteBestandsnaam = "";
+
+    // === Functie: Slim opslaan + naam onthouden ===
+    async function slimOpslaanSVG() {
       const svgElement = document.getElementById("mijnSVG");
       const serializer = new XMLSerializer();
       const svgString = serializer.serializeToString(svgElement);
 
-      // Vraag de gebruiker om een bestandsnaam
-      const filename = prompt("Geef een bestandsnaam op (bijv. tekening1.svg):");
+      // Vraag om bestandsnaam, met vorige als suggestie
+      const filename = prompt(
+        "Geef een bestandsnaam op:",
+        laatstGebruikteBestandsnaam || "tekening.svg"
+      );
+
       if (!filename) {
         alert("Opslaan geannuleerd.");
         return;
       }
 
-      // Opslaan in Firestore
-      await setDoc(doc(db, "svg-files", filename), {
+      const docRef = doc(db, "svg-files", filename);
+      const bestaandDoc = await getDoc(docRef);
+
+      if (bestaandDoc.exists()) {
+        const overschrijf = confirm(`"${filename}" bestaat al. Overschrijven?`);
+        if (!overschrijf) {
+          alert("Wijzigingen niet opgeslagen.");
+          return;
+        }
+      }
+
+      // Sla SVG op in Firestore
+      await setDoc(docRef, {
         filename,
         svg: svgString,
         timestamp: new Date().toISOString(),
       });
 
-      alert(`SVG opgeslagen als '${filename}'`);
+      // Onthoud naam voor volgende keer
+      laatstGebruikteBestandsnaam = filename;
+
+      alert(`SVG ${bestaandDoc.exists() ? "bijgewerkt" : "opgeslagen"} als '${filename}'`);
     }
 
-    // Maak de functie beschikbaar voor de knop
-    window.opslaanSVG = opslaanSVG;
+    // Maak functie beschikbaar in de knop
+    window.slimOpslaanSVG = slimOpslaanSVG;
   </script>
 </head>
 <body>
@@ -62,7 +84,7 @@
   </svg>
 
   <br>
-  <button onclick="opslaanSVG()">Opslaan als...</button>
+  <button onclick="slimOpslaanSVG()">Opslaan</button>
 
 </body>
 </html>
