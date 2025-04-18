@@ -78,8 +78,7 @@ function loadShapes() {
         bringLabelToFront(label); // Breng het label naar voren
       }
     });
-  });
-}
+
 
 // Zorg ervoor dat de vormen geladen worden zodra de pagina is geladen
 window.addEventListener('load', loadShapes);
@@ -311,7 +310,7 @@ function clearAll() {
       while (svg.firstChild) svg.removeChild(svg.firstChild);
     });
   }
-}
+
 
 // Slepen van het menu inschakelen
 const dragHandle = document.getElementById('dragHandle');
