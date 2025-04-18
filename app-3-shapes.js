@@ -1,4 +1,3 @@
-
 // 🔥 Firebase configuratie
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
@@ -198,3 +197,29 @@ async function laadSVGKeuzes() {
 }
 
 laadSVGKeuzes();
+
+// === 🧲 Sleepbaar menu ===
+const dragHandle = document.getElementById('dragHandle');
+const dragTarget = document.getElementById('controls');
+let isDragging = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+dragHandle.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  dragOffsetX = e.clientX - dragTarget.offsetLeft;
+  dragOffsetY = e.clientY - dragTarget.offsetTop;
+  dragHandle.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  dragTarget.style.left = (e.clientX - dragOffsetX) + 'px';
+  dragTarget.style.top = (e.clientY - dragOffsetY) + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  dragHandle.style.cursor = 'grab';
+});
+
