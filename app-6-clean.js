@@ -173,7 +173,9 @@ svgDropdown.addEventListener('change', async () => {
   if (!filename) return;
   const docSnap = await db.collection("svg-files").doc(filename).get();
   if (docSnap.exists) {
-    svg.outerHTML = docSnap.data().svg;
+    svg.innerHTML = new DOMParser()
+  .parseFromString(docSnap.data().svg, "image/svg+xml")
+  .documentElement.innerHTML;
     laatstGebruikteBestandsnaam = filename;
   }
 });
