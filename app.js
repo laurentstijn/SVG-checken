@@ -171,23 +171,7 @@ confirmSaveButton.onclick = async () => {
 cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 
 // Laad SVG shapes individueel
-svgDropdown.addEventListener('change', async () => {
-  const filename = svgDropdown.value;
-  if (!filename) return;
 
-  const docSnap = await db.collection("svg-files").doc(filename).get();
-  if (docSnap.exists) {
-    svg.innerHTML = '';
-    const data = docSnap.data();
-    data.shapes.forEach(shape => {
-      const el = document.createElementNS("http://www.w3.org/2000/svg", shape.type);
-      for (let key in shape) {
-        if (key !== "type") el.setAttribute(key, shape[key]);
-      }
-      el.addEventListener("click", () => selectedElement = el);
-      svg.appendChild(el);
-      updateLabel(el);
-    });
     laatstGebruikteBestandsnaam = filename;
   }
 });
@@ -318,4 +302,45 @@ svg.addEventListener("mousemove", (e) => {
 
 svg.addEventListener("mouseup", () => {
   isResizing = false;
+});
+
+
+svgDropdown.addEventListener('change', async () => {
+  const filename = svgDropdown.value;
+  if (!filename) return;
+
+  const docSnap = await db.collection("svg-files").doc(filename).get();
+  if (docSnap.exists) {
+    svg.innerHTML = '';
+    const data = docSnap.data();
+    data.shapes.forEach(shape => {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", shape.type);
+      for (let key in shape) {
+        if (key !== "type") el.setAttribute(key, shape[key]);
+      }
+
+      // ✅ Corrigeer negatieve rechthoek-afmetingen
+      if (el.tagName === 'rect') {
+        let w = parseFloat(el.getAttribute('width'));
+        let h = parseFloat(el.getAttribute('height'));
+        let x = parseFloat(el.getAttribute('x'));
+        let y = parseFloat(el.getAttribute('y'));
+
+        if (w < 0) {
+          el.setAttribute('x', x + w);
+          el.setAttribute('width', Math.abs(w));
+        }
+
+        if (h < 0) {
+          el.setAttribute('y', y + h);
+          el.setAttribute('height', Math.abs(h));
+        }
+      }
+
+      el.addEventListener("click", () => selectedElement = el);
+      svg.appendChild(el);
+      updateLabel(el);
+    });
+    laatstGebruikteBestandsnaam = filename;
+  }
 });
