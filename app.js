@@ -31,6 +31,10 @@ const fileNameInput = document.getElementById('fileNameInput');
 const confirmSaveButton = document.getElementById('confirmSaveButton');
 const cancelSaveButton = document.getElementById('cancelSaveButton');
 const svgDropdown = document.getElementById('svgDropdown');
+const dragHandle = document.getElementById('dragHandle');
+
+// Verberg dragHandle standaard
+if (dragHandle) dragHandle.style.display = 'none';
 
 let mode = 'rect';
 let selectedElement = null;
@@ -53,25 +57,14 @@ eraserButton.onclick = () => {
 
 editButton.onclick = () => {
   mode = 'edit';
-  if (selectedElement) {
-    // Toon popup en handle
-    editPopup.style.display = 'block';
-    document.getElementById('dragHandle').style.display = 'flex';
-
-    // Zet huidige waarden in inputs
-    colorInput.value = selectedElement.getAttribute('fill');
-    nameInput.value = selectedElement.getAttribute('data-name') || '';
-    lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
-    showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
-  }
+  editPopup.style.display = 'block';
+  if (dragHandle) dragHandle.style.display = 'flex';
 };
-
 
 closePopup.onclick = () => {
   editPopup.style.display = 'none';
-  document.getElementById('dragHandle').style.display = 'none';
+  if (dragHandle) dragHandle.style.display = 'none';
 };
-
 
 // Bewerken
 colorInput.oninput = () => selectedElement.setAttribute('fill', colorInput.value);
@@ -94,8 +87,11 @@ function updateLabel(el) {
   }
   label.textContent = el.getAttribute('data-show-label') === 'true' ? el.getAttribute('data-name') || '' : '';
   const bbox = el.getBBox();
-  label.setAttribute('x', bbox.x + bbox.width + 5);
-  label.setAttribute('y', bbox.y + 12);
+  label.setAttribute('x', bbox.x + bbox.width / 2);
+  label.setAttribute('y', bbox.y - 5);
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('font-size', '14');
+  label.setAttribute('fill', '#333');
 }
 
 // Teken functionaliteit
