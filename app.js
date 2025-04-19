@@ -237,6 +237,29 @@ svg.addEventListener('click', (e) => {
       // Popup positioneren naast muis
       editPopup.style.left = `${e.clientX + 20}px`;
       editPopup.style.top = `${e.clientY}px`;
+      voegResizeHandleToe(selectedElement);
     }
   }
 });
+
+
+// 🟡 Voeg resize-handle toe aan geselecteerde vorm
+function voegResizeHandleToe(element) {
+  // Verwijder bestaande handle als die er is
+  const bestaandeHandle = document.getElementById("resize-handle");
+  if (bestaandeHandle) bestaandeHandle.remove();
+
+  const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  handle.setAttribute("id", "resize-handle");
+  handle.setAttribute("r", 6);
+  handle.setAttribute("fill", "#ff9800");
+  handle.setAttribute("stroke", "#333");
+  handle.setAttribute("stroke-width", "1");
+  handle.style.cursor = "nwse-resize";
+
+  const bbox = element.getBBox();
+  handle.setAttribute("cx", bbox.x + bbox.width);
+  handle.setAttribute("cy", bbox.y + bbox.height);
+
+  element.parentNode.appendChild(handle);
+}
