@@ -23,6 +23,8 @@ const clearButton = document.getElementById('clearButton');
 const editPopup = document.getElementById('editPopup');
 const colorInput = document.getElementById('colorInput');
 const nameInput = document.getElementById('nameInput');
+const lockCheckbox = document.getElementById('lockCheckbox');
+const showLabelCheckbox = document.getElementById('showLabelCheckbox');
 const closePopup = document.getElementById('closePopup');
 const namePopup = document.getElementById('namePopup');
 const fileNameInput = document.getElementById('fileNameInput');
@@ -46,12 +48,14 @@ eraserButton.onclick = () => {
   if (selectedElement) {
     selectedElement.remove();
     selectedElement = null;
+  }
 };
 
 editButton.onclick = () => {
   mode = 'edit';
 };
 
+closePopup.onclick = () => editPopup.style.display = 'none';
 
 // Bewerken
 colorInput.oninput = () => selectedElement.setAttribute('fill', colorInput.value);
@@ -67,42 +71,31 @@ showLabelCheckbox.onchange = () => {
 
 // Labels
 function updateLabel(el) {
-  const parent = el.parentNode;
-  if (el.nextElementSibling && el.nextElementSibling.tagName === 'text') {
-    el.nextElementSibling.remove();
+  let label = el.nextElementSibling;
+  if (!label || label.tagName !== 'text') {
+    label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.after(label);
   }
-  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  if (el.tagName === 'rect') {
-    const xVal = parseFloat(el.getAttribute('x'));
-    const yVal = parseFloat(el.getAttribute('y'));
-    const w = parseFloat(el.getAttribute('width'));
-    const h = parseFloat(el.getAttribute('height'));
-  } else if (el.tagName === 'circle') {
-  if (el.tagName === 'rect') {
-    const rectX = parseFloat(el.getAttribute('x'));
-    const rectY = parseFloat(el.getAttribute('y'));
-    const width = parseFloat(el.getAttribute('width'));
-    const height = parseFloat(el.getAttribute('height'));
-    if (height > width) {
-  } else if (el.tagName === 'circle') {
-  if (el.tagName === 'rect') {
-    const rectX = parseFloat(el.getAttribute('x'));
-    const rectY = parseFloat(el.getAttribute('y'));
-    const width = parseFloat(el.getAttribute('width'));
-    const height = parseFloat(el.getAttribute('height'));
-    if (height > width) {
-  } else if (el.tagName === 'circle') {
+  label.textContent = el.getAttribute('data-show-label') === 'true' ? el.getAttribute('data-name') || '' : '';
+  const bbox = el.getBBox();
+  label.setAttribute('x', bbox.x + bbox.width + 5);
+  label.setAttribute('y', bbox.y + 12);
+}
 
 // Teken functionaliteit
 svg.addEventListener('mousedown', e => {
+  if (mode === 'move') return;
+  if (e.target.closest('svg') !== svg) return;
   isDrawing = true;
   startX = e.offsetX;
   startY = e.offsetY;
 });
 
 svg.addEventListener('mouseup', e => {
+  if (!isDrawing) return;
   isDrawing = false;
+  const x = startX;
+  const y = startY;
   const w = e.offsetX - x;
   const h = e.offsetY - y;
 
@@ -116,6 +109,7 @@ svg.addEventListener('mouseup', e => {
     shape.setAttribute('y', y);
     shape.setAttribute('width', w);
     shape.setAttribute('height', h);
+  }
 
   shape.setAttribute('fill', '#00aaff');
   shape.setAttribute('stroke', '#333');
@@ -129,17 +123,20 @@ svg.addEventListener('mouseup', e => {
 
 // Opslaan naar Firestore als individuele shapes
 document.getElementById('saveButton').onclick = () => {
+  namePopup.style.display = 'block';
   fileNameInput.value = laatstGebruikteBestandsnaam || '';
 };
 
 confirmSaveButton.onclick = async () => {
   const filename = fileNameInput.value.trim();
+  if (!filename) return alert("Geen naam ingevoerd.");
   
   const shapes = [];
   svg.querySelectorAll('rect, circle').forEach(el => {
     const shape = { type: el.tagName };
     for (let attr of el.attributes) {
       shape[attr.name] = attr.value;
+    }
     shapes.push(shape);
   });
 
@@ -149,15 +146,18 @@ confirmSaveButton.onclick = async () => {
     timestamp: new Date().toISOString()
   });
 
+  namePopup.style.display = 'none';
   laatstGebruikteBestandsnaam = filename;
   alert("Havenplan opgeslagen!");
   laadSVGKeuzes();
 };
 
+cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 
 // Laad SVG shapes individueel
 svgDropdown.addEventListener('change', async () => {
   const filename = svgDropdown.value;
+  if (!filename) return;
 
   const docSnap = await db.collection("svg-files").doc(filename).get();
   if (docSnap.exists) {
@@ -167,11 +167,13 @@ svgDropdown.addEventListener('change', async () => {
       const el = document.createElementNS("http://www.w3.org/2000/svg", shape.type);
       for (let key in shape) {
         if (key !== "type") el.setAttribute(key, shape[key]);
+      }
       el.addEventListener("click", () => selectedElement = el);
       svg.appendChild(el);
       updateLabel(el);
     });
     laatstGebruikteBestandsnaam = filename;
+  }
 });
 
 // Nieuwe lege canvas
@@ -191,6 +193,7 @@ async function laadSVGKeuzes() {
     opt.textContent = doc.id;
     svgDropdown.appendChild(opt);
   });
+}
 
 laadSVGKeuzes();
 
@@ -203,10 +206,13 @@ let offset = { x: 0, y: 0 };
 
 dragHandle.addEventListener("mousedown", (e) => {
   isDragging = true;
+  offset.x = e.clientX - controls.offsetLeft;
+  offset.y = e.clientY - controls.offsetTop;
   dragHandle.style.cursor = "grabbing";
 });
 
 document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
   controls.style.left = `${e.clientX - offset.x}px`;
   controls.style.top = `${e.clientY - offset.y}px`;
 });
@@ -222,6 +228,7 @@ svg.addEventListener('click', (e) => {
   if (mode === 'edit') {
     if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
       selectedElement = e.target;
+      editPopup.style.display = 'block';
       colorInput.value = selectedElement.getAttribute('fill') || '#000000';
       nameInput.value = selectedElement.getAttribute('data-name') || '';
       lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
@@ -231,6 +238,8 @@ svg.addEventListener('click', (e) => {
       editPopup.style.left = `${e.clientX + 20}px`;
       editPopup.style.top = `${e.clientY}px`;
       voegResizeHandleToe(selectedElement);
+    }
+  }
 });
 
 
@@ -263,19 +272,30 @@ svg.addEventListener("mousedown", (e) => {
   if (e.target.id === "resize-handle") {
     isResizing = true;
     e.preventDefault();
+  }
 });
 
 svg.addEventListener("mousemove", (e) => {
+  if (!isResizing || !selectedElement) return;
 
   const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
   const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
   if (selectedElement.tagName === "rect") {
+    const x = parseFloat(selectedElement.getAttribute("x"));
+    const y = parseFloat(selectedElement.getAttribute("y"));
     selectedElement.setAttribute("width", Math.max(10, cursorpt.x - x));
     selectedElement.setAttribute("height", Math.max(10, cursorpt.y - y));
   } else if (selectedElement.tagName === "circle") {
+    const cx = parseFloat(selectedElement.getAttribute("cx"));
+    const cy = parseFloat(selectedElement.getAttribute("cy"));
+    const dx = cursorpt.x - cx;
+    const dy = cursorpt.y - cy;
     const newR = Math.sqrt(dx * dx + dy * dy);
     selectedElement.setAttribute("r", Math.max(5, newR));
+  }
 
   voegResizeHandleToe(selectedElement); // update handle positie
 });
@@ -283,64 +303,3 @@ svg.addEventListener("mousemove", (e) => {
 svg.addEventListener("mouseup", () => {
   isResizing = false;
 });
-
-
-// 🔧 Sleepbare controls (sidebar)
-const dragHandle = document.getElementById("dragHandle");
-const controls = document.getElementById("controls");
-
-let isDraggingControls = false;
-let dragOffset = { x: 0, y: 0 };
-
-dragHandle.addEventListener("mousedown", (e) => {
-  isDraggingControls = true;
-  dragHandle.style.cursor = "grabbing";
-  e.preventDefault();
-});
-
-document.addEventListener("mousemove", (e) => {
-  if (isDraggingControls) {
-    controls.style.left = `${e.clientX - dragOffset.x}px`;
-    controls.style.top = `${e.clientY - dragOffset.y}px`;
-});
-
-document.addEventListener("mouseup", () => {
-  if (isDraggingControls) {
-    isDraggingControls = false;
-    dragHandle.style.cursor = "grab";
-});
-
-
-function updateLabel(el) {
-  if (!el) return;
-  const parent = el.parentNode;
-  if (el.nextElementSibling && el.nextElementSibling.tagName === 'text') {
-    el.nextElementSibling.remove();
-  }
-  const show = el.getAttribute('data-show-label') === 'true';
-  if (!show) return;
-
-  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  label.textContent = el.getAttribute('data-name') || '';
-  label.setAttribute('text-anchor', 'middle');
-  label.setAttribute('dominant-baseline', 'middle');
-  let x = 0, y = 0, rotate = '';
-
-  if (el.tagName === 'rect') {
-    const xVal = parseFloat(el.getAttribute('x'));
-    const yVal = parseFloat(el.getAttribute('y'));
-    const w = parseFloat(el.getAttribute('width'));
-    const h = parseFloat(el.getAttribute('height'));
-    x = xVal + w / 2;
-    y = yVal + h / 2;
-    if (h > w) rotate = `rotate(-90 ${x} ${y})`;
-  } else if (el.tagName === 'circle') {
-    x = parseFloat(el.getAttribute('cx'));
-    y = parseFloat(el.getAttribute('cy'));
-  }
-
-  label.setAttribute('x', x);
-  label.setAttribute('y', y);
-  if (rotate) label.setAttribute('transform', rotate);
-  parent.insertBefore(label, el.nextSibling);
-}
