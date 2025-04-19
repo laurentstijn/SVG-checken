@@ -170,12 +170,6 @@ confirmSaveButton.onclick = async () => {
 
 cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 
-// Laad SVG shapes individueel
-
-    laatstGebruikteBestandsnaam = filename;
-  }
-});
-
 // Nieuwe lege canvas
 window.maakNieuweSVG = () => {
   svg.innerHTML = '';
