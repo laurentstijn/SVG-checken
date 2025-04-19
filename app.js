@@ -106,7 +106,6 @@ function updateLabel(el) {
   label.setAttribute('y', y);
   if (rotate) label.setAttribute('transform', rotate);
   parent.insertBefore(label, el.nextSibling);
-}
   }
   label.textContent = el.getAttribute('data-name') || '';
   label.setAttribute('text-anchor', 'middle');
