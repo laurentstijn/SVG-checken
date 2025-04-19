@@ -31,12 +31,18 @@ const fileNameInput = document.getElementById('fileNameInput');
 const confirmSaveButton = document.getElementById('confirmSaveButton');
 const cancelSaveButton = document.getElementById('cancelSaveButton');
 const svgDropdown = document.getElementById('svgDropdown');
+const dragHandle = document.getElementById("dragHandle");
+const controls = document.getElementById("controls");
 
 let mode = 'rect';
 let selectedElement = null;
 let isDrawing = false;
 let startX = 0, startY = 0;
 let laatstGebruikteBestandsnaam = "";
+let isDragging = false;
+let offset = { x: 0, y: 0 };
+
+dragHandle.style.display = 'none';
 
 // ▼ Knopacties
 rectButton.onclick = () => mode = 'rect';
@@ -54,11 +60,8 @@ eraserButton.onclick = () => {
 editButton.onclick = () => {
   mode = 'edit';
   if (selectedElement) {
-    // Toon popup en handle
     editPopup.style.display = 'block';
-    document.getElementById('dragHandle').style.display = 'flex';
-
-    // Zet huidige waarden in inputs
+    dragHandle.style.display = 'flex';
     colorInput.value = selectedElement.getAttribute('fill');
     nameInput.value = selectedElement.getAttribute('data-name') || '';
     lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
@@ -66,14 +69,11 @@ editButton.onclick = () => {
   }
 };
 
-
 closePopup.onclick = () => {
   editPopup.style.display = 'none';
-  document.getElementById('dragHandle').style.display = 'none';
+  dragHandle.style.display = 'none';
 };
 
-
-// Bewerken
 colorInput.oninput = () => selectedElement.setAttribute('fill', colorInput.value);
 nameInput.oninput = () => {
   selectedElement.setAttribute('data-name', nameInput.value);
@@ -85,7 +85,6 @@ showLabelCheckbox.onchange = () => {
   updateLabel(selectedElement);
 };
 
-// Labels
 function updateLabel(el) {
   let label = el.nextElementSibling;
   if (!label || label.tagName !== 'text') {
@@ -112,19 +111,20 @@ svg.addEventListener('mouseup', e => {
   isDrawing = false;
   const x = startX;
   const y = startY;
-  const w = e.offsetX - x;
-  const h = e.offsetY - y;
+  let w = e.offsetX - x;
+  let h = e.offsetY - y;
 
   const shape = document.createElementNS("http://www.w3.org/2000/svg", mode === 'circle' ? 'circle' : 'rect');
+
   if (mode === 'circle') {
     shape.setAttribute('cx', x + w / 2);
     shape.setAttribute('cy', y + h / 2);
     shape.setAttribute('r', Math.sqrt(w * w + h * h) / 2);
   } else {
-    shape.setAttribute('x', x);
-    shape.setAttribute('y', y);
-    shape.setAttribute('width', w);
-    shape.setAttribute('height', h);
+    shape.setAttribute('x', w < 0 ? x + w : x);
+    shape.setAttribute('y', h < 0 ? y + h : y);
+    shape.setAttribute('width', Math.abs(w));
+    shape.setAttribute('height', Math.abs(h));
   }
 
   shape.setAttribute('fill', '#00aaff');
