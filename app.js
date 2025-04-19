@@ -77,8 +77,6 @@ function updateLabel(el) {
   if (el.nextElementSibling && el.nextElementSibling.tagName === 'text') {
     el.nextElementSibling.remove();
   }
-  const show = el.getAttribute('data-show-label') === 'true';
-  if (!show) return;
   const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   label.textContent = el.getAttribute('data-name') || '';
   label.setAttribute('text-anchor', 'middle');
@@ -101,10 +99,6 @@ function updateLabel(el) {
   if (rotate) label.setAttribute('transform', rotate);
   parent.insertBefore(label, el.nextSibling);
 }
-  const show = el.getAttribute('data-show-label') === 'true';
-  if (!show) {
-    label.textContent = '';
-    return;
   }
   label.textContent = el.getAttribute('data-name') || '';
   label.setAttribute('text-anchor', 'middle');
@@ -127,10 +121,6 @@ function updateLabel(el) {
   label.setAttribute('x', x);
   label.setAttribute('y', y);
   label.setAttribute('transform', rotate);
-  const show = el.getAttribute('data-show-label') === 'true';
-  if (!show) {
-    label.textContent = '';
-    return;
   }
   label.textContent = el.getAttribute('data-name') || '';
   label.setAttribute('text-anchor', 'middle');
@@ -161,15 +151,12 @@ function updateLabel(el) {
 
 // Teken functionaliteit
 svg.addEventListener('mousedown', e => {
-  if (mode === 'move') return;
-  if (e.target.closest('svg') !== svg) return;
   isDrawing = true;
   startX = e.offsetX;
   startY = e.offsetY;
 });
 
 svg.addEventListener('mouseup', e => {
-  if (!isDrawing) return;
   isDrawing = false;
   const x = startX;
   const y = startY;
@@ -234,7 +221,6 @@ cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 // Laad SVG shapes individueel
 svgDropdown.addEventListener('change', async () => {
   const filename = svgDropdown.value;
-  if (!filename) return;
 
   const docSnap = await db.collection("svg-files").doc(filename).get();
   if (docSnap.exists) {
@@ -289,7 +275,6 @@ dragHandle.addEventListener("mousedown", (e) => {
 });
 
 document.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
   controls.style.left = `${e.clientX - offset.x}px`;
   controls.style.top = `${e.clientY - offset.y}px`;
 });
@@ -353,7 +338,6 @@ svg.addEventListener("mousedown", (e) => {
 });
 
 svg.addEventListener("mousemove", (e) => {
-  if (!isResizing || !selectedElement) return;
 
   const pt = svg.createSVGPoint();
   pt.x = e.clientX;
@@ -454,7 +438,6 @@ function laadSVGs() {
 
 svgDropdown.addEventListener("change", () => {
   const naam = svgDropdown.value;
-  if (!naam) return;
   db.collection("svgs").doc(naam).get().then((doc) => {
     if (doc.exists) {
       svg.innerHTML = doc.data().content;
