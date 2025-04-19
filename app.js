@@ -214,7 +214,7 @@ async function laadSVGKeuzes() {
 laadSVGKeuzes();
 
 // sleepbaar maken van controls
-const dragHandle = document.getElementById("dragHandle");
+//const dragHandle = document.getElementById("dragHandle");
 const controls = document.getElementById("controls");
 
 let isDragging = false;
