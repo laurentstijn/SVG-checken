@@ -52,7 +52,6 @@ eraserButton.onclick = () => {
 };
 
 editButton.onclick = () => {
-editButton.onclick = () => {
   mode = 'edit';
 };
 
