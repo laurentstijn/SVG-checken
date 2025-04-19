@@ -197,3 +197,28 @@ async function laadSVGKeuzes() {
 }
 
 laadSVGKeuzes();
+
+// sleepbaar maken van controls
+const dragHandle = document.getElementById("dragHandle");
+const controls = document.getElementById("controls");
+
+let isDragging = false;
+let offset = { x: 0, y: 0 };
+
+dragHandle.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offset.x = e.clientX - controls.offsetLeft;
+  offset.y = e.clientY - controls.offsetTop;
+  dragHandle.style.cursor = "grabbing";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+  controls.style.left = `${e.clientX - offset.x}px`;
+  controls.style.top = `${e.clientY - offset.y}px`;
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  dragHandle.style.cursor = "grab";
+});
