@@ -52,12 +52,7 @@ eraserButton.onclick = () => {
 };
 
 editButton.onclick = () => {
-//   if (!selectedElement) return;
-  editPopup.style.display = 'block';
-  colorInput.value = selectedElement.getAttribute('fill') || '#000000';
-  nameInput.value = selectedElement.getAttribute('data-name') || '';
-  lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
-  showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
+  mode = 'edit';
 };
 
 closePopup.onclick = () => editPopup.style.display = 'none';
@@ -76,11 +71,88 @@ showLabelCheckbox.onchange = () => {
 
 // Labels
 function updateLabel(el) {
-  let label = el.nextElementSibling;
-  if (!label || label.tagName !== 'text') {
-    label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    el.after(label);
+  if (!el) return;
+  const parent = el.parentNode;
+  // Verwijder oude label indien aanwezig
+  if (el.nextElementSibling && el.nextElementSibling.tagName === 'text') {
+    el.nextElementSibling.remove();
   }
+  const show = el.getAttribute('data-show-label') === 'true';
+  if (!show) return;
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.textContent = el.getAttribute('data-name') || '';
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('dominant-baseline', 'middle');
+  let x = 0, y = 0, rotate = '';
+  if (el.tagName === 'rect') {
+    const xVal = parseFloat(el.getAttribute('x'));
+    const yVal = parseFloat(el.getAttribute('y'));
+    const w = parseFloat(el.getAttribute('width'));
+    const h = parseFloat(el.getAttribute('height'));
+    x = xVal + w / 2;
+    y = yVal + h / 2;
+    if (h > w) rotate = `rotate(-90 ${x} ${y})`;
+  } else if (el.tagName === 'circle') {
+    x = parseFloat(el.getAttribute('cx'));
+    y = parseFloat(el.getAttribute('cy'));
+  }
+  label.setAttribute('x', x);
+  label.setAttribute('y', y);
+  if (rotate) label.setAttribute('transform', rotate);
+  parent.insertBefore(label, el.nextSibling);
+}
+  const show = el.getAttribute('data-show-label') === 'true';
+  if (!show) {
+    label.textContent = '';
+    return;
+  }
+  label.textContent = el.getAttribute('data-name') || '';
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('dominant-baseline', 'middle');
+  let x = 0, y = 0, rotate = '';
+  if (el.tagName === 'rect') {
+    const rectX = parseFloat(el.getAttribute('x'));
+    const rectY = parseFloat(el.getAttribute('y'));
+    const width = parseFloat(el.getAttribute('width'));
+    const height = parseFloat(el.getAttribute('height'));
+    x = rectX + width / 2;
+    y = rectY + height / 2;
+    if (height > width) {
+      rotate = `rotate(-90 ${x} ${y})`;
+    }
+  } else if (el.tagName === 'circle') {
+    x = parseFloat(el.getAttribute('cx'));
+    y = parseFloat(el.getAttribute('cy'));
+  }
+  label.setAttribute('x', x);
+  label.setAttribute('y', y);
+  label.setAttribute('transform', rotate);
+  const show = el.getAttribute('data-show-label') === 'true';
+  if (!show) {
+    label.textContent = '';
+    return;
+  }
+  label.textContent = el.getAttribute('data-name') || '';
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('alignment-baseline', 'middle');
+  let x = 0, y = 0, rotate = '';
+  if (el.tagName === 'rect') {
+    const rectX = parseFloat(el.getAttribute('x'));
+    const rectY = parseFloat(el.getAttribute('y'));
+    const width = parseFloat(el.getAttribute('width'));
+    const height = parseFloat(el.getAttribute('height'));
+    x = rectX + width / 2;
+    y = rectY + height / 2;
+    if (height > width) {
+      rotate = `rotate(-90 ${x} ${y})`;
+    }
+  } else if (el.tagName === 'circle') {
+    x = parseFloat(el.getAttribute('cx'));
+    y = parseFloat(el.getAttribute('cy'));
+  }
+  label.setAttribute('x', x);
+  label.setAttribute('y', y);
+  label.setAttribute('transform', rotate);
   label.textContent = el.getAttribute('data-show-label') === 'true' ? el.getAttribute('data-name') || '' : '';
   const bbox = el.getBBox();
   label.setAttribute('x', bbox.x + bbox.width + 5);
@@ -89,15 +161,15 @@ function updateLabel(el) {
 
 // Teken functionaliteit
 svg.addEventListener('mousedown', e => {
-//   if (mode === 'move') return;
-//   if (e.target.closest('svg') !== svg) return;
+  if (mode === 'move') return;
+  if (e.target.closest('svg') !== svg) return;
   isDrawing = true;
   startX = e.offsetX;
   startY = e.offsetY;
 });
 
 svg.addEventListener('mouseup', e => {
-//   if (!isDrawing) return;
+  if (!isDrawing) return;
   isDrawing = false;
   const x = startX;
   const y = startY;
@@ -162,7 +234,7 @@ cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 // Laad SVG shapes individueel
 svgDropdown.addEventListener('change', async () => {
   const filename = svgDropdown.value;
-//   if (!filename) return;
+  if (!filename) return;
 
   const docSnap = await db.collection("svg-files").doc(filename).get();
   if (docSnap.exists) {
@@ -217,7 +289,7 @@ dragHandle.addEventListener("mousedown", (e) => {
 });
 
 document.addEventListener("mousemove", (e) => {
-//   if (!isDragging) return;
+  if (!isDragging) return;
   controls.style.left = `${e.clientX - offset.x}px`;
   controls.style.top = `${e.clientY - offset.y}px`;
 });
@@ -225,4 +297,116 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseup", () => {
   isDragging = false;
   dragHandle.style.cursor = "grab";
+});
+
+
+// 🖱️ Klik op SVG-elementen bij 'Bewerk'-modus om te openen
+svg.addEventListener('click', (e) => {
+  if (mode === 'edit') {
+    if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
+      selectedElement = e.target;
+      editPopup.style.display = 'block';
+      colorInput.value = selectedElement.getAttribute('fill') || '#000000';
+      nameInput.value = selectedElement.getAttribute('data-name') || '';
+      lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
+      showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
+
+      // Popup positioneren naast muis
+      editPopup.style.left = `${e.clientX + 20}px`;
+      editPopup.style.top = `${e.clientY}px`;
+      voegResizeHandleToe(selectedElement);
+    }
+  }
+});
+
+
+// 🟡 Voeg resize-handle toe aan geselecteerde vorm
+function voegResizeHandleToe(element) {
+  // Verwijder bestaande handle als die er is
+  const bestaandeHandle = document.getElementById("resize-handle");
+  if (bestaandeHandle) bestaandeHandle.remove();
+
+  const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  handle.setAttribute("id", "resize-handle");
+  handle.setAttribute("r", 6);
+  handle.setAttribute("fill", "#ff9800");
+  handle.setAttribute("stroke", "#333");
+  handle.setAttribute("stroke-width", "1");
+  handle.style.cursor = "nwse-resize";
+
+  const bbox = element.getBBox();
+  handle.setAttribute("cx", bbox.x + bbox.width);
+  handle.setAttribute("cy", bbox.y + bbox.height);
+
+  element.parentNode.appendChild(handle);
+}
+
+
+// 🟢 Interactieve resize-functionaliteit
+let isResizing = false;
+
+svg.addEventListener("mousedown", (e) => {
+  if (e.target.id === "resize-handle") {
+    isResizing = true;
+    e.preventDefault();
+  }
+});
+
+svg.addEventListener("mousemove", (e) => {
+  if (!isResizing || !selectedElement) return;
+
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+  if (selectedElement.tagName === "rect") {
+    const x = parseFloat(selectedElement.getAttribute("x"));
+    const y = parseFloat(selectedElement.getAttribute("y"));
+    selectedElement.setAttribute("width", Math.max(10, cursorpt.x - x));
+    selectedElement.setAttribute("height", Math.max(10, cursorpt.y - y));
+  } else if (selectedElement.tagName === "circle") {
+    const cx = parseFloat(selectedElement.getAttribute("cx"));
+    const cy = parseFloat(selectedElement.getAttribute("cy"));
+    const dx = cursorpt.x - cx;
+    const dy = cursorpt.y - cy;
+    const newR = Math.sqrt(dx * dx + dy * dy);
+    selectedElement.setAttribute("r", Math.max(5, newR));
+  }
+
+  voegResizeHandleToe(selectedElement); // update handle positie
+});
+
+svg.addEventListener("mouseup", () => {
+  isResizing = false;
+});
+
+
+// 🔧 Sleepbare controls (sidebar)
+const dragHandle = document.getElementById("dragHandle");
+const controls = document.getElementById("controls");
+
+let isDraggingControls = false;
+let dragOffset = { x: 0, y: 0 };
+
+dragHandle.addEventListener("mousedown", (e) => {
+  isDraggingControls = true;
+  dragOffset.x = e.clientX - controls.offsetLeft;
+  dragOffset.y = e.clientY - controls.offsetTop;
+  dragHandle.style.cursor = "grabbing";
+  e.preventDefault();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isDraggingControls) {
+    controls.style.left = `${e.clientX - dragOffset.x}px`;
+    controls.style.top = `${e.clientY - dragOffset.y}px`;
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  if (isDraggingControls) {
+    isDraggingControls = false;
+    dragHandle.style.cursor = "grab";
+  }
 });
