@@ -182,3 +182,31 @@ svgDropdown.addEventListener('change', async () => {
 
 // Init dropdown bij opstart
 laadSVGKeuzes();
+
+// Nieuw bijgevoed vanaf hier
+// ➕ Sleepbaar maken van #controls via #dragHandle
+const controls = document.getElementById("controls");
+const dragHandle = document.getElementById("dragHandle");
+
+let offsetX = 0;
+let offsetY = 0;
+let isDraggingControls = false;
+
+dragHandle.addEventListener("mousedown", (e) => {
+  isDraggingControls = true;
+  offsetX = e.clientX - controls.offsetLeft;
+  offsetY = e.clientY - controls.offsetTop;
+  dragHandle.style.cursor = "grabbing";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isDraggingControls) return;
+  controls.style.left = `${e.clientX - offsetX}px`;
+  controls.style.top = `${e.clientY - offsetY}px`;
+});
+
+document.addEventListener("mouseup", () => {
+  isDraggingControls = false;
+  dragHandle.style.cursor = "grab";
+});
+
