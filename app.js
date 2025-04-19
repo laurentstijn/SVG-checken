@@ -263,3 +263,43 @@ function voegResizeHandleToe(element) {
 
   element.parentNode.appendChild(handle);
 }
+
+
+// 🟢 Interactieve resize-functionaliteit
+let isResizing = false;
+
+svg.addEventListener("mousedown", (e) => {
+  if (e.target.id === "resize-handle") {
+    isResizing = true;
+    e.preventDefault();
+  }
+});
+
+svg.addEventListener("mousemove", (e) => {
+  if (!isResizing || !selectedElement) return;
+
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+  if (selectedElement.tagName === "rect") {
+    const x = parseFloat(selectedElement.getAttribute("x"));
+    const y = parseFloat(selectedElement.getAttribute("y"));
+    selectedElement.setAttribute("width", Math.max(10, cursorpt.x - x));
+    selectedElement.setAttribute("height", Math.max(10, cursorpt.y - y));
+  } else if (selectedElement.tagName === "circle") {
+    const cx = parseFloat(selectedElement.getAttribute("cx"));
+    const cy = parseFloat(selectedElement.getAttribute("cy"));
+    const dx = cursorpt.x - cx;
+    const dy = cursorpt.y - cy;
+    const newR = Math.sqrt(dx * dx + dy * dy);
+    selectedElement.setAttribute("r", Math.max(5, newR));
+  }
+
+  voegResizeHandleToe(selectedElement); // update handle positie
+});
+
+svg.addEventListener("mouseup", () => {
+  isResizing = false;
+});
