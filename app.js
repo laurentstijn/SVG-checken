@@ -215,7 +215,7 @@ laadSVGKeuzes();
 
 // sleepbaar maken van controls
 //const dragHandle = document.getElementById("dragHandle");
-const controls = document.getElementById("controls");
+//const controls = document.getElementById("controls");
 
 let isDragging = false;
 let offset = { x: 0, y: 0 };
