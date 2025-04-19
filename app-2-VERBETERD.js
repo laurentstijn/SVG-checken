@@ -33,6 +33,8 @@ const fileNameInput = document.getElementById('fileNameInput');
 const confirmSaveButton = document.getElementById('confirmSaveButton');
 const cancelSaveButton = document.getElementById('cancelSaveButton');
 const svgDropdown = document.getElementById('svgDropdown');
+const svg = document.getElementById('drawingArea');
+
 
 let mode = 'rect';
 let selectedElement = null;
