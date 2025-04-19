@@ -217,8 +217,8 @@ laadSVGKeuzes();
 //const dragHandle = document.getElementById("dragHandle");
 //const controls = document.getElementById("controls");
 
-let isDragging = false;
-let offset = { x: 0, y: 0 };
+//let isDragging = false;
+//let offset = { x: 0, y: 0 };
 
 dragHandle.addEventListener("mousedown", (e) => {
   isDragging = true;
