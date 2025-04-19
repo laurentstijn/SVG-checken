@@ -158,7 +158,7 @@ cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 
 // ▼ Nieuwe SVG maken
 window.maakNieuweSVG = () => {
-  svg.innerHTML = '';
+  svg.innerHTML = ''; // Leeg canvas
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   bg.setAttribute("x", 50);
   bg.setAttribute("y", 50);
@@ -166,9 +166,11 @@ window.maakNieuweSVG = () => {
   bg.setAttribute("height", 200);
   bg.setAttribute("fill", "#ddd");
   svg.appendChild(bg);
+
   laatstGebruikteBestandsnaam = '';
   svgDropdown.value = '';
 };
+
 
 // ▼ Dropdown laden + SVG inladen
 async function laadSVGKeuzes() {
