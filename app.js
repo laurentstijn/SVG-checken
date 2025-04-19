@@ -72,7 +72,6 @@ function updateLabel(el) {
     el.nextElementSibling.remove();
   }
   const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   if (el.tagName === 'rect') {
     const xVal = parseFloat(el.getAttribute('x'));
     const yVal = parseFloat(el.getAttribute('y'));
