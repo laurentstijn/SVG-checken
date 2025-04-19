@@ -31,18 +31,12 @@ const fileNameInput = document.getElementById('fileNameInput');
 const confirmSaveButton = document.getElementById('confirmSaveButton');
 const cancelSaveButton = document.getElementById('cancelSaveButton');
 const svgDropdown = document.getElementById('svgDropdown');
-const dragHandle = document.getElementById("dragHandle");
-const controls = document.getElementById("controls");
 
 let mode = 'rect';
 let selectedElement = null;
 let isDrawing = false;
 let startX = 0, startY = 0;
 let laatstGebruikteBestandsnaam = "";
-let isDragging = false;
-let offset = { x: 0, y: 0 };
-
-dragHandle.style.display = 'none';
 
 // ▼ Knopacties
 rectButton.onclick = () => mode = 'rect';
@@ -60,8 +54,11 @@ eraserButton.onclick = () => {
 editButton.onclick = () => {
   mode = 'edit';
   if (selectedElement) {
+    // Toon popup en handle
     editPopup.style.display = 'block';
-    dragHandle.style.display = 'flex';
+    document.getElementById('dragHandle').style.display = 'flex';
+
+    // Zet huidige waarden in inputs
     colorInput.value = selectedElement.getAttribute('fill');
     nameInput.value = selectedElement.getAttribute('data-name') || '';
     lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
@@ -69,11 +66,14 @@ editButton.onclick = () => {
   }
 };
 
+
 closePopup.onclick = () => {
   editPopup.style.display = 'none';
-  dragHandle.style.display = 'none';
+  document.getElementById('dragHandle').style.display = 'none';
 };
 
+
+// Bewerken
 colorInput.oninput = () => selectedElement.setAttribute('fill', colorInput.value);
 nameInput.oninput = () => {
   selectedElement.setAttribute('data-name', nameInput.value);
@@ -85,6 +85,7 @@ showLabelCheckbox.onchange = () => {
   updateLabel(selectedElement);
 };
 
+// Labels
 function updateLabel(el) {
   let label = el.nextElementSibling;
   if (!label || label.tagName !== 'text') {
@@ -111,20 +112,19 @@ svg.addEventListener('mouseup', e => {
   isDrawing = false;
   const x = startX;
   const y = startY;
-  let w = e.offsetX - x;
-  let h = e.offsetY - y;
+  const w = e.offsetX - x;
+  const h = e.offsetY - y;
 
   const shape = document.createElementNS("http://www.w3.org/2000/svg", mode === 'circle' ? 'circle' : 'rect');
-
   if (mode === 'circle') {
     shape.setAttribute('cx', x + w / 2);
     shape.setAttribute('cy', y + h / 2);
     shape.setAttribute('r', Math.sqrt(w * w + h * h) / 2);
   } else {
-    shape.setAttribute('x', w < 0 ? x + w : x);
-    shape.setAttribute('y', h < 0 ? y + h : y);
-    shape.setAttribute('width', Math.abs(w));
-    shape.setAttribute('height', Math.abs(h));
+    shape.setAttribute('x', x);
+    shape.setAttribute('y', y);
+    shape.setAttribute('width', w);
+    shape.setAttribute('height', h);
   }
 
   shape.setAttribute('fill', '#00aaff');
@@ -171,8 +171,26 @@ confirmSaveButton.onclick = async () => {
 cancelSaveButton.onclick = () => namePopup.style.display = 'none';
 
 // Laad SVG shapes individueel
+svgDropdown.addEventListener('change', async () => {
+  const filename = svgDropdown.value;
+  if (!filename) return;
 
-
+  const docSnap = await db.collection("svg-files").doc(filename).get();
+  if (docSnap.exists) {
+    svg.innerHTML = '';
+    const data = docSnap.data();
+    data.shapes.forEach(shape => {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", shape.type);
+      for (let key in shape) {
+        if (key !== "type") el.setAttribute(key, shape[key]);
+      }
+      el.addEventListener("click", () => selectedElement = el);
+      svg.appendChild(el);
+      updateLabel(el);
+    });
+    laatstGebruikteBestandsnaam = filename;
+  }
+});
 
 // Nieuwe lege canvas
 window.maakNieuweSVG = () => {
@@ -196,11 +214,11 @@ async function laadSVGKeuzes() {
 laadSVGKeuzes();
 
 // sleepbaar maken van controls
-//const dragHandle = document.getElementById("dragHandle");
-//const controls = document.getElementById("controls");
+const dragHandle = document.getElementById("dragHandle");
+const controls = document.getElementById("controls");
 
-//let isDragging = false;
-//let offset = { x: 0, y: 0 };
+let isDragging = false;
+let offset = { x: 0, y: 0 };
 
 dragHandle.addEventListener("mousedown", (e) => {
   isDragging = true;
@@ -301,66 +319,3 @@ svg.addEventListener("mousemove", (e) => {
 svg.addEventListener("mouseup", () => {
   isResizing = false;
 });
-
-
-svgDropdown.addEventListener('change', async () => {
-  const filename = svgDropdown.value;
-  if (!filename) return;
-
-  const docSnap = await db.collection("svg-files").doc(filename).get();
-  if (docSnap.exists) {
-    svg.innerHTML = '';
-    const data = docSnap.data();
-    data.shapes.forEach(shape => {
-      const el = document.createElementNS("http://www.w3.org/2000/svg", shape.type);
-      for (let key in shape) {
-        if (key !== "type") el.setAttribute(key, shape[key]);
-      }
-
-      // ✅ Corrigeer negatieve rechthoek-afmetingen
-      if (el.tagName === 'rect') {
-        let w = parseFloat(el.getAttribute('width'));
-        let h = parseFloat(el.getAttribute('height'));
-        let x = parseFloat(el.getAttribute('x'));
-        let y = parseFloat(el.getAttribute('y'));
-
-        if (w < 0) {
-          el.setAttribute('x', x + w);
-          el.setAttribute('width', Math.abs(w));
-        }
-
-        if (h < 0) {
-          el.setAttribute('y', y + h);
-          el.setAttribute('height', Math.abs(h));
-        }
-      }
-
-      el.addEventListener("click", () => selectedElement = el);
-      svg.appendChild(el);
-      updateLabel(el);
-    });
-
-
-// 🟢 Sleepbare controls altijd actief
-let isDragging = false;
-let offset = { x: 0, y: 0 };
-
-dragHandle.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offset.x = e.clientX - controls.offsetLeft;
-  offset.y = e.clientY - controls.offsetTop;
-  dragHandle.style.cursor = "grabbing";
-});
-
-document.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
-  controls.style.left = `${e.clientX - offset.x}px`;
-  controls.style.top = `${e.clientY - offset.y}px`;
-});
-
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  dragHandle.style.cursor = "grab";
-});
-}
-
