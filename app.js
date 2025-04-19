@@ -362,5 +362,4 @@ document.addEventListener("mouseup", () => {
   isDragging = false;
   dragHandle.style.cursor = "grab";
 });
-    }
-  }
+
