@@ -53,9 +53,25 @@ eraserButton.onclick = () => {
 
 editButton.onclick = () => {
   mode = 'edit';
+  if (selectedElement) {
+    // Toon popup en handle
+    editPopup.style.display = 'block';
+    document.getElementById('dragHandle').style.display = 'flex';
+
+    // Zet huidige waarden in inputs
+    colorInput.value = selectedElement.getAttribute('fill');
+    nameInput.value = selectedElement.getAttribute('data-name') || '';
+    lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
+    showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
+  }
 };
 
-closePopup.onclick = () => editPopup.style.display = 'none';
+
+closePopup.onclick = () => {
+  editPopup.style.display = 'none';
+  document.getElementById('dragHandle').style.display = 'none';
+};
+
 
 // Bewerken
 colorInput.oninput = () => selectedElement.setAttribute('fill', colorInput.value);
