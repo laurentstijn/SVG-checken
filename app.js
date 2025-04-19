@@ -52,12 +52,8 @@ eraserButton.onclick = () => {
 };
 
 editButton.onclick = () => {
-  if (!selectedElement) return;
-  editPopup.style.display = 'block';
-  colorInput.value = selectedElement.getAttribute('fill') || '#000000';
-  nameInput.value = selectedElement.getAttribute('data-name') || '';
-  lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
-  showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
+editButton.onclick = () => {
+  mode = 'edit';
 };
 
 closePopup.onclick = () => editPopup.style.display = 'none';
