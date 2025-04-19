@@ -2,7 +2,11 @@
 const firebaseConfig = {
   apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
   authDomain: "tekensvg.firebaseapp.com",
-  projectId: "tekensvg"
+  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tekensvg",
+  storageBucket: "tekensvg.firebasestorage.app",
+  messagingSenderId: "180262088073",
+  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
 };
 
 const app = firebase.initializeApp(firebaseConfig);
@@ -221,4 +225,23 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseup", () => {
   isDragging = false;
   dragHandle.style.cursor = "grab";
+});
+
+
+// 🖱️ Klik op SVG-elementen bij 'Bewerk'-modus om te openen
+svg.addEventListener('click', (e) => {
+  if (mode === 'edit') {
+    if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
+      selectedElement = e.target;
+      editPopup.style.display = 'block';
+      colorInput.value = selectedElement.getAttribute('fill') || '#000000';
+      nameInput.value = selectedElement.getAttribute('data-name') || '';
+      lockCheckbox.checked = selectedElement.getAttribute('data-locked') === 'true';
+      showLabelCheckbox.checked = selectedElement.getAttribute('data-show-label') === 'true';
+
+      // Popup positioneren naast muis
+      editPopup.style.left = `${e.clientX + 20}px`;
+      editPopup.style.top = `${e.clientY}px`;
+    }
+  }
 });
