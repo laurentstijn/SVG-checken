@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVG Keuze & Bewerking</title>
+  <style>
+    #svgContainer svg {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: auto;
+    }
+  </style>
+  <!-- Firebase SDK's -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // === Firebase Config (vervang dit met jouw eigen gegevens) ===
+const firebaseConfig = {
+  apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+  authDomain: "tekensvg.firebaseapp.com",
+  databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tekensvg",
+  storageBucket: "tekensvg.firebasestorage.app",
+  messagingSenderId: "180262088073",
+  appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+};
+
+    // Initialiseer Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // === DOM-elementen ===
+    const dropdown = document.getElementById("svgDropdown");
+    const container = document.getElementById("svgContainer");
+
+    // === Laad SVG-lijst in dropdown ===
+    async function laadSVGKeuzes() {
+      const svgCollectie = await getDocs(collection(db, "svg-files"));
+      svgCollectie.forEach((docSnap) => {
+        const optie = document.createElement("option");
+        optie.value = docSnap.id;
+        optie.textContent = docSnap.id;
+        dropdown.appendChild(optie);
+      });
+    }
+
+    // === Toon SVG als gebruiker er één kiest ===
+    dropdown.addEventListener("change", async (e) => {
+      const filename = e.target.value;
+      if (!filename) return;
+
+      const docSnap = await getDoc(doc(db, "svg-files", filename));
+      if (docSnap.exists()) {
+        container.innerHTML = docSnap.data().svg;
+      }
+    });
+
+    // === Opslaan van bewerkte SVG ===
+    document.getElementById("opslaanKnop").addEventListener("click", async () => {
+      const filename = dropdown.value;
+      const svgEl = container.querySelector("svg");
+      if (!svgEl || !filename) return;
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgEl);
+
+      await setDoc(doc(db, "svg-files", filename), {
+        filename,
+        svg: svgString,
+        timestamp: new Date().toISOString(),
+      });
+
+      alert("SVG opgeslagen!");
+    });
+
+    // Init
+    laadSVGKeuzes();
+  </script>
+</head>
+<body>
+
+  <h2>Kies een SVG</h2>
+  <select id="svgDropdown">
+    <option value="">-- Kies een SVG --</option>
+  </select>
+
+  <div id="svgContainer"></div>
+
+  <button id="opslaanKnop">Bewerkte SVG Opslaan</button>
+
+</body>
+</html>
