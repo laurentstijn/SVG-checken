@@ -149,7 +149,7 @@ confirmSaveButton.onclick = async () => {
 
   namePopup.style.display = 'none';
   laatstGebruikteBestandsnaam = filename;
-  alert("Shapes opgeslagen!");
+  alert("Havenplan opgeslagen!");
   laadSVGKeuzes();
 };
 
