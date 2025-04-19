@@ -410,3 +410,63 @@ document.addEventListener("mouseup", () => {
     dragHandle.style.cursor = "grab";
   }
 });
+
+
+// ✅ Sleepbare controls
+const dragHandle = document.getElementById("dragHandle");
+const controls = document.getElementById("controls");
+
+let isDraggingControls = false;
+let dragOffset = { x: 0, y: 0 };
+
+dragHandle.addEventListener("mousedown", (e) => {
+  isDraggingControls = true;
+  dragOffset.x = e.clientX - controls.offsetLeft;
+  dragOffset.y = e.clientY - controls.offsetTop;
+  dragHandle.style.cursor = "grabbing";
+  e.preventDefault();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isDraggingControls) {
+    controls.style.left = `${e.clientX - dragOffset.x}px`;
+    controls.style.top = `${e.clientY - dragOffset.y}px`;
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  isDraggingControls = false;
+  dragHandle.style.cursor = "grab";
+});
+
+// ✅ SVG's laden vanuit Firestore
+function laadSVGs() {
+  db.collection("svgs").get().then((querySnapshot) => {
+    svgDropdown.innerHTML = '<option value="">-- Kies een SVG --</option>';
+    querySnapshot.forEach((doc) => {
+      const opt = document.createElement("option");
+      opt.value = doc.id;
+      opt.textContent = doc.id;
+      svgDropdown.appendChild(opt);
+    });
+  });
+}
+
+svgDropdown.addEventListener("change", () => {
+  const naam = svgDropdown.value;
+  if (!naam) return;
+  db.collection("svgs").doc(naam).get().then((doc) => {
+    if (doc.exists) {
+      svg.innerHTML = doc.data().content;
+    }
+  });
+});
+
+// Laad SVG's bij opstart
+laadSVGs();
+
+// Nieuwe SVG maken
+window.maakNieuweSVG = function () {
+  svg.innerHTML = "";
+  laatstGebruikteBestandsnaam = "";
+}
