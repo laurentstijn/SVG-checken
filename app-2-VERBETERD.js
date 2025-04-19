@@ -158,7 +158,6 @@ window.maakNieuweSVG = () => {
 };
 
 // ▼ Dropdown laden + SVG inladen
-const svg = document.getElementById('drawingArea');
 async function laadSVGKeuzes() {
   svgDropdown.innerHTML = '<option value="">-- Kies een SVG --</option>';
   const snapshot = await db.collection("svg-files").get();
