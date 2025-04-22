@@ -562,32 +562,32 @@
             
             // Pier management functions
             function addPier() {
-                const type = document.getElementById('pierType').value;
-                const length = parseInt(document.getElementById('pierLength').value);
-                
-                const newPier = {
-                    id: state.nextPierId++,
-                    type: type,
-                    x: 100 + Math.random() * 100,
-                    y: 100 + Math.random() * 100,
-                    width: type === 'vertical' ? 15 : length * 5,
-                    height: type === 'horizontal' ? 15 : length * 5,
-                    boats: []
-                };
-                
-                // Update local state
-                state.piers.push(newPier);
-                
-                // Save to Firebase
-                database.ref('piers').set(state.piers)
-                    .then(() => updateSyncStatus('Pier toegevoegd'))
-                    .catch(error => {
-                        console.error("Error saving pier:", error);
-                        updateSyncStatus('Fout bij opslaan pier', 'error');
-                    });
-                
-                updateUI();
-            }
+    const type = document.getElementById('pierType').value;
+    const length = parseInt(document.getElementById('pierLength').value);
+    
+    const newPier = {
+        id: state.nextPierId++,
+        type: type,
+        x: 100 + Math.random() * 100,
+        y: 100 + Math.random() * 100,
+        width: type === 'vertical' ? 15 : length * 5,
+        height: type === 'horizontal' ? 15 : length * 5,
+        boats: [] // Zorg dat dit altijd een array is
+    };
+    
+    // Update local state
+    state.piers.push(newPier);
+    
+    // Save to Firebase
+    database.ref('piers').set(state.piers)
+        .then(() => updateSyncStatus('Pier toegevoegd'))
+        .catch(error => {
+            console.error("Error saving pier:", error);
+            updateSyncStatus('Fout bij opslaan pier', 'error');
+        });
+    
+    updateUI();
+}
             
             function removePier() {
                 if (state.piers.length === 0) return;
@@ -666,20 +666,34 @@
                     });
             }
             
-            function assignBoatToPier(boat) {
-                const randomPier = state.piers[Math.floor(Math.random() * state.piers.length)];
-                boat.pierId = randomPier.id;
-                
-                if (randomPier.type === 'horizontal') {
-                    boat.x = randomPier.x + randomPier.boats.length * (boat.width + 5);
-                    boat.y = randomPier.y - boat.height;
-                } else {
-                    boat.x = randomPier.x + randomPier.width;
-                    boat.y = randomPier.y + randomPier.boats.length * (boat.height + 5);
-                }
-                
-                randomPier.boats.push(boat);
-            }
+           function assignBoatToPier(boat) {
+    if (state.piers.length === 0) return;
+    
+    const randomPier = state.piers[Math.floor(Math.random() * state.piers.length)];
+    boat.pierId = randomPier.id;
+    
+    // Zorg dat boats array altijd bestaat
+    if (!randomPier.boats) {
+        randomPier.boats = [];
+    }
+    
+    if (randomPier.type === 'horizontal') {
+        boat.x = randomPier.x + (randomPier.boats.length * (boat.width + 5));
+        boat.y = randomPier.y - boat.height;
+    } else {
+        boat.x = randomPier.x + randomPier.width;
+        boat.y = randomPier.y + (randomPier.boats.length * (boat.height + 5));
+    }
+    
+    randomPier.boats.push(boat.id); // Sla alleen de ID op voor referentie
+    
+    // Update de pier in Firebase
+    database.ref('piers').child(randomPier.id).set(randomPier)
+        .catch(error => {
+            console.error("Error updating pier:", error);
+            updateSyncStatus('Fout bij bijwerken pier', 'error');
+        });
+}
             
             function removeBoat() {
                 if (state.boats.length === 0) return;
