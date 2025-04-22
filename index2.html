@@ -305,6 +305,17 @@
         .collision-warning {
             box-shadow: 0 0 5px 2px red;
         }
+        
+        .slot-name {
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            color: #333;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -685,7 +696,7 @@
                         y: state.tempPier.y,
                         width: Math.abs(state.tempPier.width),
                         height: Math.abs(state.tempPier.height),
-                        slots: [],  // Initialiseer slots array
+                        slots: [],
                         boats: []
                     };
                     
@@ -702,7 +713,9 @@
                         state.selectedPier.slots = [];
                     }
                     
-                    // Voeg ligplaatsen toe aan geselecteerde steiger
+                    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.selectedPier.slots.length + 1}`);
+                    if (slotName === null) return; // Gebruiker heeft geannuleerd
+                    
                     state.tempSlots.forEach(slot => {
                         state.selectedPier.slots.push({
                             x: slot.x,
@@ -710,7 +723,8 @@
                             width: Math.abs(slot.width),
                             height: Math.abs(slot.height),
                             occupied: false,
-                            boatId: null
+                            boatId: null,
+                            name: slotName || `Ligplaats ${state.selectedPier.slots.length + 1}`
                         });
                     });
                     
@@ -775,6 +789,12 @@
                             slotEl.style.height = `${slot.height}px`;
                             slotEl.dataset.pierId = pier.id;
                             slotEl.dataset.slotIndex = index;
+                            
+                            // Voeg naam toe aan ligplaats
+                            const nameEl = document.createElement('div');
+                            nameEl.className = 'slot-name';
+                            nameEl.textContent = slot.name;
+                            slotEl.appendChild(nameEl);
                             
                             slotEl.addEventListener('click', function(e) {
                                 e.stopPropagation();
@@ -914,8 +934,17 @@
                     document.getElementById('boatInfoEmail').textContent = state.selectedBoat.email;
                     
                     const pier = state.piers.find(p => p.id === state.selectedBoat.pierId);
-                    document.getElementById('boatInfoLocation').textContent = pier ? 
-                        `Pier ${pier.name}` : 'Geen pier toegewezen';
+                    let locationText = 'Geen pier toegewezen';
+                    
+                    if (pier) {
+                        const slot = pier.slots.find(s => s.boatId === state.selectedBoat.id);
+                        locationText = `Pier ${pier.name}`;
+                        if (slot) {
+                            locationText += `, Ligplaats ${slot.name}`;
+                        }
+                    }
+                    
+                    document.getElementById('boatInfoLocation').textContent = locationText;
                 } else if (state.selectedPier) {
                     noSelection.style.display = 'none';
                     boatInfoDisplay.style.display = 'none';
@@ -1159,17 +1188,17 @@
                 const boat = state.boats.find(b => b.id === boatId);
                 if (!boat) return;
                 
-                state.boats = state.boats.filter(b => b.id !== boatId);
-                
                 // Maak ligplaats vrij indien aan een pier toegewezen
                 if (boat.pierId) {
                     const pier = state.piers.find(p => p.id === boat.pierId);
                     if (pier && pier.slots) {
-                        const slot = pier.slots.find(s => s.boatId === boatId);
-                        if (slot) {
-                            slot.occupied = false;
-                            delete slot.boatId;
-                        }
+                        // Zoek alle slots die deze boot bevatten (voor het geval er meerdere zijn)
+                        pier.slots.forEach(slot => {
+                            if (slot.boatId === boatId) {
+                                slot.occupied = false;
+                                slot.boatId = null;
+                            }
+                        });
                         
                         // Verwijder boot uit pier.boats
                         if (pier.boats) {
@@ -1177,6 +1206,9 @@
                         }
                     }
                 }
+                
+                // Verwijder de boot uit de state
+                state.boats = state.boats.filter(b => b.id !== boatId);
                 
                 // Deselecteer
                 if (state.selectedBoat && state.selectedBoat.id === boatId) {
@@ -1257,7 +1289,7 @@
                     pier.slots.forEach((slot, index) => {
                         const option = document.createElement('option');
                         option.value = index;
-                        option.textContent = `Ligplaats ${index + 1} (${slot.occupied ? 'bezet' : 'beschikbaar'})`;
+                        option.textContent = `${slot.name} (${slot.occupied ? 'bezet' : 'beschikbaar'})`;
                         option.disabled = slot.occupied && slot.boatId !== state.selectedBoat.id;
                         
                         if (slot.boatId === state.selectedBoat.id) {
@@ -1315,7 +1347,7 @@
                 const slotIndex = document.getElementById('editBoatSlot').value;
                 
                 // Verwijder van oude ligplaats indien nodig
-                if (oldPierId && oldPierId !== newPierId) {
+                if (oldPierId) {
                     const oldPier = state.piers.find(p => p.id === oldPierId);
                     if (oldPier && oldPier.slots) {
                         const oldSlot = oldPier.slots.find(s => s.boatId === state.selectedBoat.id);
@@ -1337,13 +1369,19 @@
                                 return;
                             }
                         } 
-                        // Handmatige toewijzing
+                        // Handmatige toewijzing aan specifieke ligplaats
                         else if (newPier.slots && newPier.slots[slotIndex]) {
                             const slot = newPier.slots[slotIndex];
                             
                             // Controleer of de boot past
                             if (state.selectedBoat.width > slot.width || state.selectedBoat.height > slot.height) {
                                 alert('De boot past niet in deze ligplaats!');
+                                return;
+                            }
+                            
+                            // Controleer of de ligplaats al bezet is (behalve door deze boot)
+                            if (slot.occupied && slot.boatId !== state.selectedBoat.id) {
+                                alert('Deze ligplaats is al bezet!');
                                 return;
                             }
                             
