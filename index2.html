@@ -26,69 +26,22 @@
             margin: 0 auto;
         }
         
-        /* Controls panel */
-        .controls-panel {
-            width: 300px;
-            background: white;
+        /* Haven tekening panel */
+        .drawing-panel {
+            flex: 2;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .control-group {
-            margin-bottom: 20px;
-        }
-        
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #0066cc;
-        }
-        
-        .control-group input,
-        .control-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        
-        .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        button {
-            padding: 10px 15px;
-            background-color: #0066cc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #0055aa;
-        }
-        
-        button.secondary {
-            background-color: #6c757d;
-        }
-        
-        /* Harbor display */
         .harbor-container {
-            flex: 1;
             background-color: #87CEEB;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
             position: relative;
-            min-height: 600px;
+            height: 500px;
             overflow: hidden;
+            margin-top: 15px;
         }
         
         .pier {
@@ -133,28 +86,88 @@
             font-size: 9px;
         }
         
-        /* Info panel - NU DUDELLIJK ZICHTBAAR */
-        .info-panel {
-            width: 350px;
+        /* Beheer panel */
+        .management-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 350px;
+        }
+        
+        .pier-management, .boat-management {
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
         }
         
-        .info-panel h2 {
+        .section-title {
             color: #0066cc;
             margin-top: 0;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
         
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0055aa;
+        }
+        
+        button.secondary {
+            background-color: #6c757d;
+        }
+        
+        /* Info panel */
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-grow: 1;
+        }
+        
         .info-grid {
             display: grid;
             grid-template-columns: 120px 1fr;
             gap: 10px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
         
         .info-label {
@@ -170,6 +183,13 @@
             min-height: 20px;
         }
         
+        .no-selection {
+            text-align: center;
+            color: #666;
+            padding: 50px 20px;
+            font-style: italic;
+        }
+        
         .edit-form {
             margin-top: 20px;
             padding: 15px;
@@ -178,7 +198,7 @@
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .form-group label {
@@ -187,25 +207,10 @@
             font-weight: bold;
         }
         
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
         .form-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
-        }
-        
-        .no-selection {
-            text-align: center;
-            color: #666;
-            padding: 50px 20px;
-            font-style: italic;
         }
     </style>
 </head>
@@ -213,121 +218,124 @@
     <h1>Jachthaven Beheersysteem</h1>
     
     <div class="app-container">
-        <!-- Controls panel -->
-        <div class="controls-panel">
-            <h2>Haven Configuratie</h2>
-            
-            <div class="control-group">
-                <label for="pierType">Type Pier:</label>
-                <select id="pierType">
-                    <option value="horizontal">Horizontaal</option>
-                    <option value="vertical">Verticaal</option>
-                    <option value="lShape">L-vormig</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="pierLength">Lengte Pier (m):</label>
-                <input type="number" id="pierLength" min="10" max="50" value="30">
-            </div>
-            
-            <div class="control-group">
-                <label for="boatType">Type Boot:</label>
-                <select id="boatType">
-                    <option value="sailboat">Zeilboot</option>
-                    <option value="motorboat">Motorboot</option>
-                    <option value="yacht">Jacht</option>
-                    <option value="small">Kleine boot</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="boatSize">Grootte Boot (m):</label>
-                <input type="number" id="boatSize" min="5" max="30" value="10">
-            </div>
-            
-            <div class="control-group">
-                <label for="boatName">Naam Boot:</label>
-                <input type="text" id="boatName" placeholder="Bijv. De Zeevaarder">
-            </div>
-            
-            <div class="buttons">
-                <button id="addPier">Pier Toevoegen</button>
-                <button id="addBoat">Boot Toevoegen</button>
-            </div>
-            
-            <div class="buttons">
-                <button id="resetHarbor" class="secondary">Haven Resetten</button>
-            </div>
+        <!-- Haven tekening -->
+        <div class="drawing-panel">
+            <h2 class="section-title">Haven Tekening</h2>
+            <div class="harbor-container" id="harbor"></div>
         </div>
         
-        <!-- Harbor display -->
-        <div class="harbor-container" id="harbor"></div>
-        
-        <!-- Info panel - NU ALTIJD ZICHTBAAR -->
-        <div class="info-panel">
-            <h2>Boot Informatie</h2>
-            
-            <div id="noSelection" class="no-selection">
-                Klik op een boot in de haven om details te zien
-            </div>
-            
-            <div id="infoDisplay" style="display: none;">
-                <div class="info-grid">
-                    <div class="info-label">Naam:</div>
-                    <div class="info-value" id="infoName"></div>
-                    
-                    <div class="info-label">Type:</div>
-                    <div class="info-value" id="infoType"></div>
-                    
-                    <div class="info-label">Lengte:</div>
-                    <div class="info-value" id="infoSize"></div>
-                    
-                    <div class="info-label">Eigenaar:</div>
-                    <div class="info-value" id="infoOwner"></div>
-                    
-                    <div class="info-label">Telefoon:</div>
-                    <div class="info-value" id="infoPhone"></div>
-                    
-                    <div class="info-label">Email:</div>
-                    <div class="info-value" id="infoEmail"></div>
-                    
-                    <div class="info-label">Locatie:</div>
-                    <div class="info-value" id="infoLocation"></div>
-                    
-                    <div class="info-label">Opmerkingen:</div>
-                    <div class="info-value" id="infoNotes"></div>
+        <!-- Beheer panel -->
+        <div class="management-panel">
+            <!-- Pier beheer -->
+            <div class="pier-management">
+                <h2 class="section-title">Pier Beheer</h2>
+                
+                <div class="control-group">
+                    <label for="pierType">Type Pier:</label>
+                    <select id="pierType">
+                        <option value="horizontal">Horizontaal</option>
+                        <option value="vertical">Verticaal</option>
+                        <option value="lShape">L-vormig</option>
+                    </select>
                 </div>
                 
-                <button id="editInfo" class="secondary">Bewerken</button>
-            </div>
-            
-            <div id="editForm" class="edit-form" style="display: none;">
-                <h3>Bootgegevens Bewerken</h3>
-                <div class="form-group">
-                    <label for="editName">Boot Naam:</label>
-                    <input type="text" id="editName">
-                </div>
-                <div class="form-group">
-                    <label for="editOwner">Eigenaar:</label>
-                    <input type="text" id="editOwner">
-                </div>
-                <div class="form-group">
-                    <label for="editPhone">Telefoon:</label>
-                    <input type="text" id="editPhone">
-                </div>
-                <div class="form-group">
-                    <label for="editEmail">Email:</label>
-                    <input type="text" id="editEmail">
-                </div>
-                <div class="form-group">
-                    <label for="editNotes">Opmerkingen:</label>
-                    <textarea id="editNotes" rows="3"></textarea>
+                <div class="control-group">
+                    <label for="pierLength">Lengte (m):</label>
+                    <input type="number" id="pierLength" min="10" max="50" value="30">
                 </div>
                 
-                <div class="form-actions">
-                    <button id="saveInfo">Opslaan</button>
-                    <button id="cancelEdit" class="secondary">Annuleren</button>
+                <div class="buttons">
+                    <button id="addPier">Pier Toevoegen</button>
+                    <button id="removePier" class="secondary">Verwijderen</button>
+                </div>
+            </div>
+            
+            <!-- Boot beheer -->
+            <div class="boat-management">
+                <h2 class="section-title">Boot Beheer</h2>
+                
+                <div class="control-group">
+                    <label for="boatType">Type Boot:</label>
+                    <select id="boatType">
+                        <option value="sailboat">Zeilboot</option>
+                        <option value="motorboat">Motorboot</option>
+                        <option value="yacht">Jacht</option>
+                        <option value="small">Kleine boot</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="boatSize">Grootte (m):</label>
+                    <input type="number" id="boatSize" min="5" max="30" value="10">
+                </div>
+                
+                <div class="control-group">
+                    <label for="boatName">Naam:</label>
+                    <input type="text" id="boatName" placeholder="Bijv. De Zeevaarder">
+                </div>
+                
+                <div class="buttons">
+                    <button id="addBoat">Boot Toevoegen</button>
+                    <button id="removeBoat" class="secondary">Verwijderen</button>
+                </div>
+            </div>
+            
+            <!-- Info panel -->
+            <div class="info-panel">
+                <h2 class="section-title">Boot Details</h2>
+                
+                <div id="noSelection" class="no-selection">
+                    Selecteer een boot voor details
+                </div>
+                
+                <div id="infoDisplay" style="display: none;">
+                    <div class="info-grid">
+                        <div class="info-label">Naam:</div>
+                        <div class="info-value" id="infoName"></div>
+                        
+                        <div class="info-label">Type:</div>
+                        <div class="info-value" id="infoType"></div>
+                        
+                        <div class="info-label">Lengte:</div>
+                        <div class="info-value" id="infoSize"></div>
+                        
+                        <div class="info-label">Eigenaar:</div>
+                        <div class="info-value" id="infoOwner"></div>
+                        
+                        <div class="info-label">Telefoon:</div>
+                        <div class="info-value" id="infoPhone"></div>
+                        
+                        <div class="info-label">Email:</div>
+                        <div class="info-value" id="infoEmail"></div>
+                        
+                        <div class="info-label">Locatie:</div>
+                        <div class="info-value" id="infoLocation"></div>
+                    </div>
+                    
+                    <button id="editInfo" class="secondary">Bewerken</button>
+                    
+                    <div id="editForm" class="edit-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="editName">Boot Naam:</label>
+                            <input type="text" id="editName">
+                        </div>
+                        <div class="form-group">
+                            <label for="editOwner">Eigenaar:</label>
+                            <input type="text" id="editOwner">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Telefoon:</label>
+                            <input type="text" id="editPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">Email:</label>
+                            <input type="text" id="editEmail">
+                        </div>
+                        <div class="form-actions">
+                            <button id="saveInfo">Opslaan</button>
+                            <button id="cancelEdit" class="secondary">Annuleren</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -337,16 +345,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             // DOM elements
             const harbor = document.getElementById('harbor');
+            
+            // Pier management
             const addPierBtn = document.getElementById('addPier');
-            const addBoatBtn = document.getElementById('addBoat');
-            const resetHarborBtn = document.getElementById('resetHarbor');
+            const removePierBtn = document.getElementById('removePier');
             const pierTypeSelect = document.getElementById('pierType');
             const pierLengthInput = document.getElementById('pierLength');
+            
+            // Boat management
+            const addBoatBtn = document.getElementById('addBoat');
+            const removeBoatBtn = document.getElementById('removeBoat');
             const boatTypeSelect = document.getElementById('boatType');
             const boatSizeInput = document.getElementById('boatSize');
             const boatNameInput = document.getElementById('boatName');
             
-            // Info panel elements
+            // Info panel
             const noSelection = document.getElementById('noSelection');
             const infoDisplay = document.getElementById('infoDisplay');
             const infoName = document.getElementById('infoName');
@@ -356,16 +369,14 @@
             const infoPhone = document.getElementById('infoPhone');
             const infoEmail = document.getElementById('infoEmail');
             const infoLocation = document.getElementById('infoLocation');
-            const infoNotes = document.getElementById('infoNotes');
             const editInfoBtn = document.getElementById('editInfo');
             
-            // Edit form elements
+            // Edit form
             const editForm = document.getElementById('editForm');
             const editName = document.getElementById('editName');
             const editOwner = document.getElementById('editOwner');
             const editPhone = document.getElementById('editPhone');
             const editEmail = document.getElementById('editEmail');
-            const editNotes = document.getElementById('editNotes');
             const saveInfoBtn = document.getElementById('saveInfo');
             const cancelEditBtn = document.getElementById('cancelEdit');
             
@@ -375,6 +386,7 @@
             let pierId = 0;
             let boatId = 0;
             let selectedBoat = null;
+            let selectedPier = null;
             
             // Boat types
             const boatTypes = {
@@ -394,103 +406,14 @@
             
             // Event listeners
             addPierBtn.addEventListener('click', addPier);
+            removePierBtn.addEventListener('click', removePier);
             addBoatBtn.addEventListener('click', addBoat);
-            resetHarborBtn.addEventListener('click', resetHarbor);
+            removeBoatBtn.addEventListener('click', removeBoat);
             editInfoBtn.addEventListener('click', showEditForm);
             saveInfoBtn.addEventListener('click', saveBoatInfo);
             cancelEditBtn.addEventListener('click', cancelEdit);
             
-            // Functions
-            function addPier() {
-                const type = pierTypeSelect.value;
-                const length = parseInt(pierLengthInput.value);
-                
-                pierId++;
-                const pier = {
-                    id: pierId,
-                    type: type,
-                    x: 100 + Math.random() * 100,
-                    y: 100 + Math.random() * 100,
-                    width: type === 'vertical' ? 15 : length * 5,
-                    height: type === 'horizontal' ? 15 : length * 5,
-                    boats: []
-                };
-                
-                if (type === 'lShape') {
-                    pier.extension = {
-                        x: pier.x + pier.width - 15,
-                        y: pier.y + 15,
-                        width: 15,
-                        height: length * 3
-                    };
-                }
-                
-                piers.push(pier);
-                renderHarbor();
-            }
-            
-            function addBoat() {
-                if (piers.length === 0) {
-                    alert('Voeg eerst een pier toe!');
-                    return;
-                }
-                
-                const type = boatTypeSelect.value;
-                const size = parseInt(boatSizeInput.value);
-                const name = boatNameInput.value.trim() || `Boot ${boatId + 1}`;
-                const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
-                
-                boatId++;
-                const boat = {
-                    id: boatId,
-                    type: type,
-                    size: size,
-                    name: name,
-                    owner: randomOwner.name,
-                    phone: randomOwner.phone,
-                    email: randomOwner.email,
-                    notes: "",
-                    pierId: null,
-                    width: size * 2,
-                    height: 25,
-                    color: boatTypes[type].color,
-                    typeName: boatTypes[type].name
-                };
-                
-                // Try to assign to a random pier
-                assignBoatToPier(boat);
-                
-                boats.push(boat);
-                renderHarbor();
-                boatNameInput.value = "";
-            }
-            
-            function assignBoatToPier(boat) {
-                const randomPier = piers[Math.floor(Math.random() * piers.length)];
-                boat.pierId = randomPier.id;
-                
-                if (randomPier.type === 'horizontal') {
-                    boat.x = randomPier.x + randomPier.boats.length * (boat.width + 5);
-                    boat.y = randomPier.y - boat.height;
-                } else {
-                    boat.x = randomPier.x + randomPier.width;
-                    boat.y = randomPier.y + randomPier.boats.length * (boat.height + 5);
-                }
-                
-                randomPier.boats.push(boat);
-            }
-            
-            function resetHarbor() {
-                if (confirm("Weet u zeker dat u de hele haven wilt resetten?")) {
-                    piers = [];
-                    boats = [];
-                    pierId = 0;
-                    boatId = 0;
-                    renderHarbor();
-                    hideBoatInfo();
-                }
-            }
-            
+            // Haven tekening functies
             function renderHarbor() {
                 harbor.innerHTML = '';
                 
@@ -503,6 +426,14 @@
                     pierEl.style.width = `${pier.width}px`;
                     pierEl.style.height = `${pier.height}px`;
                     pierEl.dataset.id = pier.id;
+                    
+                    pierEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedPier = pier;
+                        selectedBoat = null;
+                        highlightSelectedPier();
+                    });
+                    
                     addDragEvents(pierEl);
                     harbor.appendChild(pierEl);
                     
@@ -537,7 +468,9 @@
                     boatEl.addEventListener('click', (e) => {
                         e.stopPropagation();
                         selectedBoat = boat;
+                        selectedPier = null;
                         showBoatInfo(boat);
+                        highlightSelectedBoat();
                     });
                     
                     addDragEvents(boatEl);
@@ -545,6 +478,155 @@
                 });
             }
             
+            function highlightSelectedPier() {
+                document.querySelectorAll('.pier').forEach(el => {
+                    el.style.boxShadow = 'none';
+                });
+                
+                if (selectedPier) {
+                    const pierEl = document.querySelector(`.pier[data-id="${selectedPier.id}"]`);
+                    if (pierEl) pierEl.style.boxShadow = '0 0 0 3px yellow';
+                    
+                    hideBoatInfo();
+                }
+            }
+            
+            function highlightSelectedBoat() {
+                document.querySelectorAll('.boat').forEach(el => {
+                    el.style.boxShadow = 'none';
+                });
+                
+                if (selectedBoat) {
+                    const boatEl = document.querySelector(`.boat[data-id="${selectedBoat.id}"]`);
+                    if (boatEl) boatEl.style.boxShadow = '0 0 0 3px yellow';
+                }
+            }
+            
+            // Pier beheer functies
+            function addPier() {
+                const type = pierTypeSelect.value;
+                const length = parseInt(pierLengthInput.value);
+                
+                pierId++;
+                const pier = {
+                    id: pierId,
+                    type: type,
+                    x: 100 + Math.random() * 100,
+                    y: 100 + Math.random() * 100,
+                    width: type === 'vertical' ? 15 : length * 5,
+                    height: type === 'horizontal' ? 15 : length * 5,
+                    boats: []
+                };
+                
+                if (type === 'lShape') {
+                    pier.extension = {
+                        x: pier.x + pier.width - 15,
+                        y: pier.y + 15,
+                        width: 15,
+                        height: length * 3
+                    };
+                }
+                
+                piers.push(pier);
+                renderHarbor();
+            }
+            
+            function removePier() {
+                if (!selectedPier && !confirm("Geen pier geselecteerd. Wilt u de laatste pier verwijderen?")) {
+                    return;
+                }
+                
+                const pierToRemove = selectedPier || piers[piers.length - 1];
+                if (!pierToRemove) return;
+                
+                // Verwijder alle boten op deze pier
+                boats = boats.filter(boat => boat.pierId !== pierToRemove.id);
+                
+                // Verwijder de pier
+                piers = piers.filter(p => p.id !== pierToRemove.id);
+                
+                selectedPier = null;
+                renderHarbor();
+                hideBoatInfo();
+            }
+            
+            // Boot beheer functies
+            function addBoat() {
+                if (piers.length === 0) {
+                    alert('Voeg eerst een pier toe!');
+                    return;
+                }
+                
+                const type = boatTypeSelect.value;
+                const size = parseInt(boatSizeInput.value);
+                const name = boatNameInput.value.trim() || `Boot ${boatId + 1}`;
+                const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
+                
+                boatId++;
+                const boat = {
+                    id: boatId,
+                    type: type,
+                    size: size,
+                    name: name,
+                    owner: randomOwner.name,
+                    phone: randomOwner.phone,
+                    email: randomOwner.email,
+                    notes: "",
+                    pierId: null,
+                    width: size * 2,
+                    height: 25,
+                    color: boatTypes[type].color,
+                    typeName: boatTypes[type].name
+                };
+                
+                // Probeer toe te wijzen aan een pier
+                assignBoatToPier(boat);
+                
+                boats.push(boat);
+                renderHarbor();
+                boatNameInput.value = "";
+            }
+            
+            function assignBoatToPier(boat) {
+                const targetPier = selectedPier || piers[Math.floor(Math.random() * piers.length)];
+                boat.pierId = targetPier.id;
+                
+                if (targetPier.type === 'horizontal') {
+                    boat.x = targetPier.x + targetPier.boats.length * (boat.width + 5);
+                    boat.y = targetPier.y - boat.height;
+                } else {
+                    boat.x = targetPier.x + targetPier.width;
+                    boat.y = targetPier.y + targetPier.boats.length * (boat.height + 5);
+                }
+                
+                targetPier.boats.push(boat);
+            }
+            
+            function removeBoat() {
+                if (!selectedBoat && !confirm("Geen boot geselecteerd. Wilt u de laatste boot verwijderen?")) {
+                    return;
+                }
+                
+                const boatToRemove = selectedBoat || boats[boats.length - 1];
+                if (!boatToRemove) return;
+                
+                // Verwijder uit pier
+                if (boatToRemove.pierId) {
+                    const pier = piers.find(p => p.id === boatToRemove.pierId);
+                    if (pier) {
+                        pier.boats = pier.boats.filter(b => b.id !== boatToRemove.id);
+                    }
+                }
+                
+                // Verwijder uit bootlijst
+                boats = boats.filter(b => b.id !== boatToRemove.id);
+                
+                selectedBoat = null;
+                renderHarbor();
+                hideBoatInfo();
+            }
+            
+            // Info panel functies
             function showBoatInfo(boat) {
                 noSelection.style.display = 'none';
                 infoDisplay.style.display = 'block';
@@ -556,7 +638,6 @@
                 infoOwner.textContent = boat.owner;
                 infoPhone.textContent = boat.phone;
                 infoEmail.textContent = boat.email;
-                infoNotes.textContent = boat.notes || "-";
                 
                 const pier = piers.find(p => p.id === boat.pierId);
                 infoLocation.textContent = pier ? `Pier ${pier.id}` : 'Geen pier toegewezen';
@@ -566,7 +647,6 @@
                 noSelection.style.display = 'block';
                 infoDisplay.style.display = 'none';
                 editForm.style.display = 'none';
-                selectedBoat = null;
             }
             
             function showEditForm() {
@@ -576,7 +656,6 @@
                 editOwner.value = selectedBoat.owner;
                 editPhone.value = selectedBoat.phone;
                 editEmail.value = selectedBoat.email;
-                editNotes.value = selectedBoat.notes;
                 
                 infoDisplay.style.display = 'none';
                 editForm.style.display = 'block';
@@ -589,7 +668,6 @@
                 selectedBoat.owner = editOwner.value;
                 selectedBoat.phone = editPhone.value;
                 selectedBoat.email = editEmail.value;
-                selectedBoat.notes = editNotes.value;
                 
                 renderHarbor();
                 showBoatInfo(selectedBoat);
@@ -603,6 +681,7 @@
                 }
             }
             
+            // Drag and drop functies
             function addDragEvents(element) {
                 let isDragging = false;
                 let offsetX, offsetY;
@@ -655,15 +734,32 @@
                             checkPierAssignment(boat);
                         }
                     } else {
-                        // Handle pier dragging (more complex)
-                        // Simplified for this example
+                        // Handle pier dragging
+                        const pier = piers.find(p => p.id === id);
+                        if (pier) {
+                            const deltaX = newX - pier.x;
+                            const deltaY = newY - pier.y;
+                            
+                            pier.x = newX;
+                            pier.y = newY;
+                            
+                            if (pier.type === 'lShape') {
+                                pier.extension.x += deltaX;
+                                pier.extension.y += deltaY;
+                            }
+                            
+                            // Update boats on this pier
+                            boats.filter(b => b.pierId === pier.id).forEach(boat => {
+                                boat.x += deltaX;
+                                boat.y += deltaY;
+                            });
+                        }
                     }
                 }
             }
             
             function checkPierAssignment(boat) {
                 // Simplified pier assignment check
-                // In a real implementation, this would check proximity to piers
                 console.log(`Boot ${boat.id} verplaatst naar ${boat.x}, ${boat.y}`);
             }
         });
