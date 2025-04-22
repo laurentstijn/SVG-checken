@@ -75,6 +75,11 @@
             z-index: 10;
         }
         
+        .boat.selected {
+            box-shadow: 0 0 0 3px yellow;
+            z-index: 5;
+        }
+        
         .boat-name {
             font-size: 11px;
             font-weight: bold;
@@ -209,10 +214,6 @@
             gap: 10px;
             margin-top: 15px;
         }
-        
-        .selected {
-            box-shadow: 0 0 0 3px yellow;
-        }
     </style>
 </head>
 <body>
@@ -325,24 +326,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             // DOM elements
             const harbor = document.getElementById('harbor');
-            
-            // Pier management
-            const addPierBtn = document.getElementById('addPier');
-            const removePierBtn = document.getElementById('removePier');
-            
-            // Boat management
-            const addBoatBtn = document.getElementById('addBoat');
-            const removeBoatBtn = document.getElementById('removeBoat');
-            
-            // Info panel
             const noSelection = document.getElementById('noSelection');
             const infoDisplay = document.getElementById('infoDisplay');
-            const editInfoBtn = document.getElementById('editInfo');
-            
-            // Edit form
-            const editForm = document.getElementById('editForm');
-            const saveInfoBtn = document.getElementById('saveInfo');
-            const cancelEditBtn = document.getElementById('cancelEdit');
             
             // Data
             let piers = [];
@@ -367,28 +352,33 @@
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
             
-            // Initialize event listeners
-            initEventListeners();
+            // Initialize the application
+            init();
             
-            function initEventListeners() {
+            function init() {
+                setupEventListeners();
+                renderHarbor();
+            }
+            
+            function setupEventListeners() {
                 // Pier management
-                addPierBtn.addEventListener('click', addPier);
-                removePierBtn.addEventListener('click', removePier);
+                document.getElementById('addPier').addEventListener('click', addPier);
+                document.getElementById('removePier').addEventListener('click', removePier);
                 
                 // Boat management
-                addBoatBtn.addEventListener('click', addBoat);
-                removeBoatBtn.addEventListener('click', removeBoat);
+                document.getElementById('addBoat').addEventListener('click', addBoat);
+                document.getElementById('removeBoat').addEventListener('click', removeBoat);
                 
                 // Edit functionality
-                editInfoBtn.addEventListener('click', showEditForm);
-                saveInfoBtn.addEventListener('click', saveBoatInfo);
-                cancelEditBtn.addEventListener('click', cancelEdit);
+                document.getElementById('editInfo').addEventListener('click', showEditForm);
+                document.getElementById('saveInfo').addEventListener('click', saveBoatInfo);
+                document.getElementById('cancelEdit').addEventListener('click', cancelEdit);
                 
-                // Click on harbor background to deselect
+                // Harbor click
                 harbor.addEventListener('click', function(e) {
                     if (e.target === harbor) {
                         selectedBoat = null;
-                        updateSelection();
+                        updateUI();
                     }
                 });
             }
@@ -410,10 +400,9 @@
                     pierEl.addEventListener('click', function(e) {
                         e.stopPropagation();
                         selectedBoat = null;
-                        updateSelection();
+                        updateUI();
                     });
                     
-                    addDragEvents(pierEl);
                     harbor.appendChild(pierEl);
                 });
                 
@@ -421,9 +410,6 @@
                 boats.forEach(boat => {
                     const boatEl = document.createElement('div');
                     boatEl.className = 'boat';
-                    if (selectedBoat && boat.id === selectedBoat.id) {
-                        boatEl.classList.add('selected');
-                    }
                     boatEl.style.left = `${boat.x}px`;
                     boatEl.style.top = `${boat.y}px`;
                     boatEl.style.width = `${boat.width}px`;
@@ -435,27 +421,53 @@
                     `;
                     boatEl.dataset.id = boat.id;
                     
+                    if (selectedBoat && boat.id === selectedBoat.id) {
+                        boatEl.classList.add('selected');
+                    }
+                    
                     boatEl.addEventListener('click', function(e) {
                         e.stopPropagation();
                         selectedBoat = boat;
-                        updateSelection();
+                        updateUI();
                     });
                     
-                    addDragEvents(boatEl);
                     harbor.appendChild(boatEl);
                 });
             }
             
-            function updateSelection() {
-                // Update info panel
-                if (selectedBoat) {
-                    showBoatInfo(selectedBoat);
-                } else {
-                    hideBoatInfo();
-                }
-                
-                // Re-render to update selection highlights
+            function updateUI() {
                 renderHarbor();
+                updateInfoPanel();
+                updateEditForm();
+            }
+            
+            function updateInfoPanel() {
+                if (selectedBoat) {
+                    noSelection.style.display = 'none';
+                    infoDisplay.style.display = 'block';
+                    
+                    document.getElementById('infoName').textContent = selectedBoat.name;
+                    document.getElementById('infoType').textContent = selectedBoat.typeName;
+                    document.getElementById('infoSize').textContent = `${selectedBoat.size} meter`;
+                    document.getElementById('infoOwner').textContent = selectedBoat.owner;
+                    document.getElementById('infoPhone').textContent = selectedBoat.phone;
+                    document.getElementById('infoEmail').textContent = selectedBoat.email;
+                    
+                    const pier = piers.find(p => p.id === selectedBoat.pierId);
+                    document.getElementById('infoLocation').textContent = pier ? `Pier ${pier.id}` : 'Geen pier toegewezen';
+                } else {
+                    noSelection.style.display = 'block';
+                    infoDisplay.style.display = 'none';
+                }
+            }
+            
+            function updateEditForm() {
+                if (selectedBoat) {
+                    document.getElementById('editName').value = selectedBoat.name;
+                    document.getElementById('editOwner').value = selectedBoat.owner;
+                    document.getElementById('editPhone').value = selectedBoat.phone;
+                    document.getElementById('editEmail').value = selectedBoat.email;
+                }
             }
             
             // Pier management functions
@@ -475,7 +487,7 @@
                 };
                 
                 piers.push(pier);
-                renderHarbor();
+                updateUI();
             }
             
             function removePier() {
@@ -489,7 +501,11 @@
                 // Remove boats on this pier
                 boats = boats.filter(boat => boat.pierId !== removedPier.id);
                 
-                renderHarbor();
+                if (selectedBoat && selectedBoat.pierId === removedPier.id) {
+                    selectedBoat = null;
+                }
+                
+                updateUI();
             }
             
             // Boat management functions
@@ -525,8 +541,8 @@
                 assignBoatToPier(boat);
                 
                 boats.push(boat);
-                renderHarbor();
                 document.getElementById('boatName').value = "";
+                updateUI();
             }
             
             function assignBoatToPier(boat) {
@@ -564,141 +580,35 @@
                     selectedBoat = null;
                 }
                 
-                renderHarbor();
+                updateUI();
             }
             
-            // Info panel functions
-            function showBoatInfo(boat) {
-                noSelection.style.display = 'none';
-                infoDisplay.style.display = 'block';
-                editForm.style.display = 'none';
-                
-                document.getElementById('infoName').textContent = boat.name;
-                document.getElementById('infoType').textContent = boat.typeName;
-                document.getElementById('infoSize').textContent = `${boat.size} meter`;
-                document.getElementById('infoOwner').textContent = boat.owner;
-                document.getElementById('infoPhone').textContent = boat.phone;
-                document.getElementById('infoEmail').textContent = boat.email;
-                
-                const pier = piers.find(p => p.id === boat.pierId);
-                document.getElementById('infoLocation').textContent = pier ? `Pier ${pier.id}` : 'Geen pier toegewezen';
-            }
-            
-            function hideBoatInfo() {
-                noSelection.style.display = 'block';
-                infoDisplay.style.display = 'none';
-                editForm.style.display = 'none';
-            }
-            
-            // Edit functions - DEZE ZIJN AANGEPAST OM WEL TE WERKEN
+            // Edit functions
             function showEditForm() {
                 if (!selectedBoat) {
                     alert('Selecteer eerst een boot om te bewerken');
                     return;
                 }
                 
-                document.getElementById('editName').value = selectedBoat.name;
-                document.getElementById('editOwner').value = selectedBoat.owner;
-                document.getElementById('editPhone').value = selectedBoat.phone;
-                document.getElementById('editEmail').value = selectedBoat.email;
-                
                 infoDisplay.style.display = 'none';
-                editForm.style.display = 'block';
+                document.getElementById('editForm').style.display = 'block';
             }
             
             function saveBoatInfo() {
                 if (!selectedBoat) return;
                 
-                // Update boat data
                 selectedBoat.name = document.getElementById('editName').value;
                 selectedBoat.owner = document.getElementById('editOwner').value;
                 selectedBoat.phone = document.getElementById('editPhone').value;
                 selectedBoat.email = document.getElementById('editEmail').value;
                 
-                // Update display
-                showBoatInfo(selectedBoat);
-                renderHarbor();
+                updateUI();
             }
             
             function cancelEdit() {
+                document.getElementById('editForm').style.display = 'none';
                 if (selectedBoat) {
-                    showBoatInfo(selectedBoat);
-                } else {
-                    hideBoatInfo();
-                }
-            }
-            
-            // Drag and drop functions
-            function addDragEvents(element) {
-                let isDragging = false;
-                let offsetX, offsetY;
-                
-                element.addEventListener('mousedown', function(e) {
-                    if (e.button !== 0) return;
-                    
-                    isDragging = true;
-                    offsetX = e.clientX - element.getBoundingClientRect().left;
-                    offsetY = e.clientY - element.getBoundingClientRect().top;
-                    
-                    element.style.zIndex = '100';
-                    document.addEventListener('mousemove', drag);
-                    document.addEventListener('mouseup', stopDrag);
-                    
-                    e.preventDefault();
-                });
-                
-                function drag(e) {
-                    if (!isDragging) return;
-                    
-                    const harborRect = harbor.getBoundingClientRect();
-                    let newX = e.clientX - harborRect.left - offsetX;
-                    let newY = e.clientY - harborRect.top - offsetY;
-                    
-                    // Boundary checks
-                    newX = Math.max(0, Math.min(newX, harborRect.width - element.offsetWidth));
-                    newY = Math.max(0, Math.min(newY, harborRect.height - element.offsetHeight));
-                    
-                    element.style.left = `${newX}px`;
-                    element.style.top = `${newY}px`;
-                }
-                
-                function stopDrag() {
-                    if (!isDragging) return;
-                    
-                    isDragging = false;
-                    element.style.zIndex = '';
-                    document.removeEventListener('mousemove', drag);
-                    document.removeEventListener('mouseup', stopDrag);
-                    
-                    // Update position in data
-                    const id = parseInt(element.dataset.id);
-                    const newX = parseInt(element.style.left);
-                    const newY = parseInt(element.style.top);
-                    
-                    if (element.classList.contains('boat')) {
-                        const boat = boats.find(b => b.id === id);
-                        if (boat) {
-                            boat.x = newX;
-                            boat.y = newY;
-                        }
-                    } else {
-                        const pier = piers.find(p => p.id === id);
-                        if (pier) {
-                            const deltaX = newX - pier.x;
-                            const deltaY = newY - pier.y;
-                            
-                            pier.x = newX;
-                            pier.y = newY;
-                            
-                            // Update boats on this pier
-                            boats.filter(b => b.pierId === pier.id).forEach(boat => {
-                                boat.x += deltaX;
-                                boat.y += deltaY;
-                            });
-                        }
-                    }
-                    
-                    renderHarbor();
+                    infoDisplay.style.display = 'block';
                 }
             }
         });
