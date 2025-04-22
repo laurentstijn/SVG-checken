@@ -527,7 +527,7 @@
                     return;
                 }
                 
-                const type = document.getElementById('boatType').value.trim() ||;
+                const type = document.getElementById('boatType').value;
                 const size = parseInt(document.getElementById('boatSize').value);
                 const name = document.getElementById('boatName').value.trim() || `Boot ${boatId + 1}`;
                 const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
