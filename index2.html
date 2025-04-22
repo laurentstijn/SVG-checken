@@ -317,6 +317,10 @@
                         <label for="editName">Boot Naam:</label>
                         <input type="text" id="editName">
                     </div>
+                     <div class="form-group">
+                        <label for="editName">Type:</label>
+                        <input type="text" id="typeName">
+                    </div>
                     <div class="form-group">
                         <label for="editOwner">Eigenaar:</label>
                         <input type="text" id="editOwner">
@@ -523,7 +527,7 @@
                     return;
                 }
                 
-                const type = document.getElementById('boatType').value;
+                const type = document.getElementById('boatType').value.trim() ||;
                 const size = parseInt(document.getElementById('boatSize').value);
                 const name = document.getElementById('boatName').value.trim() || `Boot ${boatId + 1}`;
                 const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
@@ -604,6 +608,7 @@
                 
                 // Fill form with current values
                 document.getElementById('editName').value = selectedBoat.name;
+                document.getElementById('editType').value = selectedBoat.name;
                 document.getElementById('editOwner').value = selectedBoat.owner;
                 document.getElementById('editPhone').value = selectedBoat.phone;
                 document.getElementById('editEmail').value = selectedBoat.email;
@@ -621,6 +626,7 @@
                 
                 // Update boat data from form
                 selectedBoat.name = document.getElementById('editName').value;
+                selectedBoat.name = document.getElementById('editType').value;
                 selectedBoat.owner = document.getElementById('editOwner').value;
                 selectedBoat.phone = document.getElementById('editPhone').value;
                 selectedBoat.email = document.getElementById('editEmail').value;
