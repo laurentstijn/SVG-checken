@@ -230,6 +230,17 @@
             gap: 10px;
             margin-top: 15px;
         }
+        
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -317,10 +328,6 @@
                         <label for="editName">Boot Naam:</label>
                         <input type="text" id="editName">
                     </div>
-                     <div class="form-group">
-                        <label for="editName">Type:</label>
-                        <input type="text" id="typeName">
-                    </div>
                     <div class="form-group">
                         <label for="editOwner">Eigenaar:</label>
                         <input type="text" id="editOwner">
@@ -342,20 +349,44 @@
         </div>
     </div>
 
+    <div id="syncStatus" class="sync-status">Verbonden met Firebase</div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+          const firebaseConfig = {
+          apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
+          authDomain: "tekensvg.firebaseapp.com",
+          databaseURL: "https://tekensvg-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "tekensvg",
+          storageBucket: "tekensvg.firebasestorage.app",
+          messagingSenderId: "180262088073",
+          appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
+            };
+
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+
             // DOM elements
             const harbor = document.getElementById('harbor');
             const noSelection = document.getElementById('noSelection');
             const infoDisplay = document.getElementById('infoDisplay');
-            
-            // Data
-            let piers = [];
-            let boats = [];
-            let pierId = 0;
-            let boatId = 0;
-            let selectedBoat = null;
-            
+            const syncStatus = document.getElementById('syncStatus');
+
+            // Application state
+            const state = {
+                piers: [],
+                boats: [],
+                nextPierId: 1,
+                nextBoatId: 1,
+                selectedBoat: null
+            };
+
             // Boat types
             const boatTypes = {
                 sailboat: { name: 'Zeilboot', color: '#1E90FF' },
@@ -371,15 +402,15 @@
                 { name: "Piet Smit", phone: "06-11223344", email: "piet@voorbeeld.nl" },
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
-            
+
             // Initialize the application
             init();
-            
+
             function init() {
                 setupEventListeners();
-                renderHarbor();
+                setupFirebaseListeners();
             }
-            
+
             function setupEventListeners() {
                 // Pier management
                 document.getElementById('addPier').addEventListener('click', addPier);
@@ -397,18 +428,65 @@
                 // Harbor click
                 harbor.addEventListener('click', function(e) {
                     if (e.target === harbor) {
-                        selectedBoat = null;
+                        state.selectedBoat = null;
                         updateUI();
                     }
                 });
             }
-            
+
+            function setupFirebaseListeners() {
+                // Listen for changes in piers
+                database.ref('piers').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        state.piers = data;
+                        // Update nextPierId
+                        if (state.piers.length > 0) {
+                            state.nextPierId = Math.max(...state.piers.map(p => p.id)) + 1;
+                        }
+                        updateUI();
+                        updateSyncStatus('Data bijgewerkt: pieren');
+                    }
+                }, (error) => {
+                    console.error("Firebase piers error:", error);
+                    updateSyncStatus('Fout bij laden pieren', 'error');
+                });
+
+                // Listen for changes in boats
+                database.ref('boats').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        state.boats = data;
+                        // Update nextBoatId
+                        if (state.boats.length > 0) {
+                            state.nextBoatId = Math.max(...state.boats.map(b => b.id)) + 1;
+                        }
+                        updateUI();
+                        updateSyncStatus('Data bijgewerkt: boten');
+                    }
+                }, (error) => {
+                    console.error("Firebase boats error:", error);
+                    updateSyncStatus('Fout bij laden boten', 'error');
+                });
+            }
+
+            function updateSyncStatus(message, type = 'success') {
+                syncStatus.textContent = message;
+                syncStatus.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    syncStatus.textContent = 'Verbonden met Firebase';
+                    syncStatus.style.backgroundColor = '#28a745';
+                }, 3000);
+            }
+
             // Drawing functions
             function renderHarbor() {
                 harbor.innerHTML = '';
                 
                 // Render piers
-                piers.forEach(pier => {
+                state.piers.forEach(pier => {
                     const pierEl = document.createElement('div');
                     pierEl.className = 'pier';
                     pierEl.style.left = `${pier.x}px`;
@@ -419,7 +497,7 @@
                     
                     pierEl.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        selectedBoat = null;
+                        state.selectedBoat = null;
                         updateUI();
                     });
                     
@@ -427,7 +505,7 @@
                 });
                 
                 // Render boats
-                boats.forEach(boat => {
+                state.boats.forEach(boat => {
                     const boatEl = document.createElement('div');
                     boatEl.className = 'boat';
                     boatEl.style.left = `${boat.x}px`;
@@ -441,13 +519,13 @@
                     `;
                     boatEl.dataset.id = boat.id;
                     
-                    if (selectedBoat && boat.id === selectedBoat.id) {
+                    if (state.selectedBoat && boat.id === state.selectedBoat.id) {
                         boatEl.classList.add('selected');
                     }
                     
                     boatEl.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        selectedBoat = boat;
+                        state.selectedBoat = boat;
                         updateUI();
                     });
                     
@@ -461,19 +539,19 @@
             }
             
             function updateInfoPanel() {
-                if (selectedBoat) {
+                if (state.selectedBoat) {
                     noSelection.style.display = 'none';
                     infoDisplay.style.display = 'block';
                     document.getElementById('editForm').style.display = 'none';
                     
-                    document.getElementById('infoName').textContent = selectedBoat.name;
-                    document.getElementById('infoType').textContent = selectedBoat.typeName;
-                    document.getElementById('infoSize').textContent = `${selectedBoat.size} meter`;
-                    document.getElementById('infoOwner').textContent = selectedBoat.owner;
-                    document.getElementById('infoPhone').textContent = selectedBoat.phone;
-                    document.getElementById('infoEmail').textContent = selectedBoat.email;
+                    document.getElementById('infoName').textContent = state.selectedBoat.name;
+                    document.getElementById('infoType').textContent = state.selectedBoat.typeName;
+                    document.getElementById('infoSize').textContent = `${state.selectedBoat.size} meter`;
+                    document.getElementById('infoOwner').textContent = state.selectedBoat.owner;
+                    document.getElementById('infoPhone').textContent = state.selectedBoat.phone;
+                    document.getElementById('infoEmail').textContent = state.selectedBoat.email;
                     
-                    const pier = piers.find(p => p.id === selectedBoat.pierId);
+                    const pier = state.piers.find(p => p.id === state.selectedBoat.pierId);
                     document.getElementById('infoLocation').textContent = pier ? `Pier ${pier.id}` : 'Geen pier toegewezen';
                 } else {
                     noSelection.style.display = 'block';
@@ -487,9 +565,8 @@
                 const type = document.getElementById('pierType').value;
                 const length = parseInt(document.getElementById('pierLength').value);
                 
-                pierId++;
-                const pier = {
-                    id: pierId,
+                const newPier = {
+                    id: state.nextPierId++,
                     type: type,
                     x: 100 + Math.random() * 100,
                     y: 100 + Math.random() * 100,
@@ -498,43 +575,62 @@
                     boats: []
                 };
                 
-                piers.push(pier);
+                // Update local state
+                state.piers.push(newPier);
+                
+                // Save to Firebase
+                database.ref('piers').set(state.piers)
+                    .then(() => updateSyncStatus('Pier toegevoegd'))
+                    .catch(error => {
+                        console.error("Error saving pier:", error);
+                        updateSyncStatus('Fout bij opslaan pier', 'error');
+                    });
+                
                 updateUI();
             }
             
             function removePier() {
-                if (piers.length === 0) return;
+                if (state.piers.length === 0) return;
                 
                 if (!confirm("Weet u zeker dat u de laatste pier wilt verwijderen?")) {
                     return;
                 }
                 
-                const removedPier = piers.pop();
+                const removedPier = state.piers.pop();
                 // Remove boats on this pier
-                boats = boats.filter(boat => boat.pierId !== removedPier.id);
+                state.boats = state.boats.filter(boat => boat.pierId !== removedPier.id);
                 
-                if (selectedBoat && selectedBoat.pierId === removedPier.id) {
-                    selectedBoat = null;
+                if (state.selectedBoat && state.selectedBoat.pierId === removedPier.id) {
+                    state.selectedBoat = null;
                 }
                 
-                updateUI();
+                // Save both piers and boats to Firebase
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Pier verwijderd');
+                    updateUI();
+                }).catch(error => {
+                    console.error("Error removing pier:", error);
+                    updateSyncStatus('Fout bij verwijderen pier', 'error');
+                });
             }
             
             // Boat management functions
             function addBoat() {
-                if (piers.length === 0) {
+                if (state.piers.length === 0) {
                     alert('Voeg eerst een pier toe!');
                     return;
                 }
                 
                 const type = document.getElementById('boatType').value;
                 const size = parseInt(document.getElementById('boatSize').value);
-                const name = document.getElementById('boatName').value.trim() || `Boot ${boatId + 1}`;
+                const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
                 const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
                 
-                boatId++;
-                const boat = {
-                    id: boatId,
+                const newBoat = {
+                    id: state.nextBoatId++,
                     type: type,
                     size: size,
                     name: name,
@@ -550,19 +646,28 @@
                 };
                 
                 // Assign to a random pier
-                assignBoatToPier(boat);
+                assignBoatToPier(newBoat);
                 
-                boats.push(boat);
+                // Update local state
+                state.boats.push(newBoat);
                 document.getElementById('boatName').value = "";
-                updateUI();
                 
-                // Select the new boat
-                selectedBoat = boat;
-                updateUI();
+                // Save to Firebase
+                database.ref('boats').set(state.boats)
+                    .then(() => {
+                        updateSyncStatus('Boot toegevoegd');
+                        // Select the new boat
+                        state.selectedBoat = newBoat;
+                        updateUI();
+                    })
+                    .catch(error => {
+                        console.error("Error saving boat:", error);
+                        updateSyncStatus('Fout bij opslaan boot', 'error');
+                    });
             }
             
             function assignBoatToPier(boat) {
-                const randomPier = piers[Math.floor(Math.random() * piers.length)];
+                const randomPier = state.piers[Math.floor(Math.random() * state.piers.length)];
                 boat.pierId = randomPier.id;
                 
                 if (randomPier.type === 'horizontal') {
@@ -577,41 +682,49 @@
             }
             
             function removeBoat() {
-                if (boats.length === 0) return;
+                if (state.boats.length === 0) return;
                 
                 if (!confirm("Weet u zeker dat u de laatste boot wilt verwijderen?")) {
                     return;
                 }
                 
-                const removedBoat = boats.pop();
+                const removedBoat = state.boats.pop();
                 // Remove from pier
                 if (removedBoat.pierId) {
-                    const pier = piers.find(p => p.id === removedBoat.pierId);
+                    const pier = state.piers.find(p => p.id === removedBoat.pierId);
                     if (pier) {
                         pier.boats = pier.boats.filter(b => b.id !== removedBoat.id);
                     }
                 }
                 
-                if (selectedBoat && selectedBoat.id === removedBoat.id) {
-                    selectedBoat = null;
+                if (state.selectedBoat && state.selectedBoat.id === removedBoat.id) {
+                    state.selectedBoat = null;
                 }
                 
-                updateUI();
+                // Save to Firebase
+                database.ref('boats').set(state.boats)
+                    .then(() => {
+                        updateSyncStatus('Boot verwijderd');
+                        updateUI();
+                    })
+                    .catch(error => {
+                        console.error("Error removing boat:", error);
+                        updateSyncStatus('Fout bij verwijderen boot', 'error');
+                    });
             }
             
             // Edit functions
             function showEditForm() {
-                if (!selectedBoat) {
+                if (!state.selectedBoat) {
                     alert('Selecteer eerst een boot om te bewerken');
                     return;
                 }
                 
                 // Fill form with current values
-                document.getElementById('editName').value = selectedBoat.name;
-                document.getElementById('editType').value = selectedBoat.name;
-                document.getElementById('editOwner').value = selectedBoat.owner;
-                document.getElementById('editPhone').value = selectedBoat.phone;
-                document.getElementById('editEmail').value = selectedBoat.email;
+                document.getElementById('editName').value = state.selectedBoat.name;
+                document.getElementById('editOwner').value = state.selectedBoat.owner;
+                document.getElementById('editPhone').value = state.selectedBoat.phone;
+                document.getElementById('editEmail').value = state.selectedBoat.email;
                 
                 // Show form and hide info
                 infoDisplay.style.display = 'none';
@@ -619,24 +732,31 @@
             }
             
             function saveBoatInfo() {
-                if (!selectedBoat) {
+                if (!state.selectedBoat) {
                     alert('Geen boot geselecteerd om op te slaan');
                     return;
                 }
                 
                 // Update boat data from form
-                selectedBoat.name = document.getElementById('editName').value;
-                selectedBoat.name = document.getElementById('editType').value;
-                selectedBoat.owner = document.getElementById('editOwner').value;
-                selectedBoat.phone = document.getElementById('editPhone').value;
-                selectedBoat.email = document.getElementById('editEmail').value;
+                state.selectedBoat.name = document.getElementById('editName').value;
+                state.selectedBoat.owner = document.getElementById('editOwner').value;
+                state.selectedBoat.phone = document.getElementById('editPhone').value;
+                state.selectedBoat.email = document.getElementById('editEmail').value;
                 
-                // Update UI
-                updateUI();
+                // Save to Firebase
+                database.ref('boats').set(state.boats)
+                    .then(() => {
+                        updateSyncStatus('Bootgegevens opgeslagen');
+                        updateUI();
+                    })
+                    .catch(error => {
+                        console.error("Error saving boat info:", error);
+                        updateSyncStatus('Fout bij opslaan gegevens', 'error');
+                    });
             }
             
             function cancelEdit() {
-                if (selectedBoat) {
+                if (state.selectedBoat) {
                     // Show info panel again
                     infoDisplay.style.display = 'block';
                     document.getElementById('editForm').style.display = 'none';
