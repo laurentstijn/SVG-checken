@@ -140,7 +140,6 @@
         
         button {
             padding: 8px 15px;
-            background-color: #0066cc;
             color: white;
             border: none;
             border-radius: 4px;
@@ -149,12 +148,28 @@
             transition: background-color 0.3s;
         }
         
-        button:hover {
+        button.primary {
+            background-color: #0066cc;
+        }
+        
+        button.primary:hover {
             background-color: #0055aa;
         }
         
         button.secondary {
             background-color: #6c757d;
+        }
+        
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        button.success {
+            background-color: #28a745;
+        }
+        
+        button.success:hover {
+            background-color: #218838;
         }
         
         .info-panel {
@@ -197,6 +212,7 @@
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
+            border: 1px solid #ddd;
         }
         
         .form-group {
@@ -241,7 +257,7 @@
                     <input type="number" id="pierLength" min="10" max="50" value="30">
                 </div>
                 <div class="buttons">
-                    <button id="addPier">Pier Toevoegen</button>
+                    <button id="addPier" class="primary">Pier Toevoegen</button>
                     <button id="removePier" class="secondary">Verwijderen</button>
                 </div>
             </div>
@@ -266,7 +282,7 @@
                     <input type="text" id="boatName" placeholder="Bijv. De Zeevaarder">
                 </div>
                 <div class="buttons">
-                    <button id="addBoat">Boot Toevoegen</button>
+                    <button id="addBoat" class="primary">Boot Toevoegen</button>
                     <button id="removeBoat" class="secondary">Verwijderen</button>
                 </div>
             </div>
@@ -314,7 +330,7 @@
                         <input type="text" id="editEmail">
                     </div>
                     <div class="form-actions">
-                        <button id="saveInfo">Opslaan</button>
+                        <button id="saveInfo" class="success">Opslaan</button>
                         <button id="cancelEdit" class="secondary">Annuleren</button>
                     </div>
                 </div>
@@ -438,13 +454,13 @@
             function updateUI() {
                 renderHarbor();
                 updateInfoPanel();
-                updateEditForm();
             }
             
             function updateInfoPanel() {
                 if (selectedBoat) {
                     noSelection.style.display = 'none';
                     infoDisplay.style.display = 'block';
+                    document.getElementById('editForm').style.display = 'none';
                     
                     document.getElementById('infoName').textContent = selectedBoat.name;
                     document.getElementById('infoType').textContent = selectedBoat.typeName;
@@ -458,15 +474,7 @@
                 } else {
                     noSelection.style.display = 'block';
                     infoDisplay.style.display = 'none';
-                }
-            }
-            
-            function updateEditForm() {
-                if (selectedBoat) {
-                    document.getElementById('editName').value = selectedBoat.name;
-                    document.getElementById('editOwner').value = selectedBoat.owner;
-                    document.getElementById('editPhone').value = selectedBoat.phone;
-                    document.getElementById('editEmail').value = selectedBoat.email;
+                    document.getElementById('editForm').style.display = 'none';
                 }
             }
             
@@ -543,6 +551,10 @@
                 boats.push(boat);
                 document.getElementById('boatName').value = "";
                 updateUI();
+                
+                // Select the new boat
+                selectedBoat = boat;
+                updateUI();
             }
             
             function assignBoatToPier(boat) {
@@ -590,25 +602,40 @@
                     return;
                 }
                 
+                // Fill form with current values
+                document.getElementById('editName').value = selectedBoat.name;
+                document.getElementById('editOwner').value = selectedBoat.owner;
+                document.getElementById('editPhone').value = selectedBoat.phone;
+                document.getElementById('editEmail').value = selectedBoat.email;
+                
+                // Show form and hide info
                 infoDisplay.style.display = 'none';
                 document.getElementById('editForm').style.display = 'block';
             }
             
             function saveBoatInfo() {
-                if (!selectedBoat) return;
+                if (!selectedBoat) {
+                    alert('Geen boot geselecteerd om op te slaan');
+                    return;
+                }
                 
+                // Update boat data from form
                 selectedBoat.name = document.getElementById('editName').value;
                 selectedBoat.owner = document.getElementById('editOwner').value;
                 selectedBoat.phone = document.getElementById('editPhone').value;
                 selectedBoat.email = document.getElementById('editEmail').value;
                 
+                // Update UI
                 updateUI();
             }
             
             function cancelEdit() {
-                document.getElementById('editForm').style.display = 'none';
                 if (selectedBoat) {
+                    // Show info panel again
                     infoDisplay.style.display = 'block';
+                    document.getElementById('editForm').style.display = 'none';
+                } else {
+                    updateUI();
                 }
             }
         });
