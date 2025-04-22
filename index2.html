@@ -316,6 +316,24 @@
             color: #333;
             font-weight: bold;
         }
+
+         .slot-context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            padding: 10px;
+            display: none;
+        }
+        
+        .slot-context-menu button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -523,6 +541,14 @@
                 { name: "Piet Smit", phone: "06-11223344", email: "piet@voorbeeld.nl" },
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
+            
+              // Voeg contextmenu toe voor ligplaatsen
+            const slotContextMenu = document.createElement('div');
+            slotContextMenu.className = 'slot-context-menu';
+            document.body.appendChild(slotContextMenu);
+            
+            // Variabele om bij te houden op welke slot we geklikt hebben
+            let clickedSlot = null;
 
             // Initialize the application
             init();
@@ -736,9 +762,10 @@
                 updateUI();
             }
 
-            function handleHarborClick(e) {
+           function handleHarborClick(e) {
                 if (e.target === harbor && state.drawingMode === 'select') {
-                    // Klik op leeg gebied - deselecteer alles
+                    // Klik op leeg gebied - verberg contextmenu en deselecteer
+                    slotContextMenu.style.display = 'none';
                     state.selectedPier = null;
                     state.selectedBoat = null;
                     state.selectedSlot = null;
@@ -779,39 +806,55 @@
                     harbor.appendChild(pierEl);
                     
                     // Render ligplaatsen
-                    if (pier.slots) {
-                        pier.slots.forEach((slot, index) => {
-                            const slotEl = document.createElement('div');
-                            slotEl.className = `pier-slot ${slot.occupied ? 'occupied' : 'available'}`;
-                            slotEl.style.left = `${pier.x + slot.x}px`;
-                            slotEl.style.top = `${pier.y + slot.y}px`;
-                            slotEl.style.width = `${slot.width}px`;
-                            slotEl.style.height = `${slot.height}px`;
-                            slotEl.dataset.pierId = pier.id;
-                            slotEl.dataset.slotIndex = index;
+                   if (pier.slots) {
+                    pier.slots.forEach((slot, index) => {
+                        const slotEl = document.createElement('div');
+                        slotEl.className = `pier-slot ${slot.occupied ? 'occupied' : 'available'}`;
+                        // [Behoud bestaande positionering]
+                        
+                        // Voeg naam toe
+                        const nameEl = document.createElement('div');
+                        nameEl.className = 'slot-name';
+                        nameEl.textContent = slot.name;
+                        slotEl.appendChild(nameEl);
+                        
+                        // Voeg contextmenu toe bij rechtermuisklik
+                        slotEl.addEventListener('contextmenu', function(e) {
+                            e.preventDefault();
+                            clickedSlot = { pier, slot, index };
                             
-                            // Voeg naam toe aan ligplaats
-                            const nameEl = document.createElement('div');
-                            nameEl.className = 'slot-name';
-                            nameEl.textContent = slot.name;
-                            slotEl.appendChild(nameEl);
+                            // Positioneer het contextmenu
+                            slotContextMenu.style.left = `${e.pageX}px`;
+                            slotContextMenu.style.top = `${e.pageY}px`;
+                            slotContextMenu.style.display = 'block';
                             
-                            slotEl.addEventListener('click', function(e) {
-                                e.stopPropagation();
-                                if (state.drawingMode === 'select') {
-                                    state.selectedSlot = { pierId: pier.id, slotIndex: index };
-                                    updateUI();
-                                } else if (state.drawingMode === 'delete') {
-                                    if (confirm('Ligplaats verwijderen?')) {
-                                        removeSlot(pier.id, index);
-                                    }
-                                }
-                            });
+                            // Vul het contextmenu
+                            slotContextMenu.innerHTML = `
+                                <button id="assignBoatToSlot">Boot toewijzen</button>
+                                <button id="renameSlot">Naam wijzigen</button>
+                                <button id="removeSlot">Ligplaats verwijderen</button>
+                            `;
                             
-                            harbor.appendChild(slotEl);
+                            // Voeg event listeners toe voor contextmenu
+                            document.getElementById('assignBoatToSlot').addEventListener('click', assignBoatToSelectedSlot);
+                            document.getElementById('renameSlot').addEventListener('click', renameSelectedSlot);
+                            document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
                         });
-                    }
-                });
+                        
+                        // Linkermuisklik selecteert de slot
+                        slotEl.addEventListener('click', function(e) {
+                            if (state.drawingMode === 'select') {
+                                state.selectedSlot = { pierId: pier.id, slotIndex: index };
+                                state.selectedPier = pier;
+                                state.selectedBoat = null;
+                                updateUI();
+                            }
+                        });
+                        
+                        harbor.appendChild(slotEl);
+                    });
+                   }
+                
                 
                 // Render tijdelijke elementen
                 if (state.tempPier) {
@@ -1131,40 +1174,54 @@
                 }
             }
             
-            function assignBoatToSlot(boat) {
-                // Zoek een pier met beschikbare ligplaats
-                for (const pier of state.piers) {
-                    if (!pier.slots) continue;
-                    
-                    for (let i = 0; i < pier.slots.length; i++) {
-                        if (!pier.slots[i].occupied) {
-                            // Controleer of de boot past in de ligplaats
-                            if (boat.width <= pier.slots[i].width && boat.height <= pier.slots[i].height) {
-                                // Bereken positie
-                                boat.x = pier.x + pier.slots[i].x;
-                                boat.y = pier.y + pier.slots[i].y;
-                                boat.pierId = pier.id;
-                                
-                                // Markeer als bezet
-                                pier.slots[i].occupied = true;
-                                pier.slots[i].boatId = boat.id;
-                                
-                                // Voeg boot toe aan pier
-                                if (!pier.boats) pier.boats = [];
-                                pier.boats.push(boat.id);
-                                
-                                // Sla pier wijzigingen op
-                                database.ref('piers').child(pier.id).set(pier)
-                                    .catch(error => {
-                                        console.error("Error updating pier:", error);
-                                        updateSyncStatus('Fout bij bijwerken steiger', 'error');
-                                    });
-                                
-                                return true;
+              function assignBoatToSelectedSlot() {
+                slotContextMenu.style.display = 'none';
+                
+                if (!state.selectedBoat) {
+                    alert('Selecteer eerst een boot om toe te wijzen');
+                    return;
+                }
+                
+                if (!clickedSlot) return;
+                
+                const { pier, slot } = clickedSlot;
+                
+                // Controleer of de boot past
+                if (state.selectedBoat.width > slot.width || state.selectedBoat.height > slot.height) {
+                    alert('De boot past niet in deze ligplaats!');
+                    return;
+                }
+                
+                // Verwijder boot van vorige ligplaats indien nodig
+                if (state.selectedBoat.pierId) {
+                    const oldPier = state.piers.find(p => p.id === state.selectedBoat.pierId);
+                    if (oldPier && oldPier.slots) {
+                        oldPier.slots.forEach(s => {
+                            if (s.boatId === state.selectedBoat.id) {
+                                s.occupied = false;
+                                s.boatId = null;
                             }
-                        }
+                        });
                     }
                 }
+                
+                // Wijs toe aan nieuwe slot
+                slot.occupied = true;
+                slot.boatId = state.selectedBoat.id;
+                state.selectedBoat.pierId = pier.id;
+                state.selectedBoat.x = pier.x + slot.x;
+                state.selectedBoat.y = pier.y + slot.y;
+                
+                // Sla wijzigingen op
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Boot toegewezen aan ligplaats');
+                    renderHarbor();
+                    updateUI();
+                });
+            }
                 
                 alert('Geen beschikbare ligplaatsen gevonden die passen bij deze boot!');
                 return false;
@@ -1419,6 +1476,57 @@
                 document.getElementById('editBoatForm').style.display = 'none';
                 boatInfoDisplay.style.display = 'block';
             }
+
+              function renameSelectedSlot() {
+                slotContextMenu.style.display = 'none';
+                
+                if (!clickedSlot) return;
+                
+                const { slot } = clickedSlot;
+                const newName = prompt('Nieuwe naam voor deze ligplaats:', slot.name);
+                
+                if (newName && newName !== slot.name) {
+                    slot.name = newName;
+                    savePiersToFirebase();
+                    renderHarbor();
+                    updateSyncStatus('Ligplaatsnaam gewijzigd');
+                }
+            }
+            
+            // Functie om geselecteerde slot te verwijderen
+            function removeSelectedSlot() {
+                slotContextMenu.style.display = 'none';
+                
+                if (!clickedSlot) return;
+                
+                const { pier, slot, index } = clickedSlot;
+                
+                if (slot.occupied) {
+                    if (!confirm('Deze ligplaats is bezet. Toch verwijderen?')) {
+                        return;
+                    }
+                    // Verwijder de boot die hier lag
+                    state.boats = state.boats.filter(b => b.id !== slot.boatId);
+                }
+                
+                pier.slots.splice(index, 1);
+                
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Ligplaats verwijderd');
+                    renderHarbor();
+                    updateUI();
+                });
+            }
+            
+            // Sluit contextmenu bij klik ergens anders
+            document.addEventListener('click', function(e) {
+                if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
+                    slotContextMenu.style.display = 'none';
+                }
+            });
         });
     </script>
 </body>
