@@ -26,7 +26,7 @@
             margin: 0 auto;
         }
         
-        /* Haven tekening panel */
+        /* Haven tekening */
         .drawing-panel {
             flex: 2;
             background-color: white;
@@ -212,6 +212,10 @@
             gap: 10px;
             margin-top: 15px;
         }
+        
+        .selected {
+            box-shadow: 0 0 0 3px yellow;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +319,7 @@
                     <button id="editInfo" class="secondary">Bewerken</button>
                     
                     <div id="editForm" class="edit-form" style="display: none;">
+                        <h3>Bootgegevens Bewerken</h3>
                         <div class="form-group">
                             <label for="editName">Boot Naam:</label>
                             <input type="text" id="editName">
@@ -404,14 +409,27 @@
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
             
-            // Event listeners
-            addPierBtn.addEventListener('click', addPier);
-            removePierBtn.addEventListener('click', removePier);
-            addBoatBtn.addEventListener('click', addBoat);
-            removeBoatBtn.addEventListener('click', removeBoat);
-            editInfoBtn.addEventListener('click', showEditForm);
-            saveInfoBtn.addEventListener('click', saveBoatInfo);
-            cancelEditBtn.addEventListener('click', cancelEdit);
+            // Initialize event listeners
+            initEventListeners();
+            
+            function initEventListeners() {
+                addPierBtn.addEventListener('click', addPier);
+                removePierBtn.addEventListener('click', removePier);
+                addBoatBtn.addEventListener('click', addBoat);
+                removeBoatBtn.addEventListener('click', removeBoat);
+                editInfoBtn.addEventListener('click', showEditForm);
+                saveInfoBtn.addEventListener('click', saveBoatInfo);
+                cancelEditBtn.addEventListener('click', cancelEdit);
+                
+                // Click on harbor background to deselect
+                harbor.addEventListener('click', function(e) {
+                    if (e.target === harbor) {
+                        selectedBoat = null;
+                        selectedPier = null;
+                        updateSelection();
+                    }
+                });
+            }
             
             // Haven tekening functies
             function renderHarbor() {
@@ -419,86 +437,114 @@
                 
                 // Render piers
                 piers.forEach(pier => {
-                    const pierEl = document.createElement('div');
-                    pierEl.className = 'pier';
-                    pierEl.style.left = `${pier.x}px`;
-                    pierEl.style.top = `${pier.y}px`;
-                    pierEl.style.width = `${pier.width}px`;
-                    pierEl.style.height = `${pier.height}px`;
-                    pierEl.dataset.id = pier.id;
-                    
-                    pierEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectedPier = pier;
-                        selectedBoat = null;
-                        highlightSelectedPier();
-                    });
-                    
-                    addDragEvents(pierEl);
-                    harbor.appendChild(pierEl);
+                    createPierElement(pier);
                     
                     if (pier.type === 'lShape') {
-                        const extensionEl = document.createElement('div');
-                        extensionEl.className = 'pier';
-                        extensionEl.style.left = `${pier.extension.x}px`;
-                        extensionEl.style.top = `${pier.extension.y}px`;
-                        extensionEl.style.width = `${pier.extension.width}px`;
-                        extensionEl.style.height = `${pier.extension.height}px`;
-                        extensionEl.dataset.id = pier.id;
-                        addDragEvents(extensionEl);
-                        harbor.appendChild(extensionEl);
+                        createPierExtensionElement(pier);
                     }
                 });
                 
                 // Render boats
                 boats.forEach(boat => {
-                    const boatEl = document.createElement('div');
-                    boatEl.className = 'boat';
-                    boatEl.style.left = `${boat.x}px`;
-                    boatEl.style.top = `${boat.y}px`;
-                    boatEl.style.width = `${boat.width}px`;
-                    boatEl.style.height = `${boat.height}px`;
-                    boatEl.style.backgroundColor = boat.color;
-                    boatEl.innerHTML = `
-                        <div class="boat-name">${boat.name}</div>
-                        <div class="boat-type">${boat.typeName} (${boat.size}m)</div>
-                    `;
-                    boatEl.dataset.id = boat.id;
-                    
-                    boatEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectedBoat = boat;
-                        selectedPier = null;
-                        showBoatInfo(boat);
-                        highlightSelectedBoat();
-                    });
-                    
-                    addDragEvents(boatEl);
-                    harbor.appendChild(boatEl);
+                    createBoatElement(boat);
                 });
+                
+                updateSelection();
             }
             
-            function highlightSelectedPier() {
+            function createPierElement(pier) {
+                const pierEl = document.createElement('div');
+                pierEl.className = 'pier';
+                pierEl.style.left = `${pier.x}px`;
+                pierEl.style.top = `${pier.y}px`;
+                pierEl.style.width = `${pier.width}px`;
+                pierEl.style.height = `${pier.height}px`;
+                pierEl.dataset.id = pier.id;
+                
+                pierEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectedPier = pier;
+                    selectedBoat = null;
+                    updateSelection();
+                });
+                
+                addDragEvents(pierEl);
+                harbor.appendChild(pierEl);
+            }
+            
+            function createPierExtensionElement(pier) {
+                const extensionEl = document.createElement('div');
+                extensionEl.className = 'pier';
+                extensionEl.style.left = `${pier.extension.x}px`;
+                extensionEl.style.top = `${pier.extension.y}px`;
+                extensionEl.style.width = `${pier.extension.width}px`;
+                extensionEl.style.height = `${pier.extension.height}px`;
+                extensionEl.dataset.id = pier.id;
+                
+                extensionEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectedPier = pier;
+                    selectedBoat = null;
+                    updateSelection();
+                });
+                
+                addDragEvents(extensionEl);
+                harbor.appendChild(extensionEl);
+            }
+            
+            function createBoatElement(boat) {
+                const boatEl = document.createElement('div');
+                boatEl.className = 'boat';
+                boatEl.style.left = `${boat.x}px`;
+                boatEl.style.top = `${boat.y}px`;
+                boatEl.style.width = `${boat.width}px`;
+                boatEl.style.height = `${boat.height}px`;
+                boatEl.style.backgroundColor = boat.color;
+                boatEl.innerHTML = `
+                    <div class="boat-name">${boat.name}</div>
+                    <div class="boat-type">${boat.typeName} (${boat.size}m)</div>
+                `;
+                boatEl.dataset.id = boat.id;
+                
+                boatEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectedBoat = boat;
+                    selectedPier = null;
+                    updateSelection();
+                });
+                
+                addDragEvents(boatEl);
+                harbor.appendChild(boatEl);
+            }
+            
+            function updateSelection() {
+                // Update pier selection
                 document.querySelectorAll('.pier').forEach(el => {
-                    el.style.boxShadow = 'none';
+                    el.classList.remove('selected');
                 });
                 
                 if (selectedPier) {
-                    const pierEl = document.querySelector(`.pier[data-id="${selectedPier.id}"]`);
-                    if (pierEl) pierEl.style.boxShadow = '0 0 0 3px yellow';
-                    
-                    hideBoatInfo();
+                    const pierEls = document.querySelectorAll(`.pier[data-id="${selectedPier.id}"]`);
+                    pierEls.forEach(el => el.classList.add('selected'));
                 }
-            }
-            
-            function highlightSelectedBoat() {
+                
+                // Update boat selection
                 document.querySelectorAll('.boat').forEach(el => {
-                    el.style.boxShadow = 'none';
+                    el.classList.remove('selected');
                 });
                 
                 if (selectedBoat) {
                     const boatEl = document.querySelector(`.boat[data-id="${selectedBoat.id}"]`);
-                    if (boatEl) boatEl.style.boxShadow = '0 0 0 3px yellow';
+                    if (boatEl) boatEl.classList.add('selected');
+                }
+                
+                // Update info panel
+                if (selectedBoat) {
+                    showBoatInfo(selectedBoat);
+                } else if (selectedPier) {
+                    hideBoatInfo();
+                } else {
+                    hideBoatInfo();
                 }
             }
             
@@ -529,25 +575,31 @@
                 
                 piers.push(pier);
                 renderHarbor();
+                
+                // Select the new pier
+                selectedPier = pier;
+                selectedBoat = null;
+                updateSelection();
             }
             
             function removePier() {
-                if (!selectedPier && !confirm("Geen pier geselecteerd. Wilt u de laatste pier verwijderen?")) {
+                if (!selectedPier) {
+                    alert('Selecteer eerst een pier om te verwijderen');
                     return;
                 }
                 
-                const pierToRemove = selectedPier || piers[piers.length - 1];
-                if (!pierToRemove) return;
+                if (!confirm(`Weet u zeker dat u pier ${selectedPier.id} wilt verwijderen?`)) {
+                    return;
+                }
                 
                 // Verwijder alle boten op deze pier
-                boats = boats.filter(boat => boat.pierId !== pierToRemove.id);
+                boats = boats.filter(boat => boat.pierId !== selectedPier.id);
                 
                 // Verwijder de pier
-                piers = piers.filter(p => p.id !== pierToRemove.id);
+                piers = piers.filter(p => p.id !== selectedPier.id);
                 
                 selectedPier = null;
                 renderHarbor();
-                hideBoatInfo();
             }
             
             // Boot beheer functies
@@ -585,6 +637,11 @@
                 boats.push(boat);
                 renderHarbor();
                 boatNameInput.value = "";
+                
+                // Select the new boat
+                selectedBoat = boat;
+                selectedPier = null;
+                updateSelection();
             }
             
             function assignBoatToPier(boat) {
@@ -603,27 +660,28 @@
             }
             
             function removeBoat() {
-                if (!selectedBoat && !confirm("Geen boot geselecteerd. Wilt u de laatste boot verwijderen?")) {
+                if (!selectedBoat) {
+                    alert('Selecteer eerst een boot om te verwijderen');
                     return;
                 }
                 
-                const boatToRemove = selectedBoat || boats[boats.length - 1];
-                if (!boatToRemove) return;
+                if (!confirm(`Weet u zeker dat u ${selectedBoat.name} wilt verwijderen?`)) {
+                    return;
+                }
                 
                 // Verwijder uit pier
-                if (boatToRemove.pierId) {
-                    const pier = piers.find(p => p.id === boatToRemove.pierId);
+                if (selectedBoat.pierId) {
+                    const pier = piers.find(p => p.id === selectedBoat.pierId);
                     if (pier) {
-                        pier.boats = pier.boats.filter(b => b.id !== boatToRemove.id);
+                        pier.boats = pier.boats.filter(b => b.id !== selectedBoat.id);
                     }
                 }
                 
                 // Verwijder uit bootlijst
-                boats = boats.filter(b => b.id !== boatToRemove.id);
+                boats = boats.filter(b => b.id !== selectedBoat.id);
                 
                 selectedBoat = null;
                 renderHarbor();
-                hideBoatInfo();
             }
             
             // Info panel functies
@@ -664,6 +722,7 @@
             function saveBoatInfo() {
                 if (!selectedBoat) return;
                 
+                // Update de bootgegevens
                 selectedBoat.name = editName.value;
                 selectedBoat.owner = editOwner.value;
                 selectedBoat.phone = editPhone.value;
@@ -676,8 +735,6 @@
             function cancelEdit() {
                 if (selectedBoat) {
                     showBoatInfo(selectedBoat);
-                } else {
-                    hideBoatInfo();
                 }
             }
             
@@ -686,7 +743,7 @@
                 let isDragging = false;
                 let offsetX, offsetY;
                 
-                element.addEventListener('mousedown', (e) => {
+                element.addEventListener('mousedown', function(e) {
                     if (e.button !== 0) return;
                     
                     isDragging = true;
@@ -696,6 +753,8 @@
                     element.style.zIndex = '100';
                     document.addEventListener('mousemove', drag);
                     document.addEventListener('mouseup', stopDrag);
+                    
+                    e.preventDefault();
                 });
                 
                 function drag(e) {
@@ -755,6 +814,8 @@
                             });
                         }
                     }
+                    
+                    renderHarbor();
                 }
             }
             
