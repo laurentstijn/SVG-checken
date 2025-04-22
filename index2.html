@@ -1183,50 +1183,52 @@
                 removeBoat(state.selectedBoat.id);
             }
 
-            function removeBoat(boatId) {
-                // Verwijder boot
-                const boat = state.boats.find(b => b.id === boatId);
-                if (!boat) return;
-                
-                // Maak ligplaats vrij indien aan een pier toegewezen
-                if (boat.pierId) {
-                    const pier = state.piers.find(p => p.id === boat.pierId);
-                    if (pier && pier.slots) {
-                        // Zoek alle slots die deze boot bevatten (voor het geval er meerdere zijn)
-                        pier.slots.forEach(slot => {
-                            if (slot.boatId === boatId) {
-                                slot.occupied = false;
-                                slot.boatId = null;
-                            }
-                        });
-                        
-                        // Verwijder boot uit pier.boats
-                        if (pier.boats) {
-                            pier.boats = pier.boats.filter(b => b !== boatId);
-                        }
-                    }
+           function removeBoat(boatId) {
+    // Verwijder boot
+    const boat = state.boats.find(b => b.id === boatId);
+    if (!boat) return;
+    
+    // Maak ligplaats vrij indien aan een pier toegewezen
+    if (boat.pierId) {
+        const pier = state.piers.find(p => p.id === boat.pierId);
+        if (pier && pier.slots) {
+            // Zoek alle slots die deze boot bevatten
+            pier.slots.forEach(slot => {
+                if (slot.boatId === boatId) {
+                    slot.occupied = false;
+                    slot.boatId = null;
                 }
-                
-                // Verwijder de boot uit de state
-                state.boats = state.boats.filter(b => b.id !== boatId);
-                
-                // Deselecteer
-                if (state.selectedBoat && state.selectedBoat.id === boatId) {
-                    state.selectedBoat = null;
-                }
-                
-                // Opslaan in Firebase
-                Promise.all([
-                    database.ref('piers').set(state.piers),
-                    database.ref('boats').set(state.boats)
-                ]).then(() => {
-                    updateSyncStatus('Boot verwijderd');
-                    updateUI();
-                }).catch(error => {
-                    console.error("Error removing boat:", error);
-                    updateSyncStatus('Fout bij verwijderen boot', 'error');
-                });
+            });
+            
+            // Verwijder boot uit pier.boats
+            if (pier.boats) {
+                pier.boats = pier.boats.filter(b => b !== boatId);
             }
+        }
+    }
+    
+    // Verwijder de boot uit de state
+    state.boats = state.boats.filter(b => b.id !== boatId);
+    
+    // Deselecteer
+    if (state.selectedBoat && state.selectedBoat.id === boatId) {
+        state.selectedBoat = null;
+    }
+    
+    // Opslaan in Firebase en UI updaten
+    Promise.all([
+        database.ref('piers').set(state.piers),
+        database.ref('boats').set(state.boats)
+    ]).then(() => {
+        updateSyncStatus('Boot verwijderd');
+        // Forceer een volledige UI refresh
+        renderHarbor();
+        updateUI();
+    }).catch(error => {
+        console.error("Error removing boat:", error);
+        updateSyncStatus('Fout bij verwijderen boot', 'error');
+    });
+}
 
             function saveBoatsToFirebase() {
                 database.ref('boats').set(state.boats)
