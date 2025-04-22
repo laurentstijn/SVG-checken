@@ -622,50 +622,95 @@
                 renderHarbor();
             }
 
-            function finishDrawing(e) {
-                if (!state.isDrawing) return;
-                state.isDrawing = false;
+         // In de finishDrawing functie:
+function finishDrawing(e) {
+    if (!state.isDrawing) return;
+    state.isDrawing = false;
+    
+    if (state.drawingMode === 'pier' && state.tempPier) {
+        // Voeg nieuwe steiger toe met geïnitialiseerde slots array
+        const newPier = {
+            id: state.nextPierId++,
+            name: `Steiger ${state.nextPierId}`,
+            type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
+            x: state.tempPier.x,
+            y: state.tempPier.y,
+            width: Math.abs(state.tempPier.width),
+            height: Math.abs(state.tempPier.height),
+            slots: [], // Hier initialiseren we de array
+            boats: []
+        };
+        
+        state.piers.push(newPier);
+        savePiersToFirebase();
+        state.tempPier = null;
+        
+        state.selectedPier = newPier;
+        state.selectedBoat = null;
+    } else if (state.drawingMode === 'slot' && state.selectedPier && state.tempSlots.length > 0) {
+        // Defensieve check - zorg dat slots array bestaat
+        if (!Array.isArray(state.selectedPier.slots)) {
+            state.selectedPier.slots = [];
+        }
+        
+        // Voeg nieuwe slots toe
+        state.tempSlots.forEach(slot => {
+            state.selectedPier.slots.push({
+                x: slot.x,
+                y: slot.y,
+                width: Math.abs(slot.width),
+                height: Math.abs(slot.height),
+                occupied: false,
+                boatId: null
+            });
+        });
+        
+        savePiersToFirebase();
+        state.tempSlots = [];
+    }
+    
+    renderHarbor();
+    updateUI();
+}
+
+// In de renderHarbor functie:
+function renderHarbor() {
+    harbor.innerHTML = '';
+    
+    // Render piers
+    state.piers.forEach(pier => {
+        const pierEl = document.createElement('div');
+        pierEl.className = 'pier';
+        if (state.selectedPier && pier.id === state.selectedPier.id) {
+            pierEl.classList.add('selected');
+        }
+        pierEl.style.left = `${pier.x}px`;
+        pierEl.style.top = `${pier.y}px`;
+        pierEl.style.width = `${pier.width}px`;
+        pierEl.style.height = `${pier.height}px`;
+        pierEl.dataset.id = pier.id;
+        
+        harbor.appendChild(pierEl);
+        
+        // Render slots - defensieve check voor pier.slots
+        if (Array.isArray(pier.slots)) {
+            pier.slots.forEach((slot, index) => {
+                const slotEl = document.createElement('div');
+                slotEl.className = `pier-slot ${slot.occupied ? 'occupied' : 'available'}`;
+                slotEl.style.left = `${pier.x + slot.x}px`;
+                slotEl.style.top = `${pier.y + slot.y}px`;
+                slotEl.style.width = `${slot.width}px`;
+                slotEl.style.height = `${slot.height}px`;
+                slotEl.dataset.pierId = pier.id;
+                slotEl.dataset.slotIndex = index;
                 
-                if (state.drawingMode === 'pier' && state.tempPier) {
-                    // Voeg nieuwe steiger toe
-                    const newPier = {
-                        id: state.nextPierId++,
-                        name: `Steiger ${state.nextPierId}`,
-                        type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
-                        x: state.tempPier.x,
-                        y: state.tempPier.y,
-                        width: Math.abs(state.tempPier.width),
-                        height: Math.abs(state.tempPier.height),
-                        slots: [],
-                        boats: []
-                    };
-                    
-                    state.piers.push(newPier);
-                    savePiersToFirebase();
-                    state.tempPier = null;
-                    
-                    // Selecteer de nieuwe steiger
-                    state.selectedPier = newPier;
-                    state.selectedBoat = null;
-                } else if (state.drawingMode === 'slot' && state.selectedPier && state.tempSlots.length > 0) {
-                    // Voeg ligplaatsen toe aan geselecteerde steiger
-                    state.tempSlots.forEach(slot => {
-                        state.selectedPier.slots.push({
-                            x: slot.x,
-                            y: slot.y,
-                            width: Math.abs(slot.width),
-                            height: Math.abs(slot.height),
-                            occupied: false
-                        });
-                    });
-                    
-                    savePiersToFirebase();
-                    state.tempSlots = [];
-                }
-                
-                renderHarbor();
-                updateUI();
-            }
+                harbor.appendChild(slotEl);
+            });
+        }
+    });
+    
+    // ... rest van de render code ...
+}
 
             function handleHarborClick(e) {
                 if (e.target === harbor && state.drawingMode === 'select') {
