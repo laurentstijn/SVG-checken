@@ -1440,7 +1440,7 @@
                 document.getElementById('editBoatForm').style.display = 'block';
             }
 
-      function saveBoatInfo() {
+   function saveBoatInfo() {
     if (!state.selectedBoat) {
         alert('Geen boot geselecteerd om op te slaan');
         return;
@@ -1449,7 +1449,8 @@
     try {
         // 1. Bereken nieuwe bootafmetingen
         const boatTypeConfig = boatTypes[document.getElementById('editBoatType').value];
-        const newWidth = parseInt(document.getElementById('editBoatSize').value) * boatTypeConfig.widthMultiplier;
+        const newSize = parseInt(document.getElementById('editBoatSize').value);
+        const newWidth = newSize * boatTypeConfig.widthMultiplier;
         const newHeight = boatTypeConfig.height;
 
         // 2. Bereid updates voor
@@ -1460,18 +1461,21 @@
         // 3. Verwerk huidige ligplaats
         if (currentSlotId) {
             const currentSlot = state.slots.find(s => s.id === currentSlotId);
-            if (currentSlot && currentSlot.boatId === state.selectedBoat.id) {
+            if (currentSlot) {
                 const updatedSlot = {
                     ...currentSlot,
                     occupied: false,
                     boatId: null
                 };
-                updates[`/slots/${currentSlotId}`] = updatedSlot;
+                updates[`slots/${currentSlotId}`] = updatedSlot;
                 state.slots = state.slots.map(s => s.id === currentSlotId ? updatedSlot : s);
             }
         }
 
         // 4. Verwerk nieuwe ligplaats
+        let newX = state.selectedBoat.x;
+        let newY = state.selectedBoat.y;
+        
         if (newSlotId) {
             const newSlot = state.slots.find(s => s.id === newSlotId);
             if (newSlot) {
@@ -1485,24 +1489,32 @@
                 if (newSlot.occupied && newSlot.boatId !== state.selectedBoat.id) {
                     const otherBoat = state.boats.find(b => b.id === newSlot.boatId);
                     if (otherBoat) {
-                        updates[`/boats/${otherBoat.id}`] = {
+                        const randomX = 50 + Math.random() * 300;
+                        const randomY = 50 + Math.random() * 300;
+                        updates[`boats/${otherBoat.id}`] = {
                             ...otherBoat,
                             slotId: null,
-                            x: 50 + Math.random() * 300,
-                            y: 50 + Math.random() * 300
+                            x: randomX,
+                            y: randomY
                         };
                     }
                 }
 
                 // Update nieuwe ligplaats
+                newX = newSlot.x;
+                newY = newSlot.y;
                 const updatedNewSlot = {
                     ...newSlot,
                     occupied: true,
                     boatId: state.selectedBoat.id
                 };
-                updates[`/slots/${newSlotId}`] = updatedNewSlot;
+                updates[`slots/${newSlotId}`] = updatedNewSlot;
                 state.slots = state.slots.map(s => s.id === newSlotId ? updatedNewSlot : s);
             }
+        } else {
+            // Plaats vrij in de haven
+            newX = 50 + Math.random() * 300;
+            newY = 50 + Math.random() * 300;
         }
 
         // 5. Update bootgegevens
@@ -1513,17 +1525,17 @@
             phone: document.getElementById('editBoatPhone').value,
             email: document.getElementById('editBoatEmail').value,
             type: document.getElementById('editBoatType').value,
-            size: parseInt(document.getElementById('editBoatSize').value),
+            size: newSize,
             width: newWidth,
             height: newHeight,
             typeName: boatTypeConfig.name,
             color: boatTypeConfig.color,
             slotId: newSlotId || null,
-            x: newSlotId ? state.slots.find(s => s.id === newSlotId)?.x : 50 + Math.random() * 300,
-            y: newSlotId ? state.slots.find(s => s.id === newSlotId)?.y : 50 + Math.random() * 300
+            x: newX,
+            y: newY
         };
 
-        updates[`/boats/${state.selectedBoat.id}`] = updatedBoat;
+        updates[`boats/${state.selectedBoat.id}`] = updatedBoat;
         state.selectedBoat = updatedBoat;
         state.boats = state.boats.map(b => b.id === state.selectedBoat.id ? updatedBoat : b);
 
