@@ -1440,7 +1440,7 @@
                 document.getElementById('editBoatForm').style.display = 'block';
             }
 
-   function saveBoatInfo() {
+ function saveBoatInfo() {
     if (!state.selectedBoat) {
         alert('Geen boot geselecteerd om op te slaan');
         return;
@@ -1461,20 +1461,18 @@
         // 3. Verwerk huidige ligplaats
         if (currentSlotId) {
             const currentSlot = state.slots.find(s => s.id === currentSlotId);
-            if (currentSlot) {
-                const updatedSlot = {
+            if (currentSlot && currentSlot.boatId === state.selectedBoat.id) {
+                updates[`slots/${currentSlotId}`] = {
                     ...currentSlot,
                     occupied: false,
                     boatId: null
                 };
-                updates[`slots/${currentSlotId}`] = updatedSlot;
-                state.slots = state.slots.map(s => s.id === currentSlotId ? updatedSlot : s);
             }
         }
 
         // 4. Verwerk nieuwe ligplaats
-        let newX = state.selectedBoat.x;
-        let newY = state.selectedBoat.y;
+        let newX = state.selectedBoat.x || 50 + Math.random() * 300;
+        let newY = state.selectedBoat.y || 50 + Math.random() * 300;
         
         if (newSlotId) {
             const newSlot = state.slots.find(s => s.id === newSlotId);
@@ -1485,8 +1483,8 @@
                     return;
                 }
 
-                // Verplaats eventuele andere boot
-                if (newSlot.occupied && newSlot.boatId !== state.selectedBoat.id) {
+                // Verplaats alleen als er een andere boot is
+                if (newSlot.occupied && newSlot.boatId && newSlot.boatId !== state.selectedBoat.id) {
                     const otherBoat = state.boats.find(b => b.id === newSlot.boatId);
                     if (otherBoat) {
                         const randomX = 50 + Math.random() * 300;
@@ -1503,18 +1501,12 @@
                 // Update nieuwe ligplaats
                 newX = newSlot.x;
                 newY = newSlot.y;
-                const updatedNewSlot = {
+                updates[`slots/${newSlotId}`] = {
                     ...newSlot,
                     occupied: true,
                     boatId: state.selectedBoat.id
                 };
-                updates[`slots/${newSlotId}`] = updatedNewSlot;
-                state.slots = state.slots.map(s => s.id === newSlotId ? updatedNewSlot : s);
             }
-        } else {
-            // Plaats vrij in de haven
-            newX = 50 + Math.random() * 300;
-            newY = 50 + Math.random() * 300;
         }
 
         // 5. Update bootgegevens
@@ -1534,14 +1526,29 @@
             x: newX,
             y: newY
         };
-
         updates[`boats/${state.selectedBoat.id}`] = updatedBoat;
-        state.selectedBoat = updatedBoat;
-        state.boats = state.boats.map(b => b.id === state.selectedBoat.id ? updatedBoat : b);
 
         // 6. Voer updates uit
         database.ref().update(updates)
             .then(() => {
+                // Update lokale state na succesvolle Firebase update
+                if (currentSlotId) {
+                    const currentSlot = state.slots.find(s => s.id === currentSlotId);
+                    if (currentSlot) {
+                        currentSlot.occupied = false;
+                        currentSlot.boatId = null;
+                    }
+                }
+                
+                if (newSlotId) {
+                    const newSlot = state.slots.find(s => s.id === newSlotId);
+                    if (newSlot) {
+                        newSlot.occupied = true;
+                        newSlot.boatId = state.selectedBoat.id;
+                    }
+                }
+                
+                Object.assign(state.selectedBoat, updatedBoat);
                 updateSyncStatus('Bootgegevens opgeslagen');
                 updateUI();
             })
