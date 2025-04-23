@@ -1223,99 +1223,92 @@
             }
 
             // Boat management functions
-         function addBoat() {
-    // Controleer eerst of er ligplaatsen zijn
+function addBoat() {
+    // Eerst controleren of er ligplaatsen zijn
     if (state.slots.length === 0) {
         alert('Voeg eerst een ligplaats toe!');
         return;
     }
 
-    // Valideer inputwaarden
+    // Inputwaarden ophalen en valideren
     const type = document.getElementById('boatType').value;
-    const sizeInput = document.getElementById('boatSize').value;
-    const name = document.getElementById('boatName').value.trim();
+    const size = parseInt(document.getElementById('boatSize').value);
+    const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
 
-    // Zorg voor een geldige bootnaam
-    const boatName = name || `Boot ${state.nextBoatId}`;
-    
-    // Parse en valideer bootgrootte
-    let size = parseInt(sizeInput);
+    // Validatie van de bootgrootte
     if (isNaN(size) || size < 5 || size > 30) {
-        alert('Voer een geldige bootgrootte in (tussen 5 en 30 meter)');
+        alert('Voer een geldige bootgrootte in tussen 5 en 30 meter');
         return;
     }
 
-    // Genereer een geldige boot-ID
-    const boatId = state.nextBoatId;
-    if (isNaN(boatId) {
-        console.error('Ongeldige boot ID gegenereerd:', state.nextBoatId);
-        alert('Er is een fout opgetreden bij het aanmaken van de boot');
-        return;
-    }
-
-    // Verhoog nextBoatId pas na succesvolle validatie
-    state.nextBoatId++;
-
-    // Kies een willekeurige eigenaar
-    const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
+    // Bootconfiguratie ophalen
     const boatTypeConfig = boatTypes[type];
+    if (!boatTypeConfig) {
+        alert('Ongeldig boottype');
+        return;
+    }
 
-    // Maak het bootobject
+    // Bootobject aanmaken
     const newBoat = {
-        id: boatId, // Gebruik de gevalideerde ID
+        id: state.nextBoatId,
         type: type,
         size: size,
-        name: boatName,
-        owner: randomOwner.name,
-        phone: randomOwner.phone,
-        email: randomOwner.email,
-        notes: "",
-        slotId: null, // Wordt later toegewezen
+        name: name,
+        owner: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].name,
+        phone: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].phone,
+        email: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].email,
+        slotId: null,
         width: size * boatTypeConfig.widthMultiplier,
         height: boatTypeConfig.height,
         color: boatTypeConfig.color,
         typeName: boatTypeConfig.name,
-        x: 50 + Math.random() * 300, // Startpositie
+        x: 50 + Math.random() * 300,
         y: 50 + Math.random() * 300
     };
 
     // Probeer boot toe te wijzen aan een ligplaats
-    if (assignBoatToSlot(newBoat)) {
-        // Voeg boot toe aan state
-        state.boats.push(newBoat);
-        
-        // Maak updates object voor Firebase
-        const updates = {};
-        updates[`boats/${boatId}`] = newBoat;
-        
-        // Update de slot als er een is toegewezen
-        if (newBoat.slotId) {
-            const slot = state.slots.find(s => s.id === newBoat.slotId);
-            if (slot) {
-                updates[`slots/${slot.id}`] = {
-                    ...slot,
-                    occupied: true,
-                    boatId: boatId
-                };
-            }
+    let assigned = false;
+    for (const slot of state.slots) {
+        if (!slot.occupied && 
+            newBoat.width <= slot.width && 
+            newBoat.height <= slot.height) {
+            
+            // Wijs toe aan deze ligplaats
+            slot.occupied = true;
+            slot.boatId = newBoat.id;
+            newBoat.slotId = slot.id;
+            newBoat.x = slot.x;
+            newBoat.y = slot.y;
+            assigned = true;
+            break;
         }
-
-        // Voer de update uit
-        database.ref().update(updates)
-            .then(() => {
-                document.getElementById('boatName').value = "";
-                updateSyncStatus('Boot toegevoegd');
-                state.selectedBoat = newBoat;
-                updateUI();
-            })
-            .catch(error => {
-                console.error("Fout bij opslaan boot:", error);
-                updateSyncStatus('Fout bij opslaan boot', 'error');
-                // Terugdraaien van state wijziging bij fout
-                state.boats = state.boats.filter(b => b.id !== boatId);
-                state.nextBoatId--;
-            });
     }
+
+    // Boot toevoegen aan de staat
+    state.boats.push(newBoat);
+    state.nextBoatId++;
+
+    // Velden leegmaken
+    document.getElementById('boatName').value = '';
+
+    // Opslaan in Firebase
+    const updates = {};
+    updates['/boats/' + newBoat.id] = newBoat;
+    if (assigned) {
+        const slot = state.slots.find(s => s.id === newBoat.slotId);
+        updates['/slots/' + newBoat.slotId] = slot;
+    }
+
+    database.ref().update(updates)
+        .then(() => {
+            updateSyncStatus('Boot toegevoegd');
+            state.selectedBoat = newBoat;
+            updateUI();
+        })
+        .catch(error => {
+            console.error("Fout bij opslaan boot:", error);
+            updateSyncStatus('Fout bij opslaan boot', 'error');
+        });
 }
 
 // Verbeterde assignBoatToSlot functie
