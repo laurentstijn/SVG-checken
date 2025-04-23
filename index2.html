@@ -1440,33 +1440,38 @@
                 document.getElementById('editBoatForm').style.display = 'block';
             }
 
-        function saveBoatInfo() {
+      function saveBoatInfo() {
     if (!state.selectedBoat) {
         alert('Geen boot geselecteerd om op te slaan');
         return;
     }
 
-    // 1. Bereken nieuwe bootafmetingen
-    const boatTypeConfig = boatTypes[document.getElementById('editBoatType').value];
-    const newWidth = parseInt(document.getElementById('editBoatSize').value) * boatTypeConfig.widthMultiplier;
-    const newHeight = boatTypeConfig.height;
+    try {
+        // 1. Bereken nieuwe bootafmetingen
+        const boatTypeConfig = boatTypes[document.getElementById('editBoatType').value];
+        const newWidth = parseInt(document.getElementById('editBoatSize').value) * boatTypeConfig.widthMultiplier;
+        const newHeight = boatTypeConfig.height;
 
-    // 2. Verwerk ligplaatswijziging
-    const newSlotId = document.getElementById('editBoatSlot').value;
-    const currentSlotId = state.selectedBoat.slotId;
+        // 2. Bereid updates voor
+        const updates = {};
+        const currentSlotId = state.selectedBoat.slotId;
+        const newSlotId = document.getElementById('editBoatSlot').value;
 
-    // 3. Als de ligplaats verandert
-    if (newSlotId !== currentSlotId) {
-        // a. Vrijmaken huidige ligplaats
+        // 3. Verwerk huidige ligplaats
         if (currentSlotId) {
             const currentSlot = state.slots.find(s => s.id === currentSlotId);
             if (currentSlot && currentSlot.boatId === state.selectedBoat.id) {
-                currentSlot.occupied = false;
-                currentSlot.boatId = null;
+                const updatedSlot = {
+                    ...currentSlot,
+                    occupied: false,
+                    boatId: null
+                };
+                updates[`/slots/${currentSlotId}`] = updatedSlot;
+                state.slots = state.slots.map(s => s.id === currentSlotId ? updatedSlot : s);
             }
         }
 
-        // b. Toewijzen aan nieuwe ligplaats
+        // 4. Verwerk nieuwe ligplaats
         if (newSlotId) {
             const newSlot = state.slots.find(s => s.id === newSlotId);
             if (newSlot) {
@@ -1480,62 +1485,63 @@
                 if (newSlot.occupied && newSlot.boatId !== state.selectedBoat.id) {
                     const otherBoat = state.boats.find(b => b.id === newSlot.boatId);
                     if (otherBoat) {
-                        otherBoat.slotId = null;
-                        otherBoat.x = 50 + Math.random() * 300;
-                        otherBoat.y = 50 + Math.random() * 300;
+                        updates[`/boats/${otherBoat.id}`] = {
+                            ...otherBoat,
+                            slotId: null,
+                            x: 50 + Math.random() * 300,
+                            y: 50 + Math.random() * 300
+                        };
                     }
                 }
 
-                // Wijs toe aan nieuwe ligplaats
-                newSlot.occupied = true;
-                newSlot.boatId = state.selectedBoat.id;
-                state.selectedBoat.x = newSlot.x;
-                state.selectedBoat.y = newSlot.y;
-                state.selectedBoat.slotId = newSlot.id;
+                // Update nieuwe ligplaats
+                const updatedNewSlot = {
+                    ...newSlot,
+                    occupied: true,
+                    boatId: state.selectedBoat.id
+                };
+                updates[`/slots/${newSlotId}`] = updatedNewSlot;
+                state.slots = state.slots.map(s => s.id === newSlotId ? updatedNewSlot : s);
             }
-        } else {
-            // Plaats vrij in de haven
-            state.selectedBoat.x = 50 + Math.random() * 300;
-            state.selectedBoat.y = 50 + Math.random() * 300;
-            state.selectedBoat.slotId = null;
         }
-    }
 
-    // 4. Update bootgegevens
-    state.selectedBoat.name = document.getElementById('editBoatName').value;
-    state.selectedBoat.owner = document.getElementById('editBoatOwner').value;
-    state.selectedBoat.phone = document.getElementById('editBoatPhone').value;
-    state.selectedBoat.email = document.getElementById('editBoatEmail').value;
-    state.selectedBoat.type = document.getElementById('editBoatType').value;
-    state.selectedBoat.size = parseInt(document.getElementById('editBoatSize').value);
-    state.selectedBoat.width = newWidth;
-    state.selectedBoat.height = newHeight;
-    state.selectedBoat.typeName = boatTypeConfig.name;
-    state.selectedBoat.color = boatTypeConfig.color;
+        // 5. Update bootgegevens
+        const updatedBoat = {
+            ...state.selectedBoat,
+            name: document.getElementById('editBoatName').value,
+            owner: document.getElementById('editBoatOwner').value,
+            phone: document.getElementById('editBoatPhone').value,
+            email: document.getElementById('editBoatEmail').value,
+            type: document.getElementById('editBoatType').value,
+            size: parseInt(document.getElementById('editBoatSize').value),
+            width: newWidth,
+            height: newHeight,
+            typeName: boatTypeConfig.name,
+            color: boatTypeConfig.color,
+            slotId: newSlotId || null,
+            x: newSlotId ? state.slots.find(s => s.id === newSlotId)?.x : 50 + Math.random() * 300,
+            y: newSlotId ? state.slots.find(s => s.id === newSlotId)?.y : 50 + Math.random() * 300
+        };
 
-    // 5. Opslaan naar Firebase
-    const updates = {};
-    updates['/boats/' + state.selectedBoat.id] = state.selectedBoat;
-    
-    // Update ook de betrokken ligplaatsen
-    if (currentSlotId) {
-        const currentSlot = state.slots.find(s => s.id === currentSlotId);
-        updates['/slots/' + currentSlotId] = currentSlot;
-    }
-    if (newSlotId) {
-        const newSlot = state.slots.find(s => s.id === newSlotId);
-        updates['/slots/' + newSlotId] = newSlot;
-    }
+        updates[`/boats/${state.selectedBoat.id}`] = updatedBoat;
+        state.selectedBoat = updatedBoat;
+        state.boats = state.boats.map(b => b.id === state.selectedBoat.id ? updatedBoat : b);
 
-    database.ref().update(updates)
-        .then(() => {
-            updateSyncStatus('Bootgegevens opgeslagen');
-            updateUI();
-        })
-        .catch(error => {
-            console.error("Fout bij opslaan:", error);
-            updateSyncStatus('Fout bij opslaan gegevens', 'error');
-        });
+        // 6. Voer updates uit
+        database.ref().update(updates)
+            .then(() => {
+                updateSyncStatus('Bootgegevens opgeslagen');
+                updateUI();
+            })
+            .catch(error => {
+                console.error("Fout bij opslaan:", error);
+                updateSyncStatus('Fout bij opslaan gegevens', 'error');
+            });
+
+    } catch (error) {
+        console.error("Fout in saveBoatInfo:", error);
+        updateSyncStatus('Fout bij opslaan bootgegevens', 'error');
+    }
 }
             
             function cancelBoatEdit() {
