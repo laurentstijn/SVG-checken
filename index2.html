@@ -61,7 +61,7 @@
             box-shadow: 0 0 0 3px #0066cc;
         }
         
-        .slot {
+        .pier-slot {
             position: absolute;
             background-color: rgba(255, 255, 255, 0.2);
             border: 1px dashed rgba(255, 255, 255, 0.5);
@@ -69,11 +69,11 @@
             z-index: 2;
         }
         
-        .slot.occupied {
+        .pier-slot.occupied {
             background-color: rgba(255, 0, 0, 0.2);
         }
         
-        .slot.available {
+        .pier-slot.available {
             background-color: rgba(0, 255, 0, 0.2);
         }
         
@@ -124,7 +124,7 @@
             min-width: 350px;
         }
         
-        .pier-management, .slot-management, .boat-management {
+        .pier-management, .boat-management {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -285,42 +285,17 @@
             pointer-events: none;
         }
 
-        .slot-name {
-            position: absolute;
-            bottom: -15px;
-            left: 0;
+        .form-group select {
             width: 100%;
-            text-align: center;
-            font-size: 9px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .slot-context-menu {
-            position: absolute;
-            background: white;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 100;
-            padding: 10px;
-            display: none;
-        }
-        
-        .slot-context-menu button {
-            display: block;
-            width: 100%;
-            margin: 5px 0;
-            text-align: left;
+            font-size: 14px;
+            margin-bottom: 5px;
         }
 
-        .boat-size-info {
-            font-size: 8px;
-            margin-top: 2px;
-        }
-        
-        .collision-warning {
-            box-shadow: 0 0 5px 2px red;
+        select option:disabled {
+            color: #999;
         }
     </style>
 </head>
@@ -352,18 +327,6 @@
                 </div>
             </div>
             
-            <div class="slot-management">
-                <h2 class="section-title">Ligplaats Beheer</h2>
-                <div class="control-group">
-                    <label for="slotName">Ligplaats Naam:</label>
-                    <input type="text" id="slotName" placeholder="Bijv. Ligplaats 1">
-                </div>
-                <div class="buttons">
-                    <button id="saveSlot" class="success">Ligplaats Opslaan</button>
-                    <button id="removeSlot" class="danger">Verwijderen</button>
-                </div>
-            </div>
-            
             <div class="boat-management">
                 <h2 class="section-title">Boot Beheer</h2>
                 <div class="control-group">
@@ -392,7 +355,7 @@
             <div class="info-panel">
                 <h2 class="section-title">Details</h2>
                 <div id="noSelection" class="no-selection">
-                    Selecteer een steiger, ligplaats of boot voor details
+                    Selecteer een steiger of boot voor details
                 </div>
                 <div id="pierInfoDisplay" style="display: none;">
                     <div class="info-grid">
@@ -400,24 +363,10 @@
                         <div class="info-value" id="pierInfoName"></div>
                         <div class="info-label">Type:</div>
                         <div class="info-value" id="pierInfoType"></div>
-                        <div class="info-label">Breedte:</div>
-                        <div class="info-value" id="pierInfoWidth"></div>
-                        <div class="info-label">Hoogte:</div>
-                        <div class="info-value" id="pierInfoHeight"></div>
-                    </div>
-                </div>
-                <div id="slotInfoDisplay" style="display: none;">
-                    <div class="info-grid">
-                        <div class="info-label">Naam:</div>
-                        <div class="info-value" id="slotInfoName"></div>
-                        <div class="info-label">Status:</div>
-                        <div class="info-value" id="slotInfoStatus"></div>
-                        <div class="info-label">Breedte:</div>
-                        <div class="info-value" id="slotInfoWidth"></div>
-                        <div class="info-label">Hoogte:</div>
-                        <div class="info-value" id="slotInfoHeight"></div>
-                        <div class="info-label">Boot:</div>
-                        <div class="info-value" id="slotInfoBoat"></div>
+                        <div class="info-label">Ligplaatsen:</div>
+                        <div class="info-value" id="pierInfoSlots"></div>
+                        <div class="info-label">Boten:</div>
+                        <div class="info-value" id="pierInfoBoats"></div>
                     </div>
                 </div>
                 <div id="boatInfoDisplay" style="display: none;">
@@ -434,7 +383,7 @@
                         <div class="info-value" id="boatInfoPhone"></div>
                         <div class="info-label">Email:</div>
                         <div class="info-value" id="boatInfoEmail"></div>
-                        <div class="info-label">Ligplaats:</div>
+                        <div class="info-label">Locatie:</div>
                         <div class="info-value" id="boatInfoLocation"></div>
                     </div>
                     <button id="editBoatInfo" class="secondary">Bewerken</button>
@@ -473,9 +422,16 @@
                         <input type="number" id="editBoatSize" min="5" max="30">
                     </div>
                     <div class="form-group">
-                        <label for="editBoatSlot">Ligplaats:</label>
-                        <select id="editBoatSlot">
-                            <option value="">Geen ligplaats</option>
+                        <label for="editBoatPier">Ligplaats (Steiger):</label>
+                        <select id="editBoatPier">
+                            <option value="">Geen steiger</option>
+                            <!-- Opties worden dynamisch ingevuld -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatSlot">Specifieke ligplaats:</label>
+                        <select id="editBoatSlot" disabled>
+                            <option value="">Automatisch toewijzen</option>
                             <!-- Opties worden dynamisch ingevuld -->
                         </select>
                     </div>
@@ -515,33 +471,30 @@
             const harbor = document.getElementById('harbor');
             const noSelection = document.getElementById('noSelection');
             const pierInfoDisplay = document.getElementById('pierInfoDisplay');
-            const slotInfoDisplay = document.getElementById('slotInfoDisplay');
             const boatInfoDisplay = document.getElementById('boatInfoDisplay');
             const syncStatus = document.getElementById('syncStatus');
 
             // Application state
             const state = {
                 piers: [],
-                slots: [],
                 boats: [],
                 nextPierId: 1,
-                nextSlotId: 1,
                 nextBoatId: 1,
                 selectedPier: null,
-                selectedSlot: null,
                 selectedBoat: null,
+                selectedSlot: null,
                 drawingMode: 'select', // 'select', 'pier', 'slot', 'delete'
                 tempPier: null,
-                tempSlot: null,
+                tempSlots: [],
                 isDrawing: false
             };
 
-            // Boat types configuration
+            // Boat types
             const boatTypes = {
-                sailboat: { name: 'Zeilboot', color: '#1E90FF', widthMultiplier: 1.5, height: 30 },
-                motorboat: { name: 'Motorboot', color: '#FF6347', widthMultiplier: 1.2, height: 25 },
-                yacht: { name: 'Jacht', color: '#9370DB', widthMultiplier: 2, height: 40 },
-                small: { name: 'Kleine boot', color: '#3CB371', widthMultiplier: 1, height: 20 }
+                sailboat: { name: 'Zeilboot', color: '#1E90FF' },
+                motorboat: { name: 'Motorboot', color: '#FF6347' },
+                yacht: { name: 'Jacht', color: '#9370DB' },
+                small: { name: 'Kleine boot', color: '#3CB371' }
             };
             
             // Sample owners
@@ -551,15 +504,6 @@
                 { name: "Piet Smit", phone: "06-11223344", email: "piet@voorbeeld.nl" },
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
-            
-            // Create context menu for slots
-            const slotContextMenu = document.createElement('div');
-            slotContextMenu.className = 'slot-context-menu';
-            slotContextMenu.setAttribute('aria-hidden', 'true');
-            document.body.appendChild(slotContextMenu);
-            
-            // Track clicked slot for context menu
-            let clickedSlot = null;
 
             // Initialize the application
             init();
@@ -583,6 +527,10 @@
                 });
                 
                 document.getElementById('drawSlotMode').addEventListener('click', () => {
+                    if (!state.selectedPier) {
+                        alert('Selecteer eerst een steiger om ligplaatsen toe te voegen');
+                        return;
+                    }
                     state.drawingMode = 'slot';
                     updateDrawingModeUI();
                 });
@@ -595,10 +543,6 @@
                 // Pier management
                 document.getElementById('savePier').addEventListener('click', savePierDetails);
                 document.getElementById('removePier').addEventListener('click', removeSelectedPier);
-                
-                // Slot management
-                document.getElementById('saveSlot').addEventListener('click', saveSlotDetails);
-                document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
                 
                 // Boat management
                 document.getElementById('addBoat').addEventListener('click', addBoat);
@@ -614,77 +558,37 @@
                 harbor.addEventListener('mousemove', continueDrawing);
                 harbor.addEventListener('mouseup', finishDrawing);
                 harbor.addEventListener('click', handleHarborClick);
-                
-                // Close context menu when clicking elsewhere
-                document.addEventListener('click', function(e) {
-                    if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
-                        slotContextMenu.style.display = 'none';
-                        slotContextMenu.setAttribute('aria-hidden', 'true');
-                    }
-                });
             }
 
             function setupFirebaseListeners() {
                 // Listen for changes in piers
                 database.ref('piers').on('value', (snapshot) => {
-                    try {
-                        const data = snapshot.val();
-                        if (data) {
-                            state.piers = data;
-                            // Update nextPierId
-                            if (state.piers.length > 0) {
-                                state.nextPierId = Math.max(...state.piers.map(p => p.id)) + 1;
-                            }
-                            updateUI();
-                            updateSyncStatus('Pieren bijgewerkt');
+                    const data = snapshot.val();
+                    if (data) {
+                        state.piers = data;
+                        // Update nextPierId
+                        if (state.piers.length > 0) {
+                            state.nextPierId = Math.max(...state.piers.map(p => p.id)) + 1;
                         }
-                    } catch (error) {
-                        console.error("Firebase piers error:", error);
-                        updateSyncStatus('Fout bij laden pieren', 'error');
+                        updateUI();
+                        updateSyncStatus('Pieren bijgewerkt');
                     }
                 }, (error) => {
                     console.error("Firebase piers error:", error);
                     updateSyncStatus('Fout bij laden pieren', 'error');
                 });
 
-                // Listen for changes in slots
-                database.ref('slots').on('value', (snapshot) => {
-                    try {
-                        const data = snapshot.val();
-                        if (data) {
-                            state.slots = data;
-                            // Update nextSlotId
-                            if (state.slots.length > 0) {
-                                state.nextSlotId = Math.max(...state.slots.map(s => s.id)) + 1;
-                            }
-                            updateUI();
-                            updateSyncStatus('Ligplaatsen bijgewerkt');
-                        }
-                    } catch (error) {
-                        console.error("Firebase slots error:", error);
-                        updateSyncStatus('Fout bij laden ligplaatsen', 'error');
-                    }
-                }, (error) => {
-                    console.error("Firebase slots error:", error);
-                    updateSyncStatus('Fout bij laden ligplaatsen', 'error');
-                });
-
                 // Listen for changes in boats
                 database.ref('boats').on('value', (snapshot) => {
-                    try {
-                        const data = snapshot.val();
-                        if (data) {
-                            state.boats = data;
-                            // Update nextBoatId
-                            if (state.boats.length > 0) {
-                                state.nextBoatId = Math.max(...state.boats.map(b => b.id)) + 1;
-                            }
-                            updateUI();
-                            updateSyncStatus('Boten bijgewerkt');
+                    const data = snapshot.val();
+                    if (data) {
+                        state.boats = data;
+                        // Update nextBoatId
+                        if (state.boats.length > 0) {
+                            state.nextBoatId = Math.max(...state.boats.map(b => b.id)) + 1;
                         }
-                    } catch (error) {
-                        console.error("Firebase boats error:", error);
-                        updateSyncStatus('Fout bij laden boten', 'error');
+                        updateUI();
+                        updateSyncStatus('Boten bijgewerkt');
                     }
                 }, (error) => {
                     console.error("Firebase boats error:", error);
@@ -732,13 +636,13 @@
                         width: 0,
                         height: 0
                     };
-                } else if (state.drawingMode === 'slot') {
-                    state.tempSlot = {
-                        x: e.offsetX,
-                        y: e.offsetY,
+                } else if (state.drawingMode === 'slot' && state.selectedPier) {
+                    state.tempSlots = [{
+                        x: e.offsetX - state.selectedPier.x,
+                        y: e.offsetY - state.selectedPier.y,
                         width: 30,
                         height: 30
-                    };
+                    }];
                 }
                 
                 renderHarbor();
@@ -750,9 +654,10 @@
                 if (state.drawingMode === 'pier' && state.tempPier) {
                     state.tempPier.width = e.offsetX - state.tempPier.x;
                     state.tempPier.height = e.offsetY - state.tempPier.y;
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
-                    state.tempSlot.width = e.offsetX - state.tempSlot.x;
-                    state.tempSlot.height = e.offsetY - state.tempSlot.y;
+                } else if (state.drawingMode === 'slot' && state.selectedPier && state.tempSlots.length > 0) {
+                    const slot = state.tempSlots[0];
+                    slot.width = e.offsetX - state.selectedPier.x - slot.x;
+                    slot.height = e.offsetY - state.selectedPier.y - slot.y;
                 }
                 
                 renderHarbor();
@@ -763,7 +668,7 @@
                 state.isDrawing = false;
                 
                 if (state.drawingMode === 'pier' && state.tempPier) {
-                    // Add new pier
+                    // Voeg nieuwe steiger toe
                     const newPier = {
                         id: state.nextPierId++,
                         name: `Steiger ${state.nextPierId}`,
@@ -771,40 +676,38 @@
                         x: state.tempPier.x,
                         y: state.tempPier.y,
                         width: Math.abs(state.tempPier.width),
-                        height: Math.abs(state.tempPier.height)
+                        height: Math.abs(state.tempPier.height),
+                        slots: [],  // Initialiseer slots array
+                        boats: []
                     };
                     
                     state.piers.push(newPier);
                     savePiersToFirebase();
                     state.tempPier = null;
                     
-                    // Select the new pier
+                    // Selecteer de nieuwe steiger
                     state.selectedPier = newPier;
-                    state.selectedSlot = null;
                     state.selectedBoat = null;
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
-                    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
-                    if (slotName === null) return; // User cancelled
+                } else if (state.drawingMode === 'slot' && state.selectedPier && state.tempSlots.length > 0) {
+                    // Zorg dat slots array bestaat
+                    if (!state.selectedPier.slots) {
+                        state.selectedPier.slots = [];
+                    }
                     
-                    const newSlot = {
-                        id: state.nextSlotId++,
-                        name: slotName || `Ligplaats ${state.nextSlotId}`,
-                        x: state.tempSlot.x,
-                        y: state.tempSlot.y,
-                        width: Math.abs(state.tempSlot.width),
-                        height: Math.abs(state.tempSlot.height),
-                        occupied: false,
-                        boatId: null
-                    };
+                    // Voeg ligplaatsen toe aan geselecteerde steiger
+                    state.tempSlots.forEach(slot => {
+                        state.selectedPier.slots.push({
+                            x: slot.x,
+                            y: slot.y,
+                            width: Math.abs(slot.width),
+                            height: Math.abs(slot.height),
+                            occupied: false,
+                            boatId: null
+                        });
+                    });
                     
-                    state.slots.push(newSlot);
-                    saveSlotsToFirebase();
-                    state.tempSlot = null;
-                    
-                    // Select the new slot
-                    state.selectedSlot = newSlot;
-                    state.selectedPier = null;
-                    state.selectedBoat = null;
+                    savePiersToFirebase();
+                    state.tempSlots = [];
                 }
                 
                 renderHarbor();
@@ -813,12 +716,10 @@
 
             function handleHarborClick(e) {
                 if (e.target === harbor && state.drawingMode === 'select') {
-                    // Click on empty area - hide context menu and deselect
-                    slotContextMenu.style.display = 'none';
-                    slotContextMenu.setAttribute('aria-hidden', 'true');
+                    // Klik op leeg gebied - deselecteer alles
                     state.selectedPier = null;
-                    state.selectedSlot = null;
                     state.selectedBoat = null;
+                    state.selectedSlot = null;
                     updateUI();
                 }
             }
@@ -838,14 +739,13 @@
                     pierEl.style.width = `${pier.width}px`;
                     pierEl.style.height = `${pier.height}px`;
                     pierEl.dataset.id = pier.id;
-                    pierEl.setAttribute('aria-label', `Steiger ${pier.name}`);
                     
                     pierEl.addEventListener('click', function(e) {
                         e.stopPropagation();
                         if (state.drawingMode === 'select') {
                             state.selectedPier = pier;
-                            state.selectedSlot = null;
                             state.selectedBoat = null;
+                            state.selectedSlot = null;
                             updateUI();
                         } else if (state.drawingMode === 'delete') {
                             if (confirm(`Steiger ${pier.name} verwijderen?`)) {
@@ -855,68 +755,37 @@
                     });
                     
                     harbor.appendChild(pierEl);
+                    
+                    // Render ligplaatsen
+                    if (pier.slots) {
+                        pier.slots.forEach((slot, index) => {
+                            const slotEl = document.createElement('div');
+                            slotEl.className = `pier-slot ${slot.occupied ? 'occupied' : 'available'}`;
+                            slotEl.style.left = `${pier.x + slot.x}px`;
+                            slotEl.style.top = `${pier.y + slot.y}px`;
+                            slotEl.style.width = `${slot.width}px`;
+                            slotEl.style.height = `${slot.height}px`;
+                            slotEl.dataset.pierId = pier.id;
+                            slotEl.dataset.slotIndex = index;
+                            
+                            slotEl.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                if (state.drawingMode === 'select') {
+                                    state.selectedSlot = { pierId: pier.id, slotIndex: index };
+                                    updateUI();
+                                } else if (state.drawingMode === 'delete') {
+                                    if (confirm('Ligplaats verwijderen?')) {
+                                        removeSlot(pier.id, index);
+                                    }
+                                }
+                            });
+                            
+                            harbor.appendChild(slotEl);
+                        });
+                    }
                 });
                 
-                // Render slots
-                state.slots.forEach(slot => {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = `slot ${slot.occupied ? 'occupied' : 'available'}`;
-                    slotEl.style.left = `${slot.x}px`;
-                    slotEl.style.top = `${slot.y}px`;
-                    slotEl.style.width = `${slot.width}px`;
-                    slotEl.style.height = `${slot.height}px`;
-                    slotEl.dataset.id = slot.id;
-                    slotEl.setAttribute('aria-label', `Ligplaats ${slot.name}, ${slot.occupied ? 'bezet' : 'beschikbaar'}`);
-                    
-                    // Add name
-                    const nameEl = document.createElement('div');
-                    nameEl.className = 'slot-name';
-                    nameEl.textContent = slot.name;
-                    slotEl.appendChild(nameEl);
-                    
-                    // Add context menu on right click
-                    slotEl.addEventListener('contextmenu', function(e) {
-                        e.preventDefault();
-                        clickedSlot = slot;
-                        
-                        // Position the context menu
-                        slotContextMenu.style.left = `${e.pageX}px`;
-                        slotContextMenu.style.top = `${e.pageY}px`;
-                        slotContextMenu.style.display = 'block';
-                        slotContextMenu.setAttribute('aria-hidden', 'false');
-                        
-                        // Fill context menu
-                        slotContextMenu.innerHTML = `
-                            <button id="assignBoatToSlot">Boot toewijzen</button>
-                            <button id="renameSlot">Naam wijzigen</button>
-                            <button id="removeSlot">Ligplaats verwijderen</button>
-                        `;
-                        
-                        // Add event listeners for context menu
-                        document.getElementById('assignBoatToSlot').addEventListener('click', assignBoatToSelectedSlot);
-                        document.getElementById('renameSlot').addEventListener('click', renameSelectedSlot);
-                        document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
-                    });
-                    
-                    // Left click selects the slot
-                    slotEl.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        if (state.drawingMode === 'select') {
-                            state.selectedSlot = slot;
-                            state.selectedPier = null;
-                            state.selectedBoat = null;
-                            updateUI();
-                        } else if (state.drawingMode === 'delete') {
-                            if (confirm(`Ligplaats ${slot.name} verwijderen?`)) {
-                                removeSlot(slot.id);
-                            }
-                        }
-                    });
-                    
-                    harbor.appendChild(slotEl);
-                });
-                
-                // Render temporary elements
+                // Render tijdelijke elementen
                 if (state.tempPier) {
                     const tempPierEl = document.createElement('div');
                     tempPierEl.className = 'pier temp-element';
@@ -927,14 +796,16 @@
                     harbor.appendChild(tempPierEl);
                 }
                 
-                if (state.tempSlot) {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = 'slot temp-element';
-                    slotEl.style.left = `${state.tempSlot.x}px`;
-                    slotEl.style.top = `${state.tempSlot.y}px`;
-                    slotEl.style.width = `${Math.abs(state.tempSlot.width)}px`;
-                    slotEl.style.height = `${Math.abs(state.tempSlot.height)}px`;
-                    harbor.appendChild(slotEl);
+                if (state.tempSlots.length > 0 && state.selectedPier) {
+                    state.tempSlots.forEach(slot => {
+                        const slotEl = document.createElement('div');
+                        slotEl.className = 'pier-slot temp-element';
+                        slotEl.style.left = `${state.selectedPier.x + slot.x}px`;
+                        slotEl.style.top = `${state.selectedPier.y + slot.y}px`;
+                        slotEl.style.width = `${Math.abs(slot.width)}px`;
+                        slotEl.style.height = `${Math.abs(slot.height)}px`;
+                        harbor.appendChild(slotEl);
+                    });
                 }
                 
                 // Render boats
@@ -951,23 +822,16 @@
                     boatEl.style.backgroundColor = boat.color;
                     boatEl.innerHTML = `
                         <div class="boat-name">${boat.name}</div>
-                        <div class="boat-type">${boat.typeName}</div>
-                        <div class="boat-size-info">${boat.size}m × ${boat.width}px</div>
+                        <div class="boat-type">${boat.typeName} (${boat.size}m)</div>
                     `;
                     boatEl.dataset.id = boat.id;
-                    boatEl.setAttribute('aria-label', `Boot ${boat.name}, type ${boat.typeName}`);
-                    
-                    // Add collision warning if needed
-                    if (checkCollision(boat)) {
-                        boatEl.classList.add('collision-warning');
-                    }
                     
                     boatEl.addEventListener('click', function(e) {
                         e.stopPropagation();
                         if (state.drawingMode === 'select') {
                             state.selectedBoat = boat;
-                            state.selectedPier = null;
-                            state.selectedSlot = state.slots.find(s => s.id === boat.slotId);
+                            state.selectedPier = state.piers.find(p => p.id === boat.pierId);
+                            state.selectedSlot = null;
                             updateUI();
                         } else if (state.drawingMode === 'delete') {
                             if (confirm(`Boot ${boat.name} verwijderen?`)) {
@@ -980,51 +844,15 @@
                 });
             }
             
-            function checkCollision(boat) {
-                // Check if boat is outside slot bounds (if assigned to a slot)
-                if (boat.slotId) {
-                    const slot = state.slots.find(s => s.id === boat.slotId);
-                    if (slot) {
-                        if (boat.x < slot.x || 
-                            boat.x + boat.width > slot.x + slot.width || 
-                            boat.y < slot.y || 
-                            boat.y + boat.height > slot.y + slot.height) {
-                            return true; // Collision with slot boundaries
-                        }
-                    }
-                }
-                
-                // Check for collisions with other boats
-                for (const otherBoat of state.boats) {
-                    if (otherBoat.id !== boat.id) {
-                        if (boat.x < otherBoat.x + otherBoat.width &&
-                            boat.x + boat.width > otherBoat.x &&
-                            boat.y < otherBoat.y + otherBoat.height &&
-                            boat.y + boat.height > otherBoat.y) {
-                            return true; // Collision with other boat
-                        }
-                    }
-                }
-                
-                return false; // No collisions
-            }
-            
             function updateUI() {
                 renderHarbor();
                 updateInfoPanel();
                 
-                // Update pier name field
+                // Update pier naam veld
                 if (state.selectedPier) {
                     document.getElementById('pierName').value = state.selectedPier.name || '';
                 } else {
                     document.getElementById('pierName').value = '';
-                }
-                
-                // Update slot name field
-                if (state.selectedSlot) {
-                    document.getElementById('slotName').value = state.selectedSlot.name || '';
-                } else {
-                    document.getElementById('slotName').value = '';
                 }
             }
             
@@ -1032,7 +860,6 @@
                 if (state.selectedBoat) {
                     noSelection.style.display = 'none';
                     pierInfoDisplay.style.display = 'none';
-                    slotInfoDisplay.style.display = 'none';
                     boatInfoDisplay.style.display = 'block';
                     document.getElementById('editBoatForm').style.display = 'none';
                     
@@ -1043,39 +870,29 @@
                     document.getElementById('boatInfoPhone').textContent = state.selectedBoat.phone;
                     document.getElementById('boatInfoEmail').textContent = state.selectedBoat.email;
                     
-                    const slot = state.slots.find(s => s.id === state.selectedBoat.slotId);
-                    document.getElementById('boatInfoLocation').textContent = slot ? `Ligplaats ${slot.name}` : 'Geen ligplaats toegewezen';
-                } else if (state.selectedSlot) {
-                    noSelection.style.display = 'none';
-                    pierInfoDisplay.style.display = 'none';
-                    boatInfoDisplay.style.display = 'none';
-                    slotInfoDisplay.style.display = 'block';
-                    
-                    document.getElementById('slotInfoName').textContent = state.selectedSlot.name;
-                    document.getElementById('slotInfoStatus').textContent = state.selectedSlot.occupied ? 'Bezet' : 'Beschikbaar';
-                    document.getElementById('slotInfoWidth').textContent = `${state.selectedSlot.width}px`;
-                    document.getElementById('slotInfoHeight').textContent = `${state.selectedSlot.height}px`;
-                    
-                    if (state.selectedSlot.occupied) {
-                        const boat = state.boats.find(b => b.id === state.selectedSlot.boatId);
-                        document.getElementById('slotInfoBoat').textContent = boat ? boat.name : 'Onbekende boot';
-                    } else {
-                        document.getElementById('slotInfoBoat').textContent = 'Geen boot';
-                    }
+                    const pier = state.piers.find(p => p.id === state.selectedBoat.pierId);
+                    document.getElementById('boatInfoLocation').textContent = pier ? 
+                        `Pier ${pier.name}` : 'Geen pier toegewezen';
                 } else if (state.selectedPier) {
                     noSelection.style.display = 'none';
                     boatInfoDisplay.style.display = 'none';
-                    slotInfoDisplay.style.display = 'none';
                     pierInfoDisplay.style.display = 'block';
                     
                     document.getElementById('pierInfoName').textContent = state.selectedPier.name;
                     document.getElementById('pierInfoType').textContent = state.selectedPier.type === 'horizontal' ? 'Horizontaal' : 'Verticaal';
-                    document.getElementById('pierInfoWidth').textContent = `${state.selectedPier.width}px`;
-                    document.getElementById('pierInfoHeight').textContent = `${state.selectedPier.height}px`;
+                    
+                    const totalSlots = state.selectedPier.slots ? state.selectedPier.slots.length : 0;
+                    const occupiedSlots = state.selectedPier.slots ? 
+                        state.selectedPier.slots.filter(s => s.occupied).length : 0;
+                    document.getElementById('pierInfoSlots').textContent = 
+                        `${occupiedSlots}/${totalSlots} bezet`;
+                    
+                    const boatCount = state.boats.filter(b => b.pierId === state.selectedPier.id).length;
+                    document.getElementById('pierInfoBoats').textContent = 
+                        `${boatCount} boten aangemeerd`;
                 } else {
                     noSelection.style.display = 'block';
                     pierInfoDisplay.style.display = 'none';
-                    slotInfoDisplay.style.display = 'none';
                     boatInfoDisplay.style.display = 'none';
                     document.getElementById('editBoatForm').style.display = 'none';
                 }
@@ -1110,33 +927,57 @@
                     return;
                 }
                 
-                removePier(state.selectedPier.id);
+                removePier(state.selectedPier);
             }
 
-            function removePier(pierId) {
-                try {
-                    // Remove the pier
-                    state.piers = state.piers.filter(p => p.id !== pierId);
-                    
-                    // Deselect
-                    if (state.selectedPier && state.selectedPier.id === pierId) {
-                        state.selectedPier = null;
-                    }
-                    
-                    // Save to Firebase
-                    database.ref('piers').set(state.piers)
-                        .then(() => {
-                            updateSyncStatus('Steiger verwijderd');
-                            updateUI();
-                        })
-                        .catch(error => {
-                            console.error("Error removing pier:", error);
-                            updateSyncStatus('Fout bij verwijderen steiger', 'error');
-                        });
-                } catch (error) {
-                    console.error("Error in removePier:", error);
-                    updateSyncStatus('Fout bij verwijderen steiger', 'error');
+            function removePier(pier) {
+                // Verwijder alle boten op deze pier
+                state.boats = state.boats.filter(boat => boat.pierId !== pier.id);
+                
+                // Verwijder de pier
+                state.piers = state.piers.filter(p => p.id !== pier.id);
+                
+                // Deselecteer
+                if (state.selectedPier && state.selectedPier.id === pier.id) {
+                    state.selectedPier = null;
                 }
+                
+                // Opslaan in Firebase
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Steiger verwijderd');
+                    updateUI();
+                }).catch(error => {
+                    console.error("Error removing pier:", error);
+                    updateSyncStatus('Fout bij verwijderen steiger', 'error');
+                });
+            }
+
+            function removeSlot(pierId, slotIndex) {
+                const pier = state.piers.find(p => p.id === pierId);
+                if (!pier || !pier.slots || slotIndex >= pier.slots.length) return;
+                
+                // Verwijder boot van deze ligplaats indien bezet
+                if (pier.slots[slotIndex].occupied) {
+                    const boatId = pier.slots[slotIndex].boatId;
+                    state.boats = state.boats.filter(b => b.id !== boatId);
+                }
+                
+                pier.slots.splice(slotIndex, 1);
+                
+                // Opslaan in Firebase
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Ligplaats verwijderd');
+                    updateUI();
+                }).catch(error => {
+                    console.error("Error removing slot:", error);
+                    updateSyncStatus('Fout bij verwijderen ligplaats', 'error');
+                });
             }
 
             function savePiersToFirebase() {
@@ -1148,239 +989,88 @@
                     });
             }
 
-            // Slot management functions
-            function saveSlotDetails() {
-                if (!state.selectedSlot) {
-                    alert('Selecteer eerst een ligplaats');
-                    return;
-                }
-                
-                const newName = document.getElementById('slotName').value.trim();
-                if (!newName) {
-                    alert('Voer een naam in voor de ligplaats');
-                    return;
-                }
-                
-                state.selectedSlot.name = newName;
-                saveSlotsToFirebase();
-                updateSyncStatus('Ligplaats opgeslagen');
-                updateUI();
-            }
-
-            function removeSelectedSlot() {
-                if (!state.selectedSlot) {
-                    alert('Selecteer eerst een ligplaats');
-                    return;
-                }
-                
-                if (!confirm(`Weet u zeker dat u ${state.selectedSlot.name} wilt verwijderen?`)) {
-                    return;
-                }
-                
-                removeSlot(state.selectedSlot.id);
-            }
-
-            function removeSlot(slotId) {
-                try {
-                    // Remove boat from this slot if occupied
-                    const slot = state.slots.find(s => s.id === slotId);
-                    if (slot && slot.occupied) {
-                        state.boats = state.boats.filter(b => b.id !== slot.boatId);
-                    }
-                    
-                    // Remove the slot
-                    state.slots = state.slots.filter(s => s.id !== slotId);
-                    
-                    // Deselect
-                    if (state.selectedSlot && state.selectedSlot.id === slotId) {
-                        state.selectedSlot = null;
-                    }
-                    
-                    // Save to Firebase
-                    Promise.all([
-                        database.ref('slots').set(state.slots),
-                        database.ref('boats').set(state.boats)
-                    ]).then(() => {
-                        updateSyncStatus('Ligplaats verwijderd');
-                        updateUI();
-                    }).catch(error => {
-                        console.error("Error removing slot:", error);
-                        updateSyncStatus('Fout bij verwijderen ligplaats', 'error');
-                    });
-                } catch (error) {
-                    console.error("Error in removeSlot:", error);
-                    updateSyncStatus('Fout bij verwijderen ligplaats', 'error');
-                }
-            }
-
-            function saveSlotsToFirebase() {
-                database.ref('slots').set(state.slots)
-                    .then(() => console.log("Slots opgeslagen in Firebase"))
-                    .catch(error => {
-                        console.error("Error saving slots:", error);
-                        updateSyncStatus('Fout bij opslaan ligplaatsen', 'error');
-                    });
-            }
-
             // Boat management functions
-function addBoat() {
-    // Eerst controleren of er ligplaatsen zijn
-    if (state.slots.length === 0) {
-        alert('Voeg eerst een ligplaats toe!');
-        return;
-    }
-
-    // Inputwaarden ophalen en valideren
-    const type = document.getElementById('boatType').value;
-    const size = parseInt(document.getElementById('boatSize').value);
-    const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
-
-    // Validatie van de bootgrootte
-    if (isNaN(size) || size < 5 || size > 30) {
-        alert('Voer een geldige bootgrootte in tussen 5 en 30 meter');
-        return;
-    }
-
-    // Bootconfiguratie ophalen
-    const boatTypeConfig = boatTypes[type];
-    if (!boatTypeConfig) {
-        alert('Ongeldig boottype');
-        return;
-    }
-
-    // Bootobject aanmaken
-    const newBoat = {
-        id: state.nextBoatId,
-        type: type,
-        size: size,
-        name: name,
-        owner: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].name,
-        phone: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].phone,
-        email: sampleOwners[Math.floor(Math.random() * sampleOwners.length)].email,
-        slotId: null,
-        width: size * boatTypeConfig.widthMultiplier,
-        height: boatTypeConfig.height,
-        color: boatTypeConfig.color,
-        typeName: boatTypeConfig.name,
-        x: 50 + Math.random() * 300,
-        y: 50 + Math.random() * 300
-    };
-
-    // Probeer boot toe te wijzen aan een ligplaats
-    let assigned = false;
-    for (const slot of state.slots) {
-        if (!slot.occupied && 
-            newBoat.width <= slot.width && 
-            newBoat.height <= slot.height) {
-            
-            // Wijs toe aan deze ligplaats
-            slot.occupied = true;
-            slot.boatId = newBoat.id;
-            newBoat.slotId = slot.id;
-            newBoat.x = slot.x;
-            newBoat.y = slot.y;
-            assigned = true;
-            break;
-        }
-    }
-
-    // Boot toevoegen aan de staat
-    state.boats.push(newBoat);
-    state.nextBoatId++;
-
-    // Velden leegmaken
-    document.getElementById('boatName').value = '';
-
-    // Opslaan in Firebase
-    const updates = {};
-    updates['/boats/' + newBoat.id] = newBoat;
-    if (assigned) {
-        const slot = state.slots.find(s => s.id === newBoat.slotId);
-        updates['/slots/' + newBoat.slotId] = slot;
-    }
-
-    database.ref().update(updates)
-        .then(() => {
-            updateSyncStatus('Boot toegevoegd');
-            state.selectedBoat = newBoat;
-            updateUI();
-        })
-        .catch(error => {
-            console.error("Fout bij opslaan boot:", error);
-            updateSyncStatus('Fout bij opslaan boot', 'error');
-        });
-}
-
-// Verbeterde assignBoatToSlot functie
-function assignBoatToSlot(boat) {
-    // Zoek eerst naar een geschikte vrije ligplaats
-    const suitableSlot = state.slots.find(slot => 
-        !slot.occupied && 
-        boat.width <= slot.width && 
-        boat.height <= slot.height
-    );
-
-    if (suitableSlot) {
-        // Wijs toe aan ligplaats
-        suitableSlot.occupied = true;
-        suitableSlot.boatId = boat.id;
-        boat.slotId = suitableSlot.id;
-        boat.x = suitableSlot.x;
-        boat.y = suitableSlot.y;
-        return true;
-    }
-    
-    // Als geen geschikte ligplaats gevonden, plaats vrij in de haven
-    boat.x = 50 + Math.random() * 300;
-    boat.y = 50 + Math.random() * 300;
-    return true;
-}
-            
-            function assignBoatToSelectedSlot() {
-                slotContextMenu.style.display = 'none';
-                slotContextMenu.setAttribute('aria-hidden', 'true');
-                
-                if (!state.selectedBoat) {
-                    alert('Selecteer eerst een boot om toe te wijzen');
+            function addBoat() {
+                if (state.piers.length === 0) {
+                    alert('Voeg eerst een steiger toe!');
                     return;
                 }
                 
-                if (!clickedSlot) return;
+                const type = document.getElementById('boatType').value;
+                const size = parseInt(document.getElementById('boatSize').value);
+                const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
+                const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
                 
-                // Check if boat fits
-                if (state.selectedBoat.width > clickedSlot.width || state.selectedBoat.height > clickedSlot.height) {
-                    alert('De boot past niet in deze ligplaats!');
-                    return;
+                const newBoat = {
+                    id: state.nextBoatId++,
+                    type: type,
+                    size: size,
+                    name: name,
+                    owner: randomOwner.name,
+                    phone: randomOwner.phone,
+                    email: randomOwner.email,
+                    notes: "",
+                    pierId: null,
+                    width: size * 2,
+                    height: 25,
+                    color: boatTypes[type].color,
+                    typeName: boatTypes[type].name
+                };
+                
+                // Probeer boot toe te wijzen aan een ligplaats
+                if (assignBoatToSlot(newBoat)) {
+                    state.boats.push(newBoat);
+                    document.getElementById('boatName').value = "";
+                    
+                    database.ref('boats').set(state.boats)
+                        .then(() => {
+                            updateSyncStatus('Boot toegevoegd');
+                            state.selectedBoat = newBoat;
+                            updateUI();
+                        })
+                        .catch(error => {
+                            console.error("Error saving boat:", error);
+                            updateSyncStatus('Fout bij opslaan boot', 'error');
+                        });
                 }
-                
-                // Remove boat from previous slot if needed
-                if (state.selectedBoat.slotId) {
-                    const oldSlot = state.slots.find(s => s.id === state.selectedBoat.slotId);
-                    if (oldSlot) {
-                        oldSlot.occupied = false;
-                        oldSlot.boatId = null;
+            }
+
+            function assignBoatToSlot(boat) {
+                // Zoek een pier met beschikbare ligplaats
+                for (const pier of state.piers) {
+                    if (!pier.slots) continue;
+                    
+                    for (let i = 0; i < pier.slots.length; i++) {
+                        if (!pier.slots[i].occupied) {
+                            // Bereken positie
+                            boat.x = pier.x + pier.slots[i].x;
+                            boat.y = pier.y + pier.slots[i].y;
+                            boat.width = pier.slots[i].width;
+                            boat.height = pier.slots[i].height;
+                            boat.pierId = pier.id;
+                            
+                            // Markeer als bezet
+                            pier.slots[i].occupied = true;
+                            pier.slots[i].boatId = boat.id;
+                            
+                            // Voeg boot toe aan pier
+                            if (!pier.boats) pier.boats = [];
+                            pier.boats.push(boat.id);
+                            
+                            // Sla pier wijzigingen op
+                            database.ref('piers').child(pier.id).set(pier)
+                                .catch(error => {
+                                    console.error("Error updating pier:", error);
+                                    updateSyncStatus('Fout bij bijwerken steiger', 'error');
+                                });
+                            
+                            return true;
+                        }
                     }
                 }
                 
-                // Assign to new slot
-                clickedSlot.occupied = true;
-                clickedSlot.boatId = state.selectedBoat.id;
-                state.selectedBoat.slotId = clickedSlot.id;
-                state.selectedBoat.x = clickedSlot.x;
-                state.selectedBoat.y = clickedSlot.y;
-                
-                // Save changes
-                Promise.all([
-                    database.ref('slots').set(state.slots),
-                    database.ref('boats').set(state.boats)
-                ]).then(() => {
-                    updateSyncStatus('Boot toegewezen aan ligplaats');
-                    renderHarbor();
-                    updateUI();
-                }).catch(error => {
-                    console.error("Error assigning boat to slot:", error);
-                    updateSyncStatus('Fout bij toewijzen boot', 'error');
-                });
+                alert('Geen beschikbare ligplaatsen gevonden!');
+                return false;
             }
 
             function removeSelectedBoat() {
@@ -1397,44 +1087,45 @@ function assignBoatToSlot(boat) {
             }
 
             function removeBoat(boatId) {
-                try {
-                    // Find boat
-                    const boat = state.boats.find(b => b.id === boatId);
-                    if (!boat) return;
-                    
-                    // Free slot if assigned to one
-                    if (boat.slotId) {
-                        const slot = state.slots.find(s => s.id === boat.slotId);
+                // Verwijder boot
+                const boat = state.boats.find(b => b.id === boatId);
+                if (!boat) return;
+                
+                state.boats = state.boats.filter(b => b.id !== boatId);
+                
+                // Maak ligplaats vrij indien aan een pier toegewezen
+                if (boat.pierId) {
+                    const pier = state.piers.find(p => p.id === boat.pierId);
+                    if (pier && pier.slots) {
+                        const slot = pier.slots.find(s => s.boatId === boatId);
                         if (slot) {
                             slot.occupied = false;
-                            slot.boatId = null;
+                            delete slot.boatId;
+                        }
+                        
+                        // Verwijder boot uit pier.boats
+                        if (pier.boats) {
+                            pier.boats = pier.boats.filter(b => b !== boatId);
                         }
                     }
-                    
-                    // Remove boat from state
-                    state.boats = state.boats.filter(b => b.id !== boatId);
-                    
-                    // Deselect
-                    if (state.selectedBoat && state.selectedBoat.id === boatId) {
-                        state.selectedBoat = null;
-                    }
-                    
-                    // Save to Firebase and update UI
-                    Promise.all([
-                        database.ref('boats').set(state.boats),
-                        database.ref('slots').set(state.slots)
-                    ]).then(() => {
-                        updateSyncStatus('Boot verwijderd');
-                        renderHarbor();
-                        updateUI();
-                    }).catch(error => {
-                        console.error("Error removing boat:", error);
-                        updateSyncStatus('Fout bij verwijderen boot', 'error');
-                    });
-                } catch (error) {
-                    console.error("Error in removeBoat:", error);
-                    updateSyncStatus('Fout bij verwijderen boot', 'error');
                 }
+                
+                // Deselecteer
+                if (state.selectedBoat && state.selectedBoat.id === boatId) {
+                    state.selectedBoat = null;
+                }
+                
+                // Opslaan in Firebase
+                Promise.all([
+                    database.ref('piers').set(state.piers),
+                    database.ref('boats').set(state.boats)
+                ]).then(() => {
+                    updateSyncStatus('Boot verwijderd');
+                    updateUI();
+                }).catch(error => {
+                    console.error("Error removing boat:", error);
+                    updateSyncStatus('Fout bij verwijderen boot', 'error');
+                });
             }
 
             function saveBoatsToFirebase() {
@@ -1453,7 +1144,7 @@ function assignBoatToSlot(boat) {
                     return;
                 }
                 
-                // Fill basic info
+                // Vul basisgegevens in
                 document.getElementById('editBoatName').value = state.selectedBoat.name;
                 document.getElementById('editBoatOwner').value = state.selectedBoat.owner;
                 document.getElementById('editBoatPhone').value = state.selectedBoat.phone;
@@ -1461,168 +1152,146 @@ function assignBoatToSlot(boat) {
                 document.getElementById('editBoatType').value = state.selectedBoat.type;
                 document.getElementById('editBoatSize').value = state.selectedBoat.size;
                 
-                // Fill slot dropdown
-                const slotSelect = document.getElementById('editBoatSlot');
-                slotSelect.innerHTML = '<option value="">Geen ligplaats</option>';
+                // Vul steiger dropdown
+                const pierSelect = document.getElementById('editBoatPier');
+                pierSelect.innerHTML = '<option value="">Geen steiger</option>';
                 
-                state.slots.forEach(slot => {
+                state.piers.forEach(pier => {
                     const option = document.createElement('option');
-                    option.value = slot.id;
-                    option.textContent = `${slot.name} (${slot.occupied && slot.boatId !== state.selectedBoat.id ? 'bezet' : 'beschikbaar'})`;
-                    option.disabled = slot.occupied && slot.boatId !== state.selectedBoat.id;
-                    
-                    if (slot.id === state.selectedBoat.slotId) {
+                    option.value = pier.id;
+                    option.textContent = pier.name || `Steiger ${pier.id}`;
+                    if (pier.id === state.selectedBoat.pierId) {
                         option.selected = true;
                     }
-                    slotSelect.appendChild(option);
+                    pierSelect.appendChild(option);
                 });
                 
-                // Show form
+                // Update ligplaats dropdown wanneer steiger verandert
+                pierSelect.addEventListener('change', updateSlotDropdown);
+                updateSlotDropdown();
+                
+                // Toon formulier
                 boatInfoDisplay.style.display = 'none';
                 document.getElementById('editBoatForm').style.display = 'block';
             }
 
-function saveBoatInfo() {
-    if (!state.selectedBoat) {
-        alert('Geen boot geselecteerd om op te slaan');
-        return;
-    }
-
-    try {
-        // 1. Bereken nieuwe bootafmetingen
-        const boatTypeConfig = boatTypes[document.getElementById('editBoatType').value];
-        const newSize = parseInt(document.getElementById('editBoatSize').value);
-        const newWidth = newSize * boatTypeConfig.widthMultiplier;
-        const newHeight = boatTypeConfig.height;
-
-        // 2. Bereid updates voor
-        const updates = {};
-        const currentSlotId = state.selectedBoat.slotId;
-        const newSlotId = document.getElementById('editBoatSlot').value;
-
-        // 3. Verwerk huidige ligplaats
-        if (currentSlotId) {
-            const currentSlot = state.slots.find(s => s.id === currentSlotId);
-            if (currentSlot && currentSlot.boatId === state.selectedBoat.id) {
-                updates[`slots/${currentSlotId}`] = {
-                    ...currentSlot,
-                    occupied: false,
-                    boatId: null
-                };
+            function updateSlotDropdown() {
+                const pierId = document.getElementById('editBoatPier').value;
+                const slotSelect = document.getElementById('editBoatSlot');
+                
+                slotSelect.innerHTML = '<option value="">Automatisch toewijzen</option>';
+                slotSelect.disabled = !pierId;
+                
+                if (!pierId) return;
+                
+                const pier = state.piers.find(p => p.id === pierId);
+                if (pier && pier.slots) {
+                    pier.slots.forEach((slot, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = `Ligplaats ${index + 1} (${slot.occupied ? 'bezet' : 'beschikbaar'})`;
+                        option.disabled = slot.occupied && slot.boatId !== state.selectedBoat.id;
+                        
+                        if (slot.boatId === state.selectedBoat.id) {
+                            option.selected = true;
+                        }
+                        slotSelect.appendChild(option);
+                    });
+                }
             }
-        }
 
-        // 4. Verwerk nieuwe ligplaats
-        let newX = state.selectedBoat.x || 50 + Math.random() * 300;
-        let newY = state.selectedBoat.y || 50 + Math.random() * 300;
-        
-        if (newSlotId) {
-            const newSlot = state.slots.find(s => s.id === newSlotId);
-            if (newSlot) {
-                // Controleer of de boot past
-                if (newWidth > newSlot.width || newHeight > newSlot.height) {
-                    alert('De boot past niet in deze ligplaats!');
+            function saveBoatInfo() {
+                if (!state.selectedBoat) {
+                    alert('Geen boot geselecteerd om op te slaan');
                     return;
                 }
-
-                // Verplaats alleen als er een andere boot is
-                if (newSlot.occupied && newSlot.boatId && newSlot.boatId !== state.selectedBoat.id) {
-                    const otherBoat = state.boats.find(b => b.id === newSlot.boatId);
-                    if (otherBoat) {
-                        const randomX = 50 + Math.random() * 300;
-                        const randomY = 50 + Math.random() * 300;
-                        updates[`boats/${otherBoat.id}`] = {
-                            ...otherBoat,
-                            slotId: null,
-                            x: randomX,
-                            y: randomY
-                        };
+                
+                // Bewaar oude waarden voor eventuele aanpassingen
+                const oldPierId = state.selectedBoat.pierId;
+                const oldType = state.selectedBoat.type;
+                const oldSize = state.selectedBoat.size;
+                
+                // Update bootgegevens
+                state.selectedBoat.name = document.getElementById('editBoatName').value;
+                state.selectedBoat.owner = document.getElementById('editBoatOwner').value;
+                state.selectedBoat.phone = document.getElementById('editBoatPhone').value;
+                state.selectedBoat.email = document.getElementById('editBoatEmail').value;
+                state.selectedBoat.type = document.getElementById('editBoatType').value;
+                state.selectedBoat.size = parseInt(document.getElementById('editBoatSize').value);
+                state.selectedBoat.typeName = boatTypes[state.selectedBoat.type].name;
+                state.selectedBoat.color = boatTypes[state.selectedBoat.type].color;
+                
+                // Verwerk ligplaatswijziging
+                const newPierId = document.getElementById('editBoatPier').value;
+                const slotIndex = document.getElementById('editBoatSlot').value;
+                
+                // Verwijder van oude ligplaats indien nodig
+                if (oldPierId && oldPierId !== newPierId) {
+                    const oldPier = state.piers.find(p => p.id === oldPierId);
+                    if (oldPier && oldPier.slots) {
+                        const oldSlot = oldPier.slots.find(s => s.boatId === state.selectedBoat.id);
+                        if (oldSlot) {
+                            oldSlot.occupied = false;
+                            oldSlot.boatId = null;
+                        }
                     }
                 }
-
-                // Update nieuwe ligplaats
-                newX = newSlot.x;
-                newY = newSlot.y;
-                updates[`slots/${newSlotId}`] = {
-                    ...newSlot,
-                    occupied: true,
-                    boatId: state.selectedBoat.id
-                };
+                
+                // Voeg toe aan nieuwe ligplaats
+                if (newPierId) {
+                    const newPier = state.piers.find(p => p.id === newPierId);
+                    if (newPier) {
+                        // Automatische toewijzing als geen specifieke slot is gekozen
+                        if (slotIndex === "") {
+                            assignBoatToSlot(state.selectedBoat);
+                        } 
+                        // Handmatige toewijzing aan specifieke slot
+                        else if (newPier.slots && newPier.slots[slotIndex]) {
+                            const slot = newPier.slots[slotIndex];
+                            
+                            // Maak oude slot vrij als deze bezet was door deze boot
+                            if (slot.occupied && slot.boatId !== state.selectedBoat.id) {
+                                alert('Deze ligplaats is al bezet!');
+                                return;
+                            }
+                            
+                            // Update slot
+                            slot.occupied = true;
+                            slot.boatId = state.selectedBoat.id;
+                            
+                            // Update bootpositie
+                            state.selectedBoat.x = newPier.x + slot.x;
+                            state.selectedBoat.y = newPier.y + slot.y;
+                            state.selectedBoat.width = slot.width;
+                            state.selectedBoat.height = slot.height;
+                            state.selectedBoat.pierId = newPier.id;
+                        }
+                    }
+                } else {
+                    // Geen steiger geselecteerd - boot verwijderen van huidige ligplaats
+                    state.selectedBoat.pierId = null;
+                }
+                
+                // Sla wijzigingen op
+                Promise.all([
+                    database.ref('boats').set(state.boats),
+                    database.ref('piers').set(state.piers)
+                ]).then(() => {
+                    updateSyncStatus('Bootgegevens opgeslagen');
+                    updateUI();
+                }).catch(error => {
+                    console.error("Error saving boat info:", error);
+                    updateSyncStatus('Fout bij opslaan gegevens', 'error');
+                });
             }
-        }
 
-        // 5. Update bootgegevens
-        const updatedBoat = {
-            ...state.selectedBoat,
-            name: document.getElementById('editBoatName').value,
-            owner: document.getElementById('editBoatOwner').value,
-            phone: document.getElementById('editBoatPhone').value,
-            email: document.getElementById('editBoatEmail').value,
-            type: document.getElementById('editBoatType').value,
-            size: newSize,
-            width: newWidth,
-            height: newHeight,
-            typeName: boatTypeConfig.name,
-            color: boatTypeConfig.color,
-            slotId: newSlotId || null,
-            x: newX,
-            y: newY
-        };
-        updates[`boats/${state.selectedBoat.id}`] = updatedBoat;
-
-        // 6. Voer updates uit
-        database.ref().update(updates)
-            .then(() => {
-                // Update lokale state na succesvolle Firebase update
-                if (currentSlotId) {
-                    const currentSlot = state.slots.find(s => s.id === currentSlotId);
-                    if (currentSlot) {
-                        currentSlot.occupied = false;
-                        currentSlot.boatId = null;
-                    }
-                }
-                
-                if (newSlotId) {
-                    const newSlot = state.slots.find(s => s.id === newSlotId);
-                    if (newSlot) {
-                        newSlot.occupied = true;
-                        newSlot.boatId = state.selectedBoat.id;
-                    }
-                }
-                
-                Object.assign(state.selectedBoat, updatedBoat);
-                updateSyncStatus('Bootgegevens opgeslagen');
-                updateUI();
-            })
-            .catch(error => {
-                console.error("Fout bij opslaan:", error);
-                updateSyncStatus('Fout bij opslaan gegevens', 'error');
-            });
-
-    } catch (error) {
-        console.error("Fout in saveBoatInfo:", error);
-        updateSyncStatus('Fout bij opslaan bootgegevens', 'error');
-    }
-}
-            
             function cancelBoatEdit() {
-                document.getElementById('editBoatForm').style.display = 'none';
-                boatInfoDisplay.style.display = 'block';
-            }
-
-            function renameSelectedSlot() {
-                slotContextMenu.style.display = 'none';
-                slotContextMenu.setAttribute('aria-hidden', 'true');
-                
-                if (!clickedSlot) return;
-                
-                const newName = prompt('Nieuwe naam voor deze ligplaats:', clickedSlot.name);
-                
-                if (newName && newName !== clickedSlot.name) {
-                    clickedSlot.name = newName;
-                    saveSlotsToFirebase();
-                    renderHarbor();
-                    updateSyncStatus('Ligplaatsnaam gewijzigd');
+                if (state.selectedBoat) {
+                    // Show info panel again
+                    boatInfoDisplay.style.display = 'block';
+                    document.getElementById('editBoatForm').style.display = 'none';
+                } else {
+                    updateUI();
                 }
             }
         });
