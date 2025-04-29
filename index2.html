@@ -867,17 +867,14 @@ document.body.appendChild(scaleIndicator);
                 });
                 
                 if (state.drawingMode === 'pier') {
-    const widthMeters = parseFloat(prompt("Steiger breedte in meters:", "2"));
-    const heightMeters = parseFloat(prompt("Steiger lengte in meters:", "20"));
-    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
     const newPier = {
         id: state.nextPierId++,
         name: `Steiger ${state.nextPierId}`,
-        type: widthMeters > heightMeters ? 'horizontal' : 'vertical',
+        type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
         x: state.tempPier.x,
         y: state.tempPier.y,
-        width: widthMeters * SCALE,
-        height: heightMeters * SCALE
+        width: Math.abs(state.tempPier.width),
+        height: Math.abs(state.tempPier.height)
     };
     state.piers.push(newPier);
     savePiersToFirebase();
@@ -891,18 +888,13 @@ document.body.appendChild(scaleIndicator);
 
                     document.getElementById('drawPierMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'slot') {
-    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
-    if (slotName === null) return;
-    const widthMeters = parseFloat(prompt("Breedte in meters:", "4"));
-    const heightMeters = parseFloat(prompt("Lengte in meters:", "10"));
-    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
     const newSlot = {
         id: state.nextSlotId++,
-        name: slotName || `Ligplaats ${state.nextSlotId}`,
+        name: `Ligplaats ${state.nextSlotId}`,
         x: state.tempSlot.x,
         y: state.tempSlot.y,
-        width: widthMeters * SCALE,
-        height: heightMeters * SCALE,
+        width: Math.abs(state.tempSlot.width),
+        height: Math.abs(state.tempSlot.height),
         occupied: false,
         boatId: null
     };
@@ -942,17 +934,14 @@ document.body.appendChild(scaleIndicator);
                 state.isDrawing = true;
                 
                 if (state.drawingMode === 'pier') {
-    const widthMeters = parseFloat(prompt("Steiger breedte in meters:", "2"));
-    const heightMeters = parseFloat(prompt("Steiger lengte in meters:", "20"));
-    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
     const newPier = {
         id: state.nextPierId++,
         name: `Steiger ${state.nextPierId}`,
-        type: widthMeters > heightMeters ? 'horizontal' : 'vertical',
+        type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
         x: state.tempPier.x,
         y: state.tempPier.y,
-        width: widthMeters * SCALE,
-        height: heightMeters * SCALE
+        width: Math.abs(state.tempPier.width),
+        height: Math.abs(state.tempPier.height)
     };
     state.piers.push(newPier);
     savePiersToFirebase();
@@ -971,18 +960,13 @@ document.body.appendChild(scaleIndicator);
                         height: 0
                     };
                 } else if (state.drawingMode === 'slot') {
-    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
-    if (slotName === null) return;
-    const widthMeters = parseFloat(prompt("Breedte in meters:", "4"));
-    const heightMeters = parseFloat(prompt("Lengte in meters:", "10"));
-    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
     const newSlot = {
         id: state.nextSlotId++,
-        name: slotName || `Ligplaats ${state.nextSlotId}`,
+        name: `Ligplaats ${state.nextSlotId}`,
         x: state.tempSlot.x,
         y: state.tempSlot.y,
-        width: widthMeters * SCALE,
-        height: heightMeters * SCALE,
+        width: Math.abs(state.tempSlot.width),
+        height: Math.abs(state.tempSlot.height),
         occupied: false,
         boatId: null
     };
