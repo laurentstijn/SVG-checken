@@ -1166,9 +1166,10 @@ document.body.appendChild(scaleIndicator);
                 
                 // Render temporary elements
                 if (state.tempPier) {
+        console.log('Rendering tempPier:', state.tempPier);
                     const tempPierEl = document.createElement('div');
                     tempPierEl.className = 'pier temp-element';
-        tempPierEl.style.border = '2px dashed #000';
+        tempPierEl.style.border = '3px dashed red';
                     tempPierEl.style.left = `${state.tempPier.x}px`;
                     tempPierEl.style.top = `${state.tempPier.y}px`;
                     tempPierEl.style.width = `${Math.abs(state.tempPier.width)}px`;
@@ -1177,9 +1178,10 @@ document.body.appendChild(scaleIndicator);
                 }
                 
                 if (state.tempSlot) {
+        console.log('Rendering tempSlot:', state.tempSlot);
                     const slotEl = document.createElement('div');
                     slotEl.className = 'slot temp-element';
-        slotEl.style.border = '2px dashed #000';
+        slotEl.style.border = '3px dashed blue';
                     slotEl.style.left = `${state.tempSlot.x}px`;
                     slotEl.style.top = `${state.tempSlot.y}px`;
                     slotEl.style.width = `${Math.abs(state.tempSlot.width)}px`;
