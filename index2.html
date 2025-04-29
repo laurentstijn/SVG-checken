@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jachthaven Beheer</title>
-    <style>
-        body {
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Jachthaven Beheer
+  </title>
+  <style>
+   body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
@@ -322,180 +324,330 @@
         .collision-warning {
             box-shadow: 0 0 5px 2px red;
         }
-    </style>
-</head>
-<body>
-    <h1>Jachthaven Beheersysteem</h1>
-    
-    <div class="app-container">
-        <div class="drawing-panel">
-            <h2 class="section-title">Haven Tekening</h2>
-            <div class="drawing-controls">
-                <button id="selectMode" class="primary">Selectie Modus</button>
-                <button id="drawPierMode" class="secondary">Steiger Modus</button>
-                <button id="drawSlotMode" class="secondary">Ligplaats Modus</button>
-                <button id="deleteMode" class="danger">Verwijder Modus</button>
-            </div>
-            <div class="harbor-container" id="harbor"></div>
-        </div>
-        
-        <div class="management-panel">
-            <div class="pier-management">
-                <h2 class="section-title">Steiger Beheer</h2>
-                <div class="control-group">
-                    <label for="pierName">Steiger Naam:</label>
-                    <input type="text" id="pierName" placeholder="Bijv. Steiger A">
-                </div>
-                <div class="buttons">
-                    <button id="savePier" class="success">Steiger Opslaan</button>
-                    <button id="removePier" class="danger">Verwijderen</button>
-                </div>
-            </div>
-            
-            <div class="slot-management">
-                <h2 class="section-title">Ligplaats Beheer</h2>
-                <div class="control-group">
-                    <label for="slotName">Ligplaats Naam:</label>
-                    <input type="text" id="slotName" placeholder="Bijv. Ligplaats 1">
-                </div>
-                <div class="buttons">
-                    <button id="saveSlot" class="success">Ligplaats Opslaan</button>
-                    <button id="removeSlot" class="danger">Verwijderen</button>
-                </div>
-            </div>
-            
-            <div class="boat-management">
-                <h2 class="section-title">Boot Beheer</h2>
-                <div class="control-group">
-                    <label for="boatType">Type Boot:</label>
-                    <select id="boatType">
-                        <option value="sailboat">Zeilboot</option>
-                        <option value="motorboat">Motorboot</option>
-                        <option value="yacht">Jacht</option>
-                        <option value="small">Kleine boot</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="boatSize">Grootte (m):</label>
-                    <input type="number" id="boatSize" min="5" max="30" value="10">
-                </div>
-                <div class="control-group">
-                    <label for="boatName">Naam:</label>
-                    <input type="text" id="boatName" placeholder="Bijv. De Zeevaarder">
-                </div>
-                <div class="buttons">
-                    <button id="addBoat" class="primary">Boot Toevoegen</button>
-                    <button id="removeBoat" class="danger">Verwijderen</button>
-                </div>
-            </div>
-            
-            <div class="info-panel">
-                <h2 class="section-title">Details</h2>
-                <div id="noSelection" class="no-selection">
-                    Selecteer een steiger, ligplaats of boot voor details
-                </div>
-                <div id="pierInfoDisplay" style="display: none;">
-                    <div class="info-grid">
-                        <div class="info-label">Naam:</div>
-                        <div class="info-value" id="pierInfoName"></div>
-                        <div class="info-label">Type:</div>
-                        <div class="info-value" id="pierInfoType"></div>
-                        <div class="info-label">Breedte:</div>
-                        <div class="info-value" id="pierInfoWidth"></div>
-                        <div class="info-label">Hoogte:</div>
-                        <div class="info-value" id="pierInfoHeight"></div>
-                    </div>
-                </div>
-                <div id="slotInfoDisplay" style="display: none;">
-                    <div class="info-grid">
-                        <div class="info-label">Naam:</div>
-                        <div class="info-value" id="slotInfoName"></div>
-                        <div class="info-label">Status:</div>
-                        <div class="info-value" id="slotInfoStatus"></div>
-                        <div class="info-label">Breedte:</div>
-                        <div class="info-value" id="slotInfoWidth"></div>
-                        <div class="info-label">Hoogte:</div>
-                        <div class="info-value" id="slotInfoHeight"></div>
-                        <div class="info-label">Boot:</div>
-                        <div class="info-value" id="slotInfoBoat"></div>
-                    </div>
-                </div>
-                <div id="boatInfoDisplay" style="display: none;">
-                    <div class="info-grid">
-                        <div class="info-label">Naam:</div>
-                        <div class="info-value" id="boatInfoName"></div>
-                        <div class="info-label">Type:</div>
-                        <div class="info-value" id="boatInfoType"></div>
-                        <div class="info-label">Lengte:</div>
-                        <div class="info-value" id="boatInfoSize"></div>
-                        <div class="info-label">Eigenaar:</div>
-                        <div class="info-value" id="boatInfoOwner"></div>
-                        <div class="info-label">Telefoon:</div>
-                        <div class="info-value" id="boatInfoPhone"></div>
-                        <div class="info-label">Email:</div>
-                        <div class="info-value" id="boatInfoEmail"></div>
-                        <div class="info-label">Ligplaats:</div>
-                        <div class="info-value" id="boatInfoLocation"></div>
-                    </div>
-                    <button id="editBoatInfo" class="secondary">Bewerken</button>
-                </div>
-                
-                <!-- Bewerkformulier -->
-                <div id="editBoatForm" class="edit-form" style="display: none;">
-                    <h3>Bootgegevens Bewerken</h3>
-                    <div class="form-group">
-                        <label for="editBoatName">Boot Naam:</label>
-                        <input type="text" id="editBoatName">
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatOwner">Eigenaar:</label>
-                        <input type="text" id="editBoatOwner">
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatPhone">Telefoon:</label>
-                        <input type="text" id="editBoatPhone">
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatEmail">Email:</label>
-                        <input type="text" id="editBoatEmail">
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatType">Type Boot:</label>
-                        <select id="editBoatType">
-                            <option value="sailboat">Zeilboot</option>
-                            <option value="motorboat">Motorboot</option>
-                            <option value="yacht">Jacht</option>
-                            <option value="small">Kleine boot</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatSize">Grootte (m):</label>
-                        <input type="number" id="editBoatSize" min="5" max="30">
-                    </div>
-                    <div class="form-group">
-                        <label for="editBoatSlot">Ligplaats:</label>
-                        <select id="editBoatSlot">
-                            <option value="">Geen ligplaats</option>
-                            <!-- Opties worden dynamisch ingevuld -->
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button id="saveBoatInfo" class="success">Opslaan</button>
-                        <button id="cancelBoatEdit" class="secondary">Annuleren</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  </style>
+ </head>
+ <body>
+  <h1>
+   Jachthaven Beheersysteem
+  </h1>
+  <div class="app-container">
+   <div class="drawing-panel">
+    <h2 class="section-title">
+     Haven Tekening
+    </h2>
+    <div class="drawing-controls">
+     <button class="primary" id="selectMode">
+      Selectie Modus
+     </button>
+     <button class="secondary" id="drawPierMode">
+      Steiger Modus
+     </button>
+     <button class="secondary" id="drawSlotMode">
+      Ligplaats Modus
+     </button>
+     <button class="danger" id="deleteMode">
+      Verwijder Modus
+     </button>
     </div>
-
-    <div id="syncStatus" class="sync-status">Verbonden met Firebase</div>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    <div class="harbor-container" id="harbor">
+    </div>
+   </div>
+   <div class="management-panel">
+    <div class="pier-management">
+     <h2 class="section-title">
+      Steiger Beheer
+     </h2>
+     <div class="control-group">
+      <label for="pierName">
+       Steiger Naam:
+      </label>
+      <input id="pierName" placeholder="Bijv. Steiger A" type="text"/>
+     </div>
+     <div class="control-group">
+      <label for="pierWidth">
+       Breedte (m):
+      </label>
+      <input id="pierWidth" min="1" step="0.1" type="number"/>
+     </div>
+     <div class="control-group">
+      <label for="pierHeight">
+       Lengte (m):
+      </label>
+      <input id="pierHeight" min="1" step="0.1" type="number"/>
+     </div>
+     <div class="buttons">
+      <button class="success" id="savePier">
+       Steiger Opslaan
+      </button>
+      <button class="danger" id="removePier">
+       Verwijderen
+      </button>
+     </div>
+    </div>
+    <div class="slot-management">
+     <h2 class="section-title">
+      Ligplaats Beheer
+     </h2>
+     <div class="control-group">
+      <label for="slotName">
+       Ligplaats Naam:
+      </label>
+      <input id="slotName" placeholder="Bijv. Ligplaats 1" type="text"/>
+     </div>
+     <div class="control-group">
+      <label for="slotWidth">
+       Breedte (m):
+      </label>
+      <input id="slotWidth" min="1" step="0.1" type="number"/>
+     </div>
+     <div class="control-group">
+      <label for="slotHeight">
+       Lengte (m):
+      </label>
+      <input id="slotHeight" min="1" step="0.1" type="number"/>
+     </div>
+     <div class="buttons">
+      <button class="success" id="saveSlot">
+       Ligplaats Opslaan
+      </button>
+      <button class="danger" id="removeSlot">
+       Verwijderen
+      </button>
+     </div>
+    </div>
+    <div class="boat-management">
+     <h2 class="section-title">
+      Boot Beheer
+     </h2>
+     <div class="control-group">
+      <label for="boatType">
+       Type Boot:
+      </label>
+      <select id="boatType">
+       <option value="sailboat">
+        Zeilboot
+       </option>
+       <option value="motorboat">
+        Motorboot
+       </option>
+       <option value="yacht">
+        Jacht
+       </option>
+       <option value="small">
+        Kleine boot
+       </option>
+      </select>
+     </div>
+     <div class="control-group">
+      <label for="boatSize">
+       Grootte (m):
+      </label>
+      <input id="boatSize" max="30" min="5" type="number" value="10"/>
+     </div>
+     <div class="control-group">
+      <label for="boatName">
+       Naam:
+      </label>
+      <input id="boatName" placeholder="Bijv. De Zeevaarder" type="text"/>
+     </div>
+     <div class="buttons">
+      <button class="primary" id="addBoat">
+       Boot Toevoegen
+      </button>
+      <button class="danger" id="removeBoat">
+       Verwijderen
+      </button>
+     </div>
+    </div>
+    <div class="info-panel">
+     <h2 class="section-title">
+      Details
+     </h2>
+     <div class="no-selection" id="noSelection">
+      Selecteer een steiger, ligplaats of boot voor details
+     </div>
+     <div id="pierInfoDisplay" style="display: none;">
+      <div class="info-grid">
+       <div class="info-label">
+        Naam:
+       </div>
+       <div class="info-value" id="pierInfoName">
+       </div>
+       <div class="info-label">
+        Type:
+       </div>
+       <div class="info-value" id="pierInfoType">
+       </div>
+       <div class="info-label">
+        Breedte:
+       </div>
+       <div class="info-value" id="pierInfoWidth">
+       </div>
+       <div class="info-label">
+        Hoogte:
+       </div>
+       <div class="info-value" id="pierInfoHeight">
+       </div>
+      </div>
+     </div>
+     <div id="slotInfoDisplay" style="display: none;">
+      <div class="info-grid">
+       <div class="info-label">
+        Naam:
+       </div>
+       <div class="info-value" id="slotInfoName">
+       </div>
+       <div class="info-label">
+        Status:
+       </div>
+       <div class="info-value" id="slotInfoStatus">
+       </div>
+       <div class="info-label">
+        Breedte:
+       </div>
+       <div class="info-value" id="slotInfoWidth">
+       </div>
+       <div class="info-label">
+        Hoogte:
+       </div>
+       <div class="info-value" id="slotInfoHeight">
+       </div>
+       <div class="info-label">
+        Boot:
+       </div>
+       <div class="info-value" id="slotInfoBoat">
+       </div>
+      </div>
+     </div>
+     <div id="boatInfoDisplay" style="display: none;">
+      <div class="info-grid">
+       <div class="info-label">
+        Naam:
+       </div>
+       <div class="info-value" id="boatInfoName">
+       </div>
+       <div class="info-label">
+        Type:
+       </div>
+       <div class="info-value" id="boatInfoType">
+       </div>
+       <div class="info-label">
+        Lengte:
+       </div>
+       <div class="info-value" id="boatInfoSize">
+       </div>
+       <div class="info-label">
+        Eigenaar:
+       </div>
+       <div class="info-value" id="boatInfoOwner">
+       </div>
+       <div class="info-label">
+        Telefoon:
+       </div>
+       <div class="info-value" id="boatInfoPhone">
+       </div>
+       <div class="info-label">
+        Email:
+       </div>
+       <div class="info-value" id="boatInfoEmail">
+       </div>
+       <div class="info-label">
+        Ligplaats:
+       </div>
+       <div class="info-value" id="boatInfoLocation">
+       </div>
+      </div>
+      <button class="secondary" id="editBoatInfo">
+       Bewerken
+      </button>
+     </div>
+     <!-- Bewerkformulier -->
+     <div class="edit-form" id="editBoatForm" style="display: none;">
+      <h3>
+       Bootgegevens Bewerken
+      </h3>
+      <div class="form-group">
+       <label for="editBoatName">
+        Boot Naam:
+       </label>
+       <input id="editBoatName" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="editBoatOwner">
+        Eigenaar:
+       </label>
+       <input id="editBoatOwner" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="editBoatPhone">
+        Telefoon:
+       </label>
+       <input id="editBoatPhone" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="editBoatEmail">
+        Email:
+       </label>
+       <input id="editBoatEmail" type="text"/>
+      </div>
+      <div class="form-group">
+       <label for="editBoatType">
+        Type Boot:
+       </label>
+       <select id="editBoatType">
+        <option value="sailboat">
+         Zeilboot
+        </option>
+        <option value="motorboat">
+         Motorboot
+        </option>
+        <option value="yacht">
+         Jacht
+        </option>
+        <option value="small">
+         Kleine boot
+        </option>
+       </select>
+      </div>
+      <div class="form-group">
+       <label for="editBoatSize">
+        Grootte (m):
+       </label>
+       <input id="editBoatSize" max="30" min="5" type="number"/>
+      </div>
+      <div class="form-group">
+       <label for="editBoatSlot">
+        Ligplaats:
+       </label>
+       <select id="editBoatSlot">
+        <option value="">
+         Geen ligplaats
+        </option>
+        <!-- Opties worden dynamisch ingevuld -->
+       </select>
+      </div>
+      <div class="form-actions">
+       <button class="success" id="saveBoatInfo">
+        Opslaan
+       </button>
+       <button class="secondary" id="cancelBoatEdit">
+        Annuleren
+       </button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="sync-status" id="syncStatus">
+   Verbonden met Firebase
+  </div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js">
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js">
+  </script>
+  <script>
+   document.addEventListener('DOMContentLoaded', function() {
             // Firebase configuratie
             const firebaseConfig = {
                 apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
@@ -1206,6 +1358,10 @@ document.body.appendChild(scaleIndicator);
                 }
                 
                 state.selectedPier.name = newName;
+const pierW = parseFloat(document.getElementById('pierWidth').value);
+const pierH = parseFloat(document.getElementById('pierHeight').value);
+if (!isNaN(pierW)) state.selectedPier.width = pierW * SCALE;
+if (!isNaN(pierH)) state.selectedPier.height = pierH * SCALE;
                 savePiersToFirebase();
                 updateSyncStatus('Steiger opgeslagen');
                 updateUI();
@@ -1273,6 +1429,10 @@ document.body.appendChild(scaleIndicator);
                 }
                 
                 state.selectedSlot.name = newName;
+const slotW = parseFloat(document.getElementById('slotWidth').value);
+const slotH = parseFloat(document.getElementById('slotHeight').value);
+if (!isNaN(slotW)) state.selectedSlot.width = slotW * SCALE;
+if (!isNaN(slotH)) state.selectedSlot.height = slotH * SCALE;
                 saveSlotsToFirebase();
                 updateSyncStatus('Ligplaats opgeslagen');
                 updateUI();
@@ -1660,6 +1820,6 @@ document.body.appendChild(scaleIndicator);
                 }
             }
         });
-    </script>
-</body>
+  </script>
+ </body>
 </html>
