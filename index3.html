@@ -825,10 +825,10 @@
                     btn.classList.remove('drawing-mode-active');
                 });
                 
-                if (state.drawingMode === 'pier' && state.tempPier) {
+                if (state.drawingMode === 'pier') {
     console.log('Creating new pier:', state.tempPier);
                     document.getElementById('drawPierMode').classList.add('drawing-mode-active');
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                } else if (state.drawingMode === 'slot') {
     console.log('Creating new slot:', state.tempSlot);
                     document.getElementById('drawSlotMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'delete') {
@@ -855,7 +855,7 @@
                 
                 state.isDrawing = true;
                 
-                if (state.drawingMode === 'pier' && state.tempPier) {
+                if (state.drawingMode === 'pier') {
     console.log('Creating new pier:', state.tempPier);
                     state.tempPier = {
                         x: e.offsetX,
@@ -863,7 +863,7 @@
                         width: 0,
                         height: 0
                     };
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                } else if (state.drawingMode === 'slot') {
     console.log('Creating new slot:', state.tempSlot);
                     state.tempSlot = {
                         x: e.offsetX,
@@ -879,10 +879,10 @@
             function continueDrawing(e) {
                 if (!state.isDrawing) return;
                 
-                if (state.drawingMode === 'pier' && state.tempPier) {
+                if (state.drawingMode === 'pier') {
                     state.tempPier.width = e.offsetX - state.tempPier.x;
                     state.tempPier.height = e.offsetY - state.tempPier.y;
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                } else if (state.drawingMode === 'slot') {
                     state.tempSlot.width = e.offsetX - state.tempSlot.x;
                     state.tempSlot.height = e.offsetY - state.tempSlot.y;
                 }
@@ -894,7 +894,7 @@
                 if (!state.isDrawing) return;
                 state.isDrawing = false;
                 
-                if (state.drawingMode === 'pier' && state.tempPier) {
+                if (state.drawingMode === 'pier') {
                     // Add new pier
                     const newPier = {
                         id: state.nextPierId++,
@@ -914,7 +914,7 @@
                     state.selectedPier = newPier;
                     state.selectedSlot = null;
                     state.selectedBoat = null;
-                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                } else if (state.drawingMode === 'slot') {
                     const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
                     if (slotName === null) return; // User cancelled
                     
