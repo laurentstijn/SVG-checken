@@ -617,8 +617,9 @@
       </div>
       <div class="form-group">
   <label for="editBoatWidth">
-    Breedte (px):
+   Breedte (m):
   </label>
+
   <input id="editBoatWidth" min="5" type="number"/>
 </div>
       <div class="form-group">
@@ -1597,7 +1598,8 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
                 document.getElementById('editBoatEmail').value = state.selectedBoat.email;
                 document.getElementById('editBoatType').value = state.selectedBoat.type;
                 document.getElementById('editBoatSize').value = state.selectedBoat.size;
-                document.getElementById('editBoatWidth').value = Math.round(state.selectedBoat.width);
+                document.getElementById('editBoatWidth').value = (state.selectedBoat.width / SCALE).toFixed(1);
+
 
                 
                 // Fill slot dropdown
@@ -1640,12 +1642,13 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
 
         // Update afmetingen en visuele eigenschappen
         const boatTypeConfig = boatTypes[state.selectedBoat.type];
-    const customWidth = parseFloat(document.getElementById('editBoatWidth').value);
-if (!isNaN(customWidth) && customWidth > 0) {
-  state.selectedBoat.width = customWidth;
-} else {
-  state.selectedBoat.width = state.selectedBoat.size * boatTypeConfig.widthMultiplier * SCALE;
-}
+   const customWidth = parseFloat(document.getElementById('editBoatWidth').value);
+const boatLength = state.selectedBoat.size;
+const widthMeters = (!isNaN(customWidth) && customWidth > 0) ? customWidth : boatLength * boatTypeConfig.widthMultiplier;
+
+state.selectedBoat.width = widthMeters * SCALE;  // pixels
+state.selectedBoat.height = boatTypeConfig.height * SCALE;
+
 
 state.selectedBoat.height = boatTypeConfig.height * SCALE;
 
