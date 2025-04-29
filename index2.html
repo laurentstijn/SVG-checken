@@ -511,6 +511,23 @@
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
 
+const SCALE = 10; // 1 meter = 10 pixels
+
+// Voeg een schaalindicator toe aan de DOM
+const scaleIndicator = document.createElement('div');
+scaleIndicator.style.position = 'absolute';
+scaleIndicator.style.bottom = '10px';
+scaleIndicator.style.left = '20px';
+scaleIndicator.style.padding = '4px 8px';
+scaleIndicator.style.backgroundColor = 'white';
+scaleIndicator.style.border = '1px solid #ccc';
+scaleIndicator.style.borderRadius = '4px';
+scaleIndicator.style.fontSize = '12px';
+scaleIndicator.style.zIndex = '1000';
+scaleIndicator.textContent = 'Schaal: 1 meter = 10 pixels';
+document.body.appendChild(scaleIndicator);
+
+
             // DOM elements
             const harbor = document.getElementById('harbor');
             const noSelection = document.getElementById('noSelection');
@@ -698,8 +715,55 @@
                 });
                 
                 if (state.drawingMode === 'pier') {
+    const widthMeters = parseFloat(prompt("Steiger breedte in meters:", "2"));
+    const heightMeters = parseFloat(prompt("Steiger lengte in meters:", "20"));
+    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
+    const newPier = {
+        id: state.nextPierId++,
+        name: `Steiger ${state.nextPierId}`,
+        type: widthMeters > heightMeters ? 'horizontal' : 'vertical',
+        x: state.tempPier.x,
+        y: state.tempPier.y,
+        width: widthMeters * SCALE,
+        height: heightMeters * SCALE
+    };
+    state.piers.push(newPier);
+    savePiersToFirebase();
+    state.tempPier = null;
+    state.selectedPier = newPier;
+    state.selectedSlot = null;
+    state.selectedBoat = null;
+    renderHarbor();
+    updateUI();
+    return;
+
                     document.getElementById('drawPierMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'slot') {
+    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
+    if (slotName === null) return;
+    const widthMeters = parseFloat(prompt("Breedte in meters:", "4"));
+    const heightMeters = parseFloat(prompt("Lengte in meters:", "10"));
+    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
+    const newSlot = {
+        id: state.nextSlotId++,
+        name: slotName || `Ligplaats ${state.nextSlotId}`,
+        x: state.tempSlot.x,
+        y: state.tempSlot.y,
+        width: widthMeters * SCALE,
+        height: heightMeters * SCALE,
+        occupied: false,
+        boatId: null
+    };
+    state.slots.push(newSlot);
+    saveSlotsToFirebase();
+    state.tempSlot = null;
+    state.selectedSlot = newSlot;
+    state.selectedPier = null;
+    state.selectedBoat = null;
+    renderHarbor();
+    updateUI();
+    return;
+
                     document.getElementById('drawSlotMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'delete') {
                     document.getElementById('deleteMode').classList.add('drawing-mode-active');
@@ -726,6 +790,28 @@
                 state.isDrawing = true;
                 
                 if (state.drawingMode === 'pier') {
+    const widthMeters = parseFloat(prompt("Steiger breedte in meters:", "2"));
+    const heightMeters = parseFloat(prompt("Steiger lengte in meters:", "20"));
+    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
+    const newPier = {
+        id: state.nextPierId++,
+        name: `Steiger ${state.nextPierId}`,
+        type: widthMeters > heightMeters ? 'horizontal' : 'vertical',
+        x: state.tempPier.x,
+        y: state.tempPier.y,
+        width: widthMeters * SCALE,
+        height: heightMeters * SCALE
+    };
+    state.piers.push(newPier);
+    savePiersToFirebase();
+    state.tempPier = null;
+    state.selectedPier = newPier;
+    state.selectedSlot = null;
+    state.selectedBoat = null;
+    renderHarbor();
+    updateUI();
+    return;
+
                     state.tempPier = {
                         x: e.offsetX,
                         y: e.offsetY,
@@ -733,6 +819,31 @@
                         height: 0
                     };
                 } else if (state.drawingMode === 'slot') {
+    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
+    if (slotName === null) return;
+    const widthMeters = parseFloat(prompt("Breedte in meters:", "4"));
+    const heightMeters = parseFloat(prompt("Lengte in meters:", "10"));
+    if (isNaN(widthMeters) || isNaN(heightMeters)) return;
+    const newSlot = {
+        id: state.nextSlotId++,
+        name: slotName || `Ligplaats ${state.nextSlotId}`,
+        x: state.tempSlot.x,
+        y: state.tempSlot.y,
+        width: widthMeters * SCALE,
+        height: heightMeters * SCALE,
+        occupied: false,
+        boatId: null
+    };
+    state.slots.push(newSlot);
+    saveSlotsToFirebase();
+    state.tempSlot = null;
+    state.selectedSlot = newSlot;
+    state.selectedPier = null;
+    state.selectedBoat = null;
+    renderHarbor();
+    updateUI();
+    return;
+
                     state.tempSlot = {
                         x: e.offsetX,
                         y: e.offsetY,
@@ -1245,8 +1356,8 @@
                     email: randomOwner.email,
                     notes: "",
                     slotId: null,
-                    width: size * boatTypeConfig.widthMultiplier,
-                    height: boatTypeConfig.height,
+                    width: size * boatTypeConfig.widthMultiplier * SCALE,
+                    height: boatTypeConfig.height * SCALE,
                     color: boatTypeConfig.color,
                     typeName: boatTypeConfig.name
                 };
