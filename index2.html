@@ -929,6 +929,7 @@ document.body.appendChild(scaleIndicator);
 
             // Drawing functions
             function startDrawing(e) {
+    console.log('Start drawing mode:', state.drawingMode);
                 if (e.target !== harbor) return;
                 
                 state.isDrawing = true;
@@ -1167,6 +1168,7 @@ document.body.appendChild(scaleIndicator);
                 if (state.tempPier) {
                     const tempPierEl = document.createElement('div');
                     tempPierEl.className = 'pier temp-element';
+        tempPierEl.style.border = '2px dashed #000';
                     tempPierEl.style.left = `${state.tempPier.x}px`;
                     tempPierEl.style.top = `${state.tempPier.y}px`;
                     tempPierEl.style.width = `${Math.abs(state.tempPier.width)}px`;
@@ -1177,6 +1179,7 @@ document.body.appendChild(scaleIndicator);
                 if (state.tempSlot) {
                     const slotEl = document.createElement('div');
                     slotEl.className = 'slot temp-element';
+        slotEl.style.border = '2px dashed #000';
                     slotEl.style.left = `${state.tempSlot.x}px`;
                     slotEl.style.top = `${state.tempSlot.y}px`;
                     slotEl.style.width = `${Math.abs(state.tempSlot.width)}px`;
