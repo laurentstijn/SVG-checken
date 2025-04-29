@@ -866,7 +866,7 @@ document.body.appendChild(scaleIndicator);
                     btn.classList.remove('drawing-mode-active');
                 });
                 
-                if (state.drawingMode === 'pier') {
+                if (state.drawingMode === 'pier' && state.tempPier) {
     const newPier = {
         id: state.nextPierId++,
         name: `Steiger ${state.nextPierId}`,
@@ -887,7 +887,7 @@ document.body.appendChild(scaleIndicator);
     return;
 
                     document.getElementById('drawPierMode').classList.add('drawing-mode-active');
-                } else if (state.drawingMode === 'slot') {
+                } else if (state.drawingMode === 'slot' && state.tempSlot) {
     const newSlot = {
         id: state.nextSlotId++,
         name: `Ligplaats ${state.nextSlotId}`,
@@ -933,7 +933,7 @@ document.body.appendChild(scaleIndicator);
                 
                 state.isDrawing = true;
                 
-                if (state.drawingMode === 'pier') {
+                if (state.drawingMode === 'pier' && state.tempPier) {
     const newPier = {
         id: state.nextPierId++,
         name: `Steiger ${state.nextPierId}`,
@@ -959,7 +959,7 @@ document.body.appendChild(scaleIndicator);
                         width: 0,
                         height: 0
                     };
-                } else if (state.drawingMode === 'slot') {
+                } else if (state.drawingMode === 'slot' && state.tempSlot) {
     const newSlot = {
         id: state.nextSlotId++,
         name: `Ligplaats ${state.nextSlotId}`,
