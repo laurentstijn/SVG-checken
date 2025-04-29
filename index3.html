@@ -695,6 +695,8 @@
                 yacht: { name: 'Jacht', color: '#9370DB', widthMultiplier: 2, height: 40 },
                 small: { name: 'Kleine boot', color: '#3CB371', widthMultiplier: 1, height: 20 }
             };
+    
+            const SCALE = 10; // 1 meter = 10 pixels
             
             // Sample owners
             const sampleOwners = [
@@ -1416,8 +1418,8 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
                     email: randomOwner.email,
                     notes: "",
                     slotId: null,
-                    width: size * boatTypeConfig.widthMultiplier,
-                    height: boatTypeConfig.height,
+                    width: size * boatTypeConfig.widthMultiplier * SCALE,
+                    height: boatTypeConfig.height * SCALE,
                     color: boatTypeConfig.color,
                     typeName: boatTypeConfig.name
                 };
@@ -1630,8 +1632,8 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
 
         // Update afmetingen en visuele eigenschappen
         const boatTypeConfig = boatTypes[state.selectedBoat.type];
-        state.selectedBoat.width = state.selectedBoat.size * boatTypeConfig.widthMultiplier;
-        state.selectedBoat.height = boatTypeConfig.height;
+        state.selectedBoat.width = state.selectedBoat.size * boatTypeConfig.widthMultiplier * SCALE;
+        state.selectedBoat.height = boatTypeConfig.height * SCALE;
         state.selectedBoat.typeName = boatTypeConfig.name;
         state.selectedBoat.color = boatTypeConfig.color;
 
