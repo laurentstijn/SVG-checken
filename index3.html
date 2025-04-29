@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Teken Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    #harbor {
+      width: 800px;
+      height: 500px;
+      background-color: #87CEEB;
+      position: relative;
+      border: 2px solid #444;
+    }
+    .temp-rect {
+      position: absolute;
+      border: 2px dashed red;
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Test: Teken een rechthoek</h1>
+  <p>Klik en sleep met je muis om een rechthoek te tekenen.</p>
+  <div id="harbor"></div>
+
+  <script>
+    const harbor = document.getElementById('harbor');
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let tempEl = null;
+
+    harbor.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      startX = e.offsetX;
+      startY = e.offsetY;
+      console.log("Start tekenen op", startX, startY);
+
+      tempEl = document.createElement('div');
+      tempEl.className = 'temp-rect';
+      tempEl.style.left = startX + 'px';
+      tempEl.style.top = startY + 'px';
+      tempEl.style.width = '0px';
+      tempEl.style.height = '0px';
+      harbor.appendChild(tempEl);
+    });
+
+    harbor.addEventListener('mousemove', (e) => {
+      if (!isDrawing || !tempEl) return;
+
+      const currentX = e.offsetX;
+      const currentY = e.offsetY;
+
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+      tempEl.style.left = Math.min(currentX, startX) + 'px';
+      tempEl.style.top = Math.min(currentY, startY) + 'px';
+      tempEl.style.width = width + 'px';
+      tempEl.style.height = height + 'px';
+
+      console.log("Teken: ", width, height);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDrawing) {
+        isDrawing = false;
+        console.log("Tekenen klaar");
+        tempEl = null;
+      }
+    });
+  </script>
+</body>
+</html>
