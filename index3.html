@@ -70,6 +70,9 @@
             cursor: pointer;
             z-index: 2;
         }
+        .slot.selected {
+            box-shadow: 0 0 0 3px #ffcc00;
+        }
         
         .slot.occupied {
             background-color: rgba(255, 0, 0, 0.2);
@@ -1024,8 +1027,9 @@
                 
                 // Render slots
                 state.slots.forEach(slot => {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = `slot ${slot.occupied ? 'occupied' : 'available'}`;
+                    const isSelected = state.selectedSlot && slot.id === state.selectedSlot.id;
+                    slotEl.className = `slot ${slot.occupied ? 'occupied' : 'available'}${isSelected ? ' selected' : ''}`;
+
                     slotEl.style.left = `${slot.x}px`;
                     slotEl.style.top = `${slot.y}px`;
                     slotEl.style.width = `${slot.width}px`;
