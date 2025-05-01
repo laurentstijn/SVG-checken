@@ -90,16 +90,21 @@
 }
 
    #harborCanvas {
-  background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-  background-size: 20px 20px; /* rastergrootte van 20px */
-  position: absolute;
   top: -2500px;
   left: -2500px;
   width: 10000px;
   height: 10000px;
+     background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 20px 20px; /* rastergrootte van 20px */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5000px; /* of nog groter indien nodig */
+  height: 5000px;
   transform-origin: 0 0;
 }
+
 
 #harbor.panning {
     cursor: grabbing;
@@ -1045,20 +1050,17 @@ function snapToGrid(value) {
                 updateUI();
             }
 
-      function handleHarborClick(e) {
-    const clickedEmpty = e.target === harbor || e.target === harborCanvas;
-
-    if (clickedEmpty && state.drawingMode === 'select') {
-        // Klik op lege ruimte → deselect
-        slotContextMenu.style.display = 'none';
-        slotContextMenu.setAttribute('aria-hidden', 'true');
-        state.selectedPier = null;
-        state.selectedSlot = null;
-        state.selectedBoat = null;
-        updateUI();
-    }
-}
-
+            function handleHarborClick(e) {
+                if (e.target === harbor && state.drawingMode === 'select') {
+                    // Click on empty area - hide context menu and deselect
+                    slotContextMenu.style.display = 'none';
+                    slotContextMenu.setAttribute('aria-hidden', 'true');
+                    state.selectedPier = null;
+                    state.selectedSlot = null;
+                    state.selectedBoat = null;
+                    updateUI();
+                }
+            }
 
             function renderHarbor() {
                 harborCanvas.innerHTML = '';
