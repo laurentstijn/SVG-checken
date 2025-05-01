@@ -1903,23 +1903,32 @@ function enablePierDragging() {
 
     piers.forEach(pierEl => {
         let isDragging = false;
-        let dragStarted = false;
-        let offsetX, offsetY;
+        let moved = false;
+        let offsetX = 0, offsetY = 0;
+        let startX = 0, startY = 0;
+
         const pierId = parseInt(pierEl.dataset.id);
         const pier = state.piers.find(p => p.id === pierId);
 
         pierEl.addEventListener('mousedown', function(e) {
             if (state.drawingMode !== 'select' || e.button !== 0) return;
+
             isDragging = true;
-            dragStarted = false;
+            moved = false;
             offsetX = e.offsetX;
             offsetY = e.offsetY;
+            startX = e.clientX;
+            startY = e.clientY;
         });
 
         window.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
 
-            if (!dragStarted) dragStarted = true;
+            const dx = Math.abs(e.clientX - startX);
+            const dy = Math.abs(e.clientY - startY);
+            if (dx < 3 && dy < 3) return; // niet genoeg beweging om te slepen
+
+            moved = true;
 
             const harborRect = harborCanvas.getBoundingClientRect();
             const newX = e.clientX - harborRect.left - offsetX;
@@ -1931,15 +1940,22 @@ function enablePierDragging() {
         });
 
         window.addEventListener('mouseup', function(e) {
-            if (isDragging) {
-                isDragging = false;
-                if (dragStarted) {
-                    savePiersToFirebase();
-                }
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (moved) {
+                savePiersToFirebase();
+            } else {
+                // gewone klik → selecteer steiger
+                state.selectedPier = pier;
+                state.selectedSlot = null;
+                state.selectedBoat = null;
+                updateUI();
             }
         });
     });
 }
+
 
 
 
