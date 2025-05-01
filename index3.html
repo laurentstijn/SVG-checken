@@ -1939,20 +1939,20 @@ function enablePierDragging() {
             renderHarbor();
         });
 
-        window.addEventListener('mouseup', function(e) {
-            if (!isDragging) return;
-            isDragging = false;
+      pierEl.addEventListener('mouseup', function(e) {
+    if (!isDragging) return;
+    isDragging = false;
 
-            if (moved) {
-                savePiersToFirebase();
-            } else {
-                // gewone klik → selecteer steiger
-                state.selectedPier = pier;
-                state.selectedSlot = null;
-                state.selectedBoat = null;
-                updateUI();
-            }
-        });
+    if (moved) {
+        savePiersToFirebase();
+    } else {
+        state.selectedPier = pier;
+        state.selectedSlot = null;
+        state.selectedBoat = null;
+        updateUI();
+    }
+});
+
     });
 }
 
