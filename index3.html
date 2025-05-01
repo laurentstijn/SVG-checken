@@ -953,64 +953,45 @@ function snapToGrid(value) {
             }
 
             // Drawing functions
-            function startDrawing(e) {
-                if (e.target !== harbor) return;
-                
-                state.isDrawing = true;
-                
-                if (state.drawingMode === 'pier') {
-    console.log('Creating new pier:', state.tempPier);
-                    state.tempPier = {
-                        x: e.offsetX,
-                        y: e.offsetY,
-                        width: 0,
-                        height: 0
-                    };
-                } else if (state.drawingMode === 'slot') {
-    console.log('Creating new slot:', state.tempSlot);
-                    state.tempSlot = {
-                        x: e.offsetX,
-                        y: e.offsetY,
-                        width: 30,
-                        height: 30
-                    };
-                }
+      function startDrawing(e) {
+    if (e.target !== harbor) return;
 
-             state.tempPier = {
-  x: snapToGrid(e.offsetX),
-  y: snapToGrid(e.offsetY),
-  width: 0,
-  height: 0       
-};
+    state.isDrawing = true;
 
-             state.tempSlot = {
-  x: snapToGrid(e.offsetX),
-  y: snapToGrid(e.offsetY),
-  width: GRID_SIZE * 2,
-  height: GRID_SIZE * 2
-};
+    if (state.drawingMode === 'pier') {
+        state.tempPier = {
+            x: snapToGrid(e.offsetX),
+            y: snapToGrid(e.offsetY),
+            width: 0,
+            height: 0
+        };
+    } else if (state.drawingMode === 'slot') {
+        state.tempSlot = {
+            x: snapToGrid(e.offsetX),
+            y: snapToGrid(e.offsetY),
+            width: GRID_SIZE * 2,
+            height: GRID_SIZE * 2
+        };
+    }
 
-                
-                renderHarbor();
-            }
+    renderHarbor();
+}
 
-            function continueDrawing(e) {
-                if (!state.isDrawing) return;
-                
-                if (state.drawingMode === 'pier') {
-                    state.tempPier.width = e.offsetX - state.tempPier.x;
-                    state.tempPier.height = e.offsetY - state.tempPier.y;
-                } else if (state.drawingMode === 'slot') {
-                    state.tempSlot.width = e.offsetX - state.tempSlot.x;
-                    state.tempSlot.height = e.offsetY - state.tempSlot.y;
-                }
 
-             state.tempPier.width = snapToGrid(e.offsetX) - state.tempPier.x;
-state.tempPier.height = snapToGrid(e.offsetY) - state.tempPier.y;
+          function continueDrawing(e) {
+    if (!state.isDrawing) return;
 
-                
-                renderHarbor();
-            }
+    if (state.drawingMode === 'pier') {
+        state.tempPier.width = snapToGrid(e.offsetX) - state.tempPier.x;
+        state.tempPier.height = snapToGrid(e.offsetY) - state.tempPier.y;
+    } else if (state.drawingMode === 'slot') {
+        state.tempSlot.width = snapToGrid(e.offsetX) - state.tempSlot.x;
+        state.tempSlot.height = snapToGrid(e.offsetY) - state.tempSlot.y;
+    }
+
+    renderHarbor();
+}
+
 
             function finishDrawing(e) {
                 if (!state.isDrawing) return;
