@@ -826,70 +826,78 @@ function snapToGrid(value) {
                 updateDrawingModeUI();
             }
 
-            function setupEventListeners() {
-                // Drawing mode buttons
-                document.getElementById('selectMode').addEventListener('click', () => {
-                    state.drawingMode = 'select';
-                    updateDrawingModeUI();
-                
-    // Toon muiscoördinaten op het canvas
-    harborCanvas.addEventListener('mousemove', function(e) {
-        const rect = harbor.getBoundingClientRect();
-        const canvasX = Math.round((e.clientX - rect.left - translateX) / scale);
-        const canvasY = Math.round((e.clientY - rect.top - translateY) / scale);
-        const meterX = (canvasX / 10).toFixed(1);
-        const meterY = (canvasY / 10).toFixed(1);
-        document.getElementById('cursorCoordinates').textContent = 
-            `Cursor: ${canvasX}px, ${canvasY}px (${meterX}m, ${meterY}m)`;
-    });
-});
-                
-                document.getElementById('drawPierMode').addEventListener('click', () => {
-                    state.drawingMode = 'pier';
-                    updateDrawingModeUI();
-                });
-                
-                document.getElementById('drawSlotMode').addEventListener('click', () => {
-                    state.drawingMode = 'slot';
-                    updateDrawingModeUI();
-                });
-                
-                document.getElementById('deleteMode').addEventListener('click', () => {
-                    state.drawingMode = 'delete';
-                    updateDrawingModeUI();
-                });
+          function setupEventListeners() {
+    // 🎯 Zorg dat tekenen ALTIJD werkt
+    harborCanvas.addEventListener('mousedown', startDrawing);
+    harborCanvas.addEventListener('mousemove', continueDrawing);
+    harborCanvas.addEventListener('mouseup', finishDrawing);
 
-                // Pier management
-                document.getElementById('savePier').addEventListener('click', savePierDetails);
-                document.getElementById('removePier').addEventListener('click', removeSelectedPier);
-                
-                // Slot management
-                document.getElementById('saveSlot').addEventListener('click', saveSlotDetails);
-                document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
-                
-                // Boat management
-                document.getElementById('addBoat').addEventListener('click', addBoat);
-                document.getElementById('removeBoat').addEventListener('click', removeSelectedBoat);
-                
-                // Edit functionality
-                document.getElementById('editBoatInfo').addEventListener('click', showBoatEditForm);
-                document.getElementById('saveBoatInfo').addEventListener('click', saveBoatInfo);
-                document.getElementById('cancelBoatEdit').addEventListener('click', cancelBoatEdit);
-                
-                // Harbor events
-                harborCanvas.addEventListener('mousedown', startDrawing);
-                harborCanvas.addEventListener('mousemove', continueDrawing);
-                harborCanvas.addEventListener('mouseup', finishDrawing);
-                harbor.addEventListener('click', handleHarborClick);
-                
-                // Close context menu when clicking elsewhere
-                document.addEventListener('click', function(e) {
-                    if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
-                        slotContextMenu.style.display = 'none';
-                        slotContextMenu.setAttribute('aria-hidden', 'true');
-                    }
-                });
-            }
+    // 🔘 Modus-knoppen
+    document.getElementById('selectMode').addEventListener('click', () => {
+        state.drawingMode = 'select';
+        updateDrawingModeUI();
+    });
+
+    document.getElementById('drawPierMode').addEventListener('click', () => {
+        state.drawingMode = 'pier';
+        updateDrawingModeUI();
+    });
+
+    document.getElementById('drawSlotMode').addEventListener('click', () => {
+        state.drawingMode = 'slot';
+        updateDrawingModeUI();
+    });
+
+    document.getElementById('deleteMode').addEventListener('click', () => {
+        state.drawingMode = 'delete';
+        updateDrawingModeUI();
+    });
+
+    // ⛴️ Steigerbeheer
+    document.getElementById('savePier').addEventListener('click', savePierDetails);
+    document.getElementById('removePier').addEventListener('click', removeSelectedPier);
+
+    // ⚓ Ligplaatsbeheer
+    document.getElementById('saveSlot').addEventListener('click', saveSlotDetails);
+    document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
+
+    // 🚤 Bootbeheer
+    document.getElementById('addBoat').addEventListener('click', addBoat);
+    document.getElementById('removeBoat').addEventListener('click', removeSelectedBoat);
+
+    // ✏️ Bootbewerking
+    document.getElementById('editBoatInfo').addEventListener('click', showBoatEditForm);
+    document.getElementById('saveBoatInfo').addEventListener('click', saveBoatInfo);
+    document.getElementById('cancelBoatEdit').addEventListener('click', cancelBoatEdit);
+
+    // 🔘 Zoom/reset/raster
+    document.getElementById('resetZoomBtn').addEventListener('click', () => {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    });
+
+    document.getElementById('toggleGridBtn').addEventListener('click', () => {
+        gridVisible = !gridVisible;
+        document.getElementById('harborCanvas').style.backgroundImage = gridVisible
+            ? `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+               linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)`
+            : 'none';
+    });
+
+    // ❌ Slot contextmenu sluiten
+    document.addEventListener('click', function (e) {
+        if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
+            slotContextMenu.style.display = 'none';
+            slotContextMenu.setAttribute('aria-hidden', 'true');
+        }
+    });
+
+    // 🖱️ Klik op lege havenruimte
+    harbor.addEventListener('click', handleHarborClick);
+}
+
 
             function setupFirebaseListeners() {
                 // Listen for changes in piers
