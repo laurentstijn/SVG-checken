@@ -28,13 +28,19 @@
             margin: 0 auto;
         }
         
-        .drawing-panel {
-            flex: 2;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
+  .drawing-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    height: 90vh;         /* hoogte afgestemd op scherm */
+    min-height: 600px;
+}
+
+
         
         .drawing-controls {
             display: flex;
@@ -42,14 +48,26 @@
             margin-bottom: 15px;
         }
         
-        .harbor-container {
-            background-color: #87CEEB;
-            border-radius: 8px;
-            position: relative;
-            height: 500px;
-            overflow: hidden;
-            margin-top: 15px;
-        }
+.harbor-container {
+    background-color: #87CEEB;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 500px;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    margin-top: 15px;
+}
+
+   #harbor {
+    flex: 1;
+    position: relative;
+}
+
+
         
         .pier {
             position: absolute;
