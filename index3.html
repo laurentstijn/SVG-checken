@@ -1239,8 +1239,9 @@ function snapToGrid(value) {
                     boatEl.style.backgroundColor = boat.color;
                     boatEl.innerHTML = `
                         <div class="boat-name">${boat.name}</div>
-                        <div class="boat-type">${boat.typeName}</div>
-                        <div class="boat-size-info">${boat.size}m × ${boat.width}px</div>
+                        <!--<div class="boat-type">${boat.typeName}</div>-->
+                        <div class="boat-size-info">${boat.size}m × ${(boat.width / SCALE).toFixed(1)}m</div>
+
                     `;
                     boatEl.dataset.id = boat.id;
                     boatEl.setAttribute('aria-label', `Boot ${boat.name}, type ${boat.typeName}`);
