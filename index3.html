@@ -1046,17 +1046,20 @@ function snapToGrid(value) {
                 updateUI();
             }
 
-            function handleHarborClick(e) {
-                if (e.target === harbor && state.drawingMode === 'select') {
-                    // Click on empty area - hide context menu and deselect
-                    slotContextMenu.style.display = 'none';
-                    slotContextMenu.setAttribute('aria-hidden', 'true');
-                    state.selectedPier = null;
-                    state.selectedSlot = null;
-                    state.selectedBoat = null;
-                    updateUI();
-                }
-            }
+      function handleHarborClick(e) {
+    const clickedEmpty = e.target === harbor || e.target === harborCanvas;
+
+    if (clickedEmpty && state.drawingMode === 'select') {
+        // Klik op lege ruimte → deselect
+        slotContextMenu.style.display = 'none';
+        slotContextMenu.setAttribute('aria-hidden', 'true');
+        state.selectedPier = null;
+        state.selectedSlot = null;
+        state.selectedBoat = null;
+        updateUI();
+    }
+}
+
 
             function renderHarbor() {
                 harborCanvas.innerHTML = '';
