@@ -1930,8 +1930,13 @@ function enablePierDragging() {
 
     isDragging = true;
     moved = false;
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
+   const rect = harbor.getBoundingClientRect();
+const canvasX = (e.clientX - rect.left - translateX) / scale;
+const canvasY = (e.clientY - rect.top - translateY) / scale;
+
+offsetX = canvasX - pier.x;
+offsetY = canvasY - pier.y;
+
     startX = e.clientX;
     startY = e.clientY;
 });
