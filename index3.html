@@ -1862,17 +1862,20 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
             }
 
     // Zoom & pan instellingen
+
 let scale = 1;
 let translateX = 0;
 let translateY = 0;
 let isPanning = false;
 let isDragging = false;
-let startX, startY;
+let startX = 0;
+let startY = 0;
 
 function updateTransform() {
     harborCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
 
+// Zoomen met muiswiel
 harbor.addEventListener('wheel', function (e) {
     if (e.ctrlKey) return;
     e.preventDefault();
@@ -1892,6 +1895,31 @@ harbor.addEventListener('wheel', function (e) {
     updateTransform();
 }, { passive: false });
 
+// Start panning met middelste muisknop
+harbor.addEventListener('mousedown', function (e) {
+    if (e.button === 1) {
+        isPanning = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        harbor.classList.add('panning');
+        e.preventDefault();
+    }
+});
+
+window.addEventListener('mousemove', function (e) {
+    if (isPanning) {
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+    }
+});
+
+window.addEventListener('mouseup', function (e) {
+    if (isPanning && e.button === 1) {
+        isPanning = false;
+        harbor.classList.remove('panning');
+    }
+});
 harbor.addEventListener('mousedown', function (e) {
     if (e.button === 1) {
         isPanning = true;
