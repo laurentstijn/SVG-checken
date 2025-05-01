@@ -31,8 +31,7 @@
     box-sizing: border-box;
 }
 
-        
- .drawing-panel {
+.drawing-panel {
     flex: 2;
     display: flex;
     flex-direction: column;
@@ -42,10 +41,22 @@
     padding: 20px;
     height: 90vh;
     min-height: 600px;
-    min-width: 0; /* zorgt dat het binnen flex werkt */
+    min-width: 0;
+    overflow: hidden; /* voorkomt dat haven over de rand heen valt */
+    position: relative;
+}
+
+#harborWrapper {
+    z-index: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 
+
+
+   
 
         
         .drawing-controls {
@@ -162,6 +173,8 @@
     gap: 20px;
     min-width: 400px;
     max-width: 5000px;
+    z-index: 1;
+    position: relative;
 }
 
         
