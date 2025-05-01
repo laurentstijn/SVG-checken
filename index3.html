@@ -1264,6 +1264,8 @@ function snapToGrid(value) {
                     harborCanvas.appendChild(boatEl);
                 });
              enablePierDragging();
+             enableSlotDragging();
+             enableBoatDragging();
 
             }
 
@@ -2019,7 +2021,117 @@ function enablePierDragging() {
 }
 
 
+        
+function enableSlotDragging() {
+    const slots = document.querySelectorAll('.slot');
+
+    slots.forEach(slotEl => {
+        let isDragging = false;
+        let moved = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        const slotId = parseInt(slotEl.dataset.id);
+        const slot = state.slots.find(s => s.id === slotId);
+
+        slotEl.addEventListener('mousedown', function (e) {
+            if (state.drawingMode !== 'select' || e.button !== 0) return;
+
+            state.selectedSlot = slot;
+            state.selectedPier = null;
+            state.selectedBoat = null;
+            updateUI();
+
+            isDragging = true;
+            moved = false;
+
+            const rect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - translateX) / scale;
+            const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+            offsetX = mouseX - slot.x;
+            offsetY = mouseY - slot.y;
         });
+
+        window.addEventListener('mousemove', function (e) {
+            if (!isDragging) return;
+
+            const rect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - translateX) / scale;
+            const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+            slot.x = snapToGrid(mouseX - offsetX);
+            slot.y = snapToGrid(mouseY - offsetY);
+
+            state.selectedSlot = slot;
+            renderHarbor();
+            moved = true;
+        });
+
+        window.addEventListener('mouseup', function (e) {
+            if (isDragging && moved) {
+                saveSlotsToFirebase();
+            }
+            isDragging = false;
+            moved = false;
+        });
+    });
+}
+
+function enableBoatDragging() {
+    const boats = document.querySelectorAll('.boat');
+
+    boats.forEach(boatEl => {
+        let isDragging = false;
+        let moved = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        const boatId = parseInt(boatEl.dataset.id);
+        const boat = state.boats.find(b => b.id === boatId);
+
+        boatEl.addEventListener('mousedown', function (e) {
+            if (state.drawingMode !== 'select' || e.button !== 0) return;
+
+            state.selectedBoat = boat;
+            state.selectedPier = null;
+            state.selectedSlot = null;
+            updateUI();
+
+            isDragging = true;
+            moved = false;
+
+            const rect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - translateX) / scale;
+            const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+            offsetX = mouseX - boat.x;
+            offsetY = mouseY - boat.y;
+        });
+
+        window.addEventListener('mousemove', function (e) {
+            if (!isDragging) return;
+
+            const rect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - translateX) / scale;
+            const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+            boat.x = snapToGrid(mouseX - offsetX);
+            boat.y = snapToGrid(mouseY - offsetY);
+
+            state.selectedBoat = boat;
+            renderHarbor();
+            moved = true;
+        });
+
+        window.addEventListener('mouseup', function (e) {
+            if (isDragging && moved) {
+                saveBoatsToFirebase();
+            }
+            isDragging = false;
+            moved = false;
+        });
+    });
+}
+});
   </script>
  </body>
 </html>
