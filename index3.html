@@ -420,7 +420,7 @@
   <div class="app-container">
    <div class="drawing-panel">
     <h2 class="section-title">
-     Havenplan
+     Haven Tekening
     </h2>
     <div class="drawing-controls">
      <button class="primary" id="selectMode">
@@ -742,9 +742,13 @@
   </div>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js">
-  </script>
+  
+
+</script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js">
-  </script>
+  
+
+</script>
   <script>
    document.addEventListener('DOMContentLoaded', function() {
             // Firebase configuratie
@@ -1099,6 +1103,7 @@ function snapToGrid(value) {
             }
 
             function renderHarbor() {
+  console.log("renderHarbor called");
                 harborCanvas.innerHTML = '';
                 
                 // Render piers
@@ -2185,6 +2190,20 @@ function enableBoatDragging() {
     });
 }
 });
-  </script>
- </body>
+  
+
+</script>
+ 
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    console.log("✅ DOM ready, calling renderHarbor()");
+    if (typeof renderHarbor === 'function') {
+      renderHarbor();
+    } else {
+      console.warn("⚠️ renderHarbor is not defined");
+    }
+  });
+</script>
+</body>
+
 </html>
