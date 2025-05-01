@@ -1903,6 +1903,7 @@ function enablePierDragging() {
 
     piers.forEach(pierEl => {
         let isDragging = false;
+        let dragStarted = false;
         let offsetX, offsetY;
         const pierId = parseInt(pierEl.dataset.id);
         const pier = state.piers.find(p => p.id === pierId);
@@ -1910,13 +1911,15 @@ function enablePierDragging() {
         pierEl.addEventListener('mousedown', function(e) {
             if (state.drawingMode !== 'select' || e.button !== 0) return;
             isDragging = true;
+            dragStarted = false;
             offsetX = e.offsetX;
             offsetY = e.offsetY;
-            e.preventDefault();
         });
 
         window.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
+
+            if (!dragStarted) dragStarted = true;
 
             const harborRect = harborCanvas.getBoundingClientRect();
             const newX = e.clientX - harborRect.left - offsetX;
@@ -1930,7 +1933,9 @@ function enablePierDragging() {
         window.addEventListener('mouseup', function(e) {
             if (isDragging) {
                 isDragging = false;
-                savePiersToFirebase();
+                if (dragStarted) {
+                    savePiersToFirebase();
+                }
             }
         });
     });
