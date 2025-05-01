@@ -1877,9 +1877,10 @@ window.addEventListener('mouseup', function (e) {
     updateTransform();
 });
 
-    document.getElementById('toggleGridBtn').addEventListener('click', () => {
-    harbor.classList.toggle('show-grid');
+document.getElementById('toggleGridBtn').addEventListener('click', () => {
+document.querySelector('.harbor-container').classList.toggle('show-grid');
 });
+
 
 
 
