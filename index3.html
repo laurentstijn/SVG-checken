@@ -1306,14 +1306,42 @@ function snapToGrid(value) {
                 // Update pier name field
                 if (state.selectedPier) {
                     document.getElementById('pierName').value = state.selectedPier.name || '';
+                
+                // Update pier size fields
+                if (state.selectedPier) {
+                    const pierWidthField = document.getElementById('pierWidth');
+                    const pierHeightField = document.getElementById('pierHeight');
+                    if (pierWidthField && pierHeightField) {
+                        pierWidthField.value = (state.selectedPier.width / 10).toFixed(1);
+                        pierHeightField.value = (state.selectedPier.height / 10).toFixed(1);
+                    }
                 } else {
+                    const pierWidthField = document.getElementById('pierWidth');
+                    const pierHeightField = document.getElementById('pierHeight');
+                    if (pierWidthField && pierHeightField) {
+                        pierWidthField.value = '';
+                        pierHeightField.value = '';
+                    }
+                }
+} else {
                     document.getElementById('pierName').value = '';
                 }
                 
                 // Update slot name field
                 if (state.selectedSlot) {
                     document.getElementById('slotName').value = state.selectedSlot.name || '';
+                
+                
+
+                // Update slot size fields
+                if (state.selectedSlot) {
+                    document.getElementById('slotWidth').value = (state.selectedSlot.width / 10).toFixed(1);
+                    document.getElementById('slotHeight').value = (state.selectedSlot.height / 10).toFixed(1);
                 } else {
+                    document.getElementById('slotWidth').value = '';
+                    document.getElementById('slotHeight').value = '';
+                }
+} else {
                     document.getElementById('slotName').value = '';
                 }
             }
@@ -1372,26 +1400,30 @@ function snapToGrid(value) {
             }
 
             // Pier management functions
-            function savePierDetails() {
-                if (!state.selectedPier) {
-                    alert('Selecteer eerst een steiger');
-                    return;
-                }
-                
-                const newName = document.getElementById('pierName').value.trim();
-                if (!newName) {
-                    alert('Voer een naam in voor de steiger');
-                    return;
-                }
-                
-                state.selectedPier.name = newName;
-const pierW = parseFloat(document.getElementById('pierWidth').value);
-const pierH = parseFloat(document.getElementById('pierHeight').value);
-if (!isNaN(pierW)) state.selectedPier.width = pierW * 10;
-if (!isNaN(pierH)) state.selectedPier.height = pierH * 10;
-                savePiersToFirebase();
+            
+function savePierDetails() {
+    if (!state.selectedPier) return;
+
+    const pierWidth = parseFloat(document.getElementById('pierWidth').value) * 10;
+    const pierHeight = parseFloat(document.getElementById('pierHeight').value) * 10;
+    const pierName = document.getElementById('pierName').value;
+
+    state.selectedPier.width = pierWidth;
+    state.selectedPier.height = pierHeight;
+    state.selectedPier.name = pierName;
+
+    savePiersToFirebase();
+    renderHarbor();
+
+    // Herselecteer object
+    const id = state.selectedPier.id;
+    const updatedPier = state.piers.find(p => p.id === id);
+    state.selectedPier = updatedPier;
+
                 updateSyncStatus('Steiger opgeslagen');
                 updateUI();
+    renderHarbor();
+renderHarbor();
             }
 
             function removeSelectedPier() {
@@ -1443,26 +1475,30 @@ if (!isNaN(pierH)) state.selectedPier.height = pierH * 10;
             }
 
             // Slot management functions
-            function saveSlotDetails() {
-                if (!state.selectedSlot) {
-                    alert('Selecteer eerst een ligplaats');
-                    return;
-                }
-                
-                const newName = document.getElementById('slotName').value.trim();
-                if (!newName) {
-                    alert('Voer een naam in voor de ligplaats');
-                    return;
-                }
-                
-                state.selectedSlot.name = newName;
-const slotW = parseFloat(document.getElementById('slotWidth').value);
-const slotH = parseFloat(document.getElementById('slotHeight').value);
-if (!isNaN(slotW)) state.selectedSlot.width = slotW * 10;
-if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
-                saveSlotsToFirebase();
+            
+function saveSlotDetails() {
+    if (!state.selectedSlot) return;
+
+    const slotWidth = parseFloat(document.getElementById('slotWidth').value) * 10;
+    const slotHeight = parseFloat(document.getElementById('slotHeight').value) * 10;
+    const slotName = document.getElementById('slotName').value;
+
+    state.selectedSlot.width = slotWidth;
+    state.selectedSlot.height = slotHeight;
+    state.selectedSlot.name = slotName;
+
+    saveSlotsToFirebase();
+    renderHarbor();
+
+    // Herselecteer object
+    const id = state.selectedSlot.id;
+    const updatedSlot = state.slots.find(s => s.id === id);
+    state.selectedSlot = updatedSlot;
+
                 updateSyncStatus('Ligplaats opgeslagen');
                 updateUI();
+    renderHarbor();
+renderHarbor();
             }
 
             function removeSelectedSlot() {
@@ -1892,15 +1928,7 @@ harbor.addEventListener('wheel', function (e) {
 }, { passive: false });
 
 // Start panning met middelste muisknop
-harbor.addEventListener('mousedown', function (e) {
-    if (e.button === 1) {
-        isPanning = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        harbor.classList.add('panning');
-        e.preventDefault();
-    }
-});
+
 
 window.addEventListener('mousemove', function (e) {
     if (isPanning) {
