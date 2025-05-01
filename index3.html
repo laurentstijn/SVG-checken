@@ -90,6 +90,8 @@
 }
 
    #harborCanvas {
+  border: 2px solid #ccc; /* visuele canvasrand */
+
   top: -2500px;
   left: -2500px;
   width: 10000px;
@@ -114,6 +116,8 @@
 }
 
 /*   .harbor-container.show-grid #harborCanvas {
+  border: 2px solid #ccc; /* visuele canvasrand */
+
     background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
                       linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
 }*/
@@ -432,7 +436,12 @@
     </div>
     <div class="harbor-container" id="harbor">
      <div id="harborCanvas"></div>
-    </div>
+    
+<div id="cursorCoordinates" style="margin-top:10px; font-size:12px; color:#555;">
+  Cursor: 0px, 0px (0.0m, 0.0m)
+</div>
+
+</div>
    </div>
    <div class="management-panel">
     <div class="pier-management">
@@ -724,7 +733,12 @@
        </button>
       </div>
      </div>
-    </div>
+    
+<div id="cursorCoordinates" style="margin-top:10px; font-size:12px; color:#555;">
+  Cursor: 0px, 0px (0.0m, 0.0m)
+</div>
+
+</div>
    </div>
   </div>
   <div class="sync-status" id="syncStatus">
@@ -825,7 +839,18 @@ function snapToGrid(value) {
                 document.getElementById('selectMode').addEventListener('click', () => {
                     state.drawingMode = 'select';
                     updateDrawingModeUI();
-                });
+                
+    // Toon muiscoördinaten op het canvas
+    harborCanvas.addEventListener('mousemove', function(e) {
+        const rect = harbor.getBoundingClientRect();
+        const canvasX = Math.round((e.clientX - rect.left - translateX) / scale);
+        const canvasY = Math.round((e.clientY - rect.top - translateY) / scale);
+        const meterX = (canvasX / 10).toFixed(1);
+        const meterY = (canvasY / 10).toFixed(1);
+        document.getElementById('cursorCoordinates').textContent = 
+            `Cursor: ${canvasX}px, ${canvasY}px (${meterX}m, ${meterY}m)`;
+    });
+});
                 
                 document.getElementById('drawPierMode').addEventListener('click', () => {
                     state.drawingMode = 'pier';
@@ -1875,11 +1900,22 @@ harbor.addEventListener('mousedown', function (e) {
 });
 
 window.addEventListener('mousemove', function (e) {
-    if (!isPanning) return;
-    translateX = e.clientX - startX;
-    translateY = e.clientY - startY;
-    updateTransform();
-});
+            if (!isDragging) return;
+
+            const harborRect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+            const mouseY = (e.clientY - harborRect.top - translateY) / scale;
+
+            pier.x = snapToGrid(mouseX - offsetX);
+            pier.y = snapToGrid(mouseY - offsetY);
+
+            state.selectedPier = pier;
+            state.selectedSlot = null;
+            state.selectedBoat = null;
+
+            renderHarbor();
+            moved = true;
+        });
 
 window.addEventListener('mouseup', function (e) {
     if (e.button === 1) {
@@ -1922,7 +1958,6 @@ function enablePierDragging() {
      pierEl.addEventListener('mousedown', function (e) {
     if (state.drawingMode !== 'select' || e.button !== 0) return;
 
-    // ✅ selecteer direct bij aanklikken
     state.selectedPier = pier;
     state.selectedSlot = null;
     state.selectedBoat = null;
@@ -1930,41 +1965,32 @@ function enablePierDragging() {
 
     isDragging = true;
     moved = false;
-   const rect = harbor.getBoundingClientRect();
-const canvasX = (e.clientX - rect.left - translateX) / scale;
-const canvasY = (e.clientY - rect.top - translateY) / scale;
 
-offsetX = canvasX - pier.x;
-offsetY = canvasY - pier.y;
+    const harborRect = harbor.getBoundingClientRect();
+    const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+    const mouseY = (e.clientY - harborRect.top - translateY) / scale;
 
-    startX = e.clientX;
-    startY = e.clientY;
+    offsetX = mouseX - pier.x;
+    offsetY = mouseY - pier.y;
 });
 
 
         window.addEventListener('mousemove', function (e) {
             if (!isDragging) return;
 
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
+            const harborRect = harbor.getBoundingClientRect();
+            const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+            const mouseY = (e.clientY - harborRect.top - translateY) / scale;
 
-            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-                moved = true;
+            pier.x = snapToGrid(mouseX - offsetX);
+            pier.y = snapToGrid(mouseY - offsetY);
 
-                const harborRect = harborCanvas.getBoundingClientRect();
-                const newX = e.clientX - harborRect.left - offsetX;
-                const newY = e.clientY - harborRect.top - offsetY;
+            state.selectedPier = pier;
+            state.selectedSlot = null;
+            state.selectedBoat = null;
 
-                pier.x = snapToGrid(newX);
-                pier.y = snapToGrid(newY);
-
-                // ⬅️ Belangrijk: herbevestig selectie zodat highlight blijft
-                state.selectedPier = pier;
-                state.selectedSlot = null;
-                state.selectedBoat = null;
-
-                renderHarbor();
-            }
+            renderHarbor();
+            moved = true;
         });
 
         window.addEventListener('mouseup', function (e) {
