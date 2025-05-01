@@ -1883,9 +1883,16 @@ window.addEventListener('mouseup', function (e) {
     updateTransform();
 });
 
+let gridVisible = true;
+
 document.getElementById('toggleGridBtn').addEventListener('click', () => {
-document.querySelector('.harbor-container').classList.toggle('show-grid');
+    gridVisible = !gridVisible;
+    document.getElementById('harborCanvas').style.backgroundImage = gridVisible
+        ? `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+           linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)`
+        : 'none';
 });
+
 
 
 
