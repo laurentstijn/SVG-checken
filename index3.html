@@ -1779,6 +1779,61 @@ if (!isNaN(slotH)) state.selectedSlot.height = slotH * 10;
                     updateSyncStatus('Ligplaatsnaam gewijzigd');
                 }
             }
+
+    // Zoom & pan instellingen
+let scale = 1;
+let translateX = 0;
+let translateY = 0;
+let isPanning = false;
+let startX, startY;
+
+function updateTransform() {
+    harbor.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
+harbor.addEventListener('wheel', function (e) {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    const zoomIntensity = 0.1;
+    const delta = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+    const rect = harbor.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const zoomX = (offsetX - translateX) / scale;
+    const zoomY = (offsetY - translateY) / scale;
+
+    scale *= delta;
+    translateX = offsetX - zoomX * scale;
+    translateY = offsetY - zoomY * scale;
+
+    updateTransform();
+}, { passive: false });
+
+harbor.addEventListener('mousedown', function (e) {
+    if (e.button === 1) {
+        isPanning = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        harbor.classList.add('panning');
+        e.preventDefault();
+    }
+});
+
+window.addEventListener('mousemove', function (e) {
+    if (!isPanning) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    updateTransform();
+});
+
+window.addEventListener('mouseup', function (e) {
+    if (e.button === 1) {
+        isPanning = false;
+        harbor.classList.remove('panning');
+    }
+});
+
         });
   </script>
  </body>
