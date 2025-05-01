@@ -470,9 +470,13 @@
     </div>
     <div class="slot-management">
      <div class="control-group">
-          <h2 class="section-title">
-      Ligplaats Beheer
-     </h2>
+          <h2 class="section-title">Ligplaats Beheer</h2>
+       <!--<div class="control-group">-->
+      <label for="slotName">
+       Ligplaats Naam:
+      </label>
+      <input id="slotName" placeholder="Bijv. Ligplaats 1" type="text"/>
+     </div>
       <label for="slotWidth">
        Ligplaats Breedte (m):
       </label>
@@ -482,12 +486,7 @@
       </label>
       <input id="slotHeight" min="0.5" step="0.1" type="number"/>
      </div>
-     <div class="control-group">
-      <label for="slotName">
-       Ligplaats Naam:
-      </label>
-      <input id="slotName" placeholder="Bijv. Ligplaats 1" type="text"/>
-     </div>
+    
      <div class="buttons">
       <button class="success" id="saveSlot">
        Ligplaats Opslaan
