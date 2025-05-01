@@ -89,6 +89,15 @@
     cursor: grab;
 }
 
+   #harborCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5000px; /* of nog groter indien nodig */
+  height: 5000px;
+  transform-origin: 0 0;
+}
+
 #harbor.panning {
     cursor: grabbing;
 }
@@ -402,6 +411,7 @@
      </button>
     </div>
     <div class="harbor-container" id="harbor">
+     <div id="harborCanvas"></div>
     </div>
    </div>
    <div class="management-panel">
@@ -724,6 +734,7 @@
 
             // DOM elements
             const harbor = document.getElementById('harbor');
+            const harborCanvas = document.getElementById('harborCanvas');
             const noSelection = document.getElementById('noSelection');
             const pierInfoDisplay = document.getElementById('pierInfoDisplay');
             const slotInfoDisplay = document.getElementById('slotInfoDisplay');
@@ -1041,7 +1052,7 @@
             }
 
             function renderHarbor() {
-                harbor.innerHTML = '';
+                harborCanvas.innerHTML = '';
                 
                 // Render piers
                 state.piers.forEach(pier => {
@@ -1071,7 +1082,7 @@
                         }
                     });
                     
-                    harbor.appendChild(pierEl);
+                    harborCanvas.appendChild(pierEl);
                 });
                 
                 // Render slots
@@ -1132,7 +1143,7 @@
                         }
                     });
                     
-                    harbor.appendChild(slotEl);
+                    harborCanvas.appendChild(slotEl);
                 });
                 
                 // Render temporary elements
@@ -1145,7 +1156,7 @@
                     tempPierEl.style.top = `${state.tempPier.y}px`;
                     tempPierEl.style.width = `${Math.abs(state.tempPier.width)}px`;
                     tempPierEl.style.height = `${Math.abs(state.tempPier.height)}px`;
-                    harbor.appendChild(tempPierEl);
+                    harborCanvas.appendChild(tempPierEl);
                 }
                 
                 if (state.tempSlot) {
@@ -1157,7 +1168,7 @@
                     slotEl.style.top = `${state.tempSlot.y}px`;
                     slotEl.style.width = `${Math.abs(state.tempSlot.width)}px`;
                     slotEl.style.height = `${Math.abs(state.tempSlot.height)}px`;
-                    harbor.appendChild(slotEl);
+                    harborCanvas.appendChild(slotEl);
                 }
                 
                 // Render boats
@@ -1199,7 +1210,7 @@
                         }
                     });
                     
-                    harbor.appendChild(boatEl);
+                    harborCanvas.appendChild(boatEl);
                 });
             }
             
@@ -1801,7 +1812,7 @@ let isPanning = false;
 let startX, startY;
 
 function updateTransform() {
-    harbor.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    harborCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
 
 harbor.addEventListener('wheel', function (e) {
