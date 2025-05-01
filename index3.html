@@ -1231,7 +1231,9 @@ function snapToGrid(value) {
                     harborCanvas.appendChild(boatEl);
                 });
             }
-            
+
+    enablePierDragging();
+
             function checkCollision(boat) {
                 // Check if boat is outside slot bounds (if assigned to a slot)
                 if (boat.slotId) {
@@ -1894,6 +1896,43 @@ document.getElementById('toggleGridBtn').addEventListener('click', () => {
 });
 
 
+function enablePierDragging() {
+    const piers = document.querySelectorAll('.pier');
+
+    piers.forEach(pierEl => {
+        let isDragging = false;
+        let offsetX, offsetY;
+        const pierId = parseInt(pierEl.dataset.id);
+        const pier = state.piers.find(p => p.id === pierId);
+
+        pierEl.addEventListener('mousedown', function(e) {
+            if (state.drawingMode !== 'select' || e.button !== 0) return;
+            isDragging = true;
+            offsetX = e.offsetX;
+            offsetY = e.offsetY;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+
+            const harborRect = harborCanvas.getBoundingClientRect();
+            const newX = e.clientX - harborRect.left - offsetX;
+            const newY = e.clientY - harborRect.top - offsetY;
+
+            pier.x = snapToGrid(newX);
+            pier.y = snapToGrid(newY);
+            renderHarbor();
+        });
+
+        window.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                savePiersToFirebase();
+            }
+        });
+    });
+}
 
 
 
