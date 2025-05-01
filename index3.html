@@ -414,6 +414,7 @@
      <button class="secondary" id="drawSlotMode">Ligplaats Modus</button>
      <button class="danger" id="deleteMode">Verwijder Modus</button>
      <button class="secondary" id="resetZoomBtn">Reset Zoom</button>
+     <button class="secondary" id="toggleGridBtn">Raster Aan/Uit</button>
     </div>
     <div class="harbor-container" id="harbor">
      <div id="harborCanvas"></div>
@@ -1875,6 +1876,11 @@ window.addEventListener('mouseup', function (e) {
     translateY = 0;
     updateTransform();
 });
+
+    document.getElementById('toggleGridBtn').addEventListener('click', () => {
+    harbor.classList.toggle('show-grid');
+});
+
 
 
         });
