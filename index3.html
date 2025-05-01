@@ -1901,6 +1901,7 @@ document.getElementById('toggleGridBtn').addEventListener('click', () => {
 function enablePierDragging() {
     const piers = document.querySelectorAll('.pier');
     let isDraggingPier = false;
+    let dragStarted = false;
     let currentPier = null;
     let offsetX = 0, offsetY = 0;
     let startX = 0, startY = 0;
@@ -1912,14 +1913,27 @@ function enablePierDragging() {
         pierEl.addEventListener('mousedown', function(e) {
             if (state.drawingMode !== 'select' || e.button !== 0) return;
             isDraggingPier = true;
+            dragStarted = false;
             currentPier = pier;
             offsetX = e.offsetX;
             offsetY = e.offsetY;
             startX = e.clientX;
             startY = e.clientY;
+        });
 
-            // voorkom dat klik direct selectie verstoort
-            e.stopPropagation();
+        pierEl.addEventListener('click', function(e) {
+            if (dragStarted) {
+                // voorkom klik na slepen
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+            if (state.drawingMode === 'select') {
+                state.selectedPier = pier;
+                state.selectedSlot = null;
+                state.selectedBoat = null;
+                updateUI();
+            }
         });
     });
 
@@ -1928,7 +1942,9 @@ function enablePierDragging() {
 
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
-        if (dx < 3 && dy < 3) return;
+        if (dx > 3 || dy > 3) dragStarted = true;
+
+        if (!dragStarted) return;
 
         const harborRect = harborCanvas.getBoundingClientRect();
         const newX = e.clientX - harborRect.left - offsetX;
@@ -1940,18 +1956,14 @@ function enablePierDragging() {
     });
 
     window.addEventListener('mouseup', function(e) {
-        if (!isDraggingPier || !currentPier) return;
+        if (isDraggingPier && dragStarted) {
+            savePiersToFirebase();
+        }
         isDraggingPier = false;
-
-        savePiersToFirebase();
+        dragStarted = false;
         currentPier = null;
     });
 }
-
-
-
-
-
 
         });
   </script>
