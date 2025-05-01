@@ -403,12 +403,9 @@
      <button class="secondary" id="drawPierMode">
       Steiger Modus
      </button>
-     <button class="secondary" id="drawSlotMode">
-      Ligplaats Modus
-     </button>
-     <button class="danger" id="deleteMode">
-      Verwijder Modus
-     </button>
+     <button class="secondary" id="drawSlotMode">Ligplaats Modus</button>
+     <button class="danger" id="deleteMode">Verwijder Modus</button>
+     <button class="secondary" id="resetZoomBtn">Reset Zoom</button>
     </div>
     <div class="harbor-container" id="harbor">
      <div id="harborCanvas"></div>
@@ -1857,6 +1854,14 @@ window.addEventListener('mouseup', function (e) {
         harbor.classList.remove('panning');
     }
 });
+
+    document.getElementById('resetZoomBtn').addEventListener('click', () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    updateTransform();
+});
+
 
         });
   </script>
