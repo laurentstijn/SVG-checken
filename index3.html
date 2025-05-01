@@ -73,10 +73,15 @@
     position: relative;
     width: 100%;
     height: 100%;
+    transform-origin: 0 0;
+    transition: transform 0.05s ease;
+    cursor: grab;
 }
 
-
-        
+#harbor.panning {
+    cursor: grabbing;
+}
+ 
         .pier {
             position: absolute;
             background-color: #8B4513;
@@ -699,6 +704,61 @@
                 messagingSenderId: "180262088073",
                 appId: "1:180262088073:web:6470e50e3ad8a587ef8558"
             };
+    
+    // Zoom & pan instellingen
+let scale = 1;
+let translateX = 0;
+let translateY = 0;
+let isPanning = false;
+let startX, startY;
+
+function updateTransform() {
+    harbor.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
+harbor.addEventListener('wheel', function (e) {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    const zoomIntensity = 0.1;
+    const delta = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+    const rect = harbor.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const zoomX = (offsetX - translateX) / scale;
+    const zoomY = (offsetY - translateY) / scale;
+
+    scale *= delta;
+    translateX = offsetX - zoomX * scale;
+    translateY = offsetY - zoomY * scale;
+
+    updateTransform();
+}, { passive: false });
+
+harbor.addEventListener('mousedown', function (e) {
+    if (e.button === 1) {
+        isPanning = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        harbor.classList.add('panning');
+        e.preventDefault();
+    }
+});
+
+window.addEventListener('mousemove', function (e) {
+    if (!isPanning) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    updateTransform();
+});
+
+window.addEventListener('mouseup', function (e) {
+    if (e.button === 1) {
+        isPanning = false;
+        harbor.classList.remove('panning');
+    }
+});
+
 
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
