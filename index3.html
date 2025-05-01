@@ -841,9 +841,9 @@ function snapToGrid(value) {
                 document.getElementById('cancelBoatEdit').addEventListener('click', cancelBoatEdit);
                 
                 // Harbor events
-                harbor.addEventListener('mousedown', startDrawing);
-                harbor.addEventListener('mousemove', continueDrawing);
-                harbor.addEventListener('mouseup', finishDrawing);
+                harborCanvas.addEventListener('mousedown', startDrawing);
+                harborCanvas.addEventListener('mousemove', continueDrawing);
+                harborCanvas.addEventListener('mouseup', finishDrawing);
                 harbor.addEventListener('click', handleHarborClick);
                 
                 // Close context menu when clicking elsewhere
@@ -954,7 +954,7 @@ function snapToGrid(value) {
 
             // Drawing functions
       function startDrawing(e) {
-    if (e.target !== harbor) return;
+    if (e.target !== 0) return;
 
     state.isDrawing = true;
 
