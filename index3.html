@@ -1900,34 +1900,68 @@ document.getElementById('toggleGridBtn').addEventListener('click', () => {
 
 function enablePierDragging() {
     const piers = document.querySelectorAll('.pier');
-    let isDraggingPier = false;
-    let dragStarted = false;
-    let currentPier = null;
-    let offsetX = 0, offsetY = 0;
-    let startX = 0, startY = 0;
 
     piers.forEach(pierEl => {
+        let isDragging = false;
+        let moved = false;
+        let offsetX = 0;
+        let offsetY = 0;
+        let startX = 0;
+        let startY = 0;
         const pierId = parseInt(pierEl.dataset.id);
         const pier = state.piers.find(p => p.id === pierId);
 
-        pierEl.addEventListener('mousedown', function(e) {
+        pierEl.addEventListener('mousedown', function (e) {
             if (state.drawingMode !== 'select' || e.button !== 0) return;
-            isDraggingPier = true;
-            dragStarted = false;
-            currentPier = pier;
+
+            isDragging = true;
+            moved = false;
             offsetX = e.offsetX;
             offsetY = e.offsetY;
             startX = e.clientX;
             startY = e.clientY;
         });
 
-        pierEl.addEventListener('click', function(e) {
-            if (dragStarted) {
-                // voorkom klik na slepen
+        window.addEventListener('mousemove', function (e) {
+            if (!isDragging) return;
+
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                moved = true;
+
+                const harborRect = harborCanvas.getBoundingClientRect();
+                const newX = e.clientX - harborRect.left - offsetX;
+                const newY = e.clientY - harborRect.top - offsetY;
+
+                pier.x = snapToGrid(newX);
+                pier.y = snapToGrid(newY);
+
+                // ⬅️ Belangrijk: herbevestig selectie zodat highlight blijft
+                state.selectedPier = pier;
+                state.selectedSlot = null;
+                state.selectedBoat = null;
+
+                renderHarbor();
+            }
+        });
+
+        window.addEventListener('mouseup', function (e) {
+            if (isDragging && moved) {
+                savePiersToFirebase();
+            }
+            isDragging = false;
+            moved = false;
+        });
+
+        pierEl.addEventListener('click', function (e) {
+            if (moved) {
                 e.stopPropagation();
                 e.preventDefault();
                 return;
             }
+
             if (state.drawingMode === 'select') {
                 state.selectedPier = pier;
                 state.selectedSlot = null;
@@ -1936,34 +1970,8 @@ function enablePierDragging() {
             }
         });
     });
-
-    window.addEventListener('mousemove', function(e) {
-        if (!isDraggingPier || !currentPier) return;
-
-        const dx = Math.abs(e.clientX - startX);
-        const dy = Math.abs(e.clientY - startY);
-        if (dx > 3 || dy > 3) dragStarted = true;
-
-        if (!dragStarted) return;
-
-        const harborRect = harborCanvas.getBoundingClientRect();
-        const newX = e.clientX - harborRect.left - offsetX;
-        const newY = e.clientY - harborRect.top - offsetY;
-
-        currentPier.x = snapToGrid(newX);
-        currentPier.y = snapToGrid(newY);
-        renderHarbor();
-    });
-
-    window.addEventListener('mouseup', function(e) {
-        if (isDraggingPier && dragStarted) {
-            savePiersToFirebase();
-        }
-        isDraggingPier = false;
-        dragStarted = false;
-        currentPier = null;
-    });
 }
+
 
         });
   </script>
