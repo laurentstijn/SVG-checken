@@ -2184,13 +2184,68 @@ function enableBoatDragging() {
 
         window.addEventListener('mouseup', function (e) {
             if (isDragging && moved) {
+                const previousSlot = state.slots.find(s => s.id === boat.slotId);
+                let newAssignedSlot = null;
+
+                // Zoek vrije slot waar boot in past
+                for (const slot of state.slots) {
+                    const fits = !slot.occupied &&
+                        boat.x >= slot.x &&
+                        boat.y >= slot.y &&
+                        boat.x + boat.width <= slot.x + slot.width &&
+                        boat.y + boat.height <= slot.y + slot.height;
+
+                    if (fits) {
+                        newAssignedSlot = slot;
+                        break;
+                    }
+                }
+
+                if (newAssignedSlot) {
+                    // ✅ Boot koppelen aan nieuwe slot
+                    if (previousSlot && previousSlot.id !== newAssignedSlot.id) {
+                        previousSlot.occupied = false;
+                        previousSlot.boatId = null;
+                    }
+
+                    newAssignedSlot.occupied = true;
+                    newAssignedSlot.boatId = boat.id;
+                    boat.slotId = newAssignedSlot.id;
+                    boat.x = newAssignedSlot.x;
+                    boat.y = newAssignedSlot.y;
+                } else {
+                    // ❌ Boot past nergens → losmaken
+                    if (previousSlot) {
+                        const stillInside = (
+                            boat.x >= previousSlot.x &&
+                            boat.y >= previousSlot.y &&
+                            boat.x + boat.width <= previousSlot.x + previousSlot.width &&
+                            boat.y + boat.height <= previousSlot.y + previousSlot.height
+                        );
+
+                        if (!stillInside) {
+                            previousSlot.occupied = false;
+                            previousSlot.boatId = null;
+                            boat.slotId = null;
+                        }
+                    } else {
+                        boat.slotId = null;
+                    }
+                }
+
+                // Opslaan
                 saveBoatsToFirebase();
+                saveSlotsToFirebase();
+                updateSyncStatus('Ligplaatsen bijgewerkt na slepen');
+                updateUI();
             }
+
             isDragging = false;
             moved = false;
         });
     });
 }
+
 });
   
 
