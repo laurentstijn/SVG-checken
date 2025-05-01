@@ -94,7 +94,7 @@
   left: -2500px;
   width: 10000px;
   height: 10000px;
-     background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+  background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
                     linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
   background-size: 20px 20px; /* rastergrootte van 20px */
   position: absolute;
@@ -103,6 +103,14 @@
   width: 5000px; /* of nog groter indien nodig */
   height: 5000px;
   transform-origin: 0 0;
+  pointer-events: none;
+}
+
+
+
+
+.pier, .slot, .boat {
+  pointer-events: auto;
 }
 
 /*   .harbor-container.show-grid #harborCanvas {
@@ -1911,16 +1919,23 @@ function enablePierDragging() {
         const pierId = parseInt(pierEl.dataset.id);
         const pier = state.piers.find(p => p.id === pierId);
 
-        pierEl.addEventListener('mousedown', function (e) {
-            if (state.drawingMode !== 'select' || e.button !== 0) return;
+     pierEl.addEventListener('mousedown', function (e) {
+    if (state.drawingMode !== 'select' || e.button !== 0) return;
 
-            isDragging = true;
-            moved = false;
-            offsetX = e.offsetX;
-            offsetY = e.offsetY;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
+    // ✅ selecteer direct bij aanklikken
+    state.selectedPier = pier;
+    state.selectedSlot = null;
+    state.selectedBoat = null;
+    updateUI();
+
+    isDragging = true;
+    moved = false;
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+    startX = e.clientX;
+    startY = e.clientY;
+});
+
 
         window.addEventListener('mousemove', function (e) {
             if (!isDragging) return;
