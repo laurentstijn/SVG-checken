@@ -996,25 +996,27 @@ function snapToGrid(value) {
                 }, 3000);
             }
 
-            // Drawing functions
-      function startDrawing(e) {
-    if (e.button !== 0) return;
-
+         function startDrawing(e) {
+    if (e.button !== 0) return; // Alleen linker muisknop
     state.isDrawing = true;
+
+    const rect = harbor.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left - translateX) / scale;
+    const mouseY = (e.clientY - rect.top - translateY) / scale;
 
     if (state.drawingMode === 'pier') {
         state.tempPier = {
-            x: snapToGrid(e.offsetX),
-            y: snapToGrid(e.offsetY),
+            x: snapToGrid(mouseX),
+            y: snapToGrid(mouseY),
             width: 0,
             height: 0
         };
     } else if (state.drawingMode === 'slot') {
         state.tempSlot = {
-            x: snapToGrid(e.offsetX),
-            y: snapToGrid(e.offsetY),
-            width: GRID_SIZE * 2,
-            height: GRID_SIZE * 2
+            x: snapToGrid(mouseX),
+            y: snapToGrid(mouseY),
+            width: 0,
+            height: 0
         };
     }
 
@@ -1022,73 +1024,71 @@ function snapToGrid(value) {
 }
 
 
-          function continueDrawing(e) {
+        function continueDrawing(e) {
     if (!state.isDrawing) return;
 
-    if (state.drawingMode === 'pier') {
-        state.tempPier.width = snapToGrid(e.offsetX) - state.tempPier.x;
-        state.tempPier.height = snapToGrid(e.offsetY) - state.tempPier.y;
-    } else if (state.drawingMode === 'slot') {
-        state.tempSlot.width = snapToGrid(e.offsetX) - state.tempSlot.x;
-        state.tempSlot.height = snapToGrid(e.offsetY) - state.tempSlot.y;
+    const rect = harbor.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left - translateX) / scale;
+    const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+    if (state.drawingMode === 'pier' && state.tempPier) {
+        state.tempPier.width = snapToGrid(mouseX) - state.tempPier.x;
+        state.tempPier.height = snapToGrid(mouseY) - state.tempPier.y;
+    } else if (state.drawingMode === 'slot' && state.tempSlot) {
+        state.tempSlot.width = snapToGrid(mouseX) - state.tempSlot.x;
+        state.tempSlot.height = snapToGrid(mouseY) - state.tempSlot.y;
     }
 
     renderHarbor();
 }
 
 
+
             function finishDrawing(e) {
-                if (!state.isDrawing) return;
-                state.isDrawing = false;
-                
-                if (state.drawingMode === 'pier') {
-                    // Add new pier
-                    const newPier = {
-                        id: state.nextPierId++,
-                        name: `Steiger ${state.nextPierId}`,
-                        type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
-                        x: state.tempPier.x,
-                        y: state.tempPier.y,
-                        width: Math.abs(state.tempPier.width),
-                        height: Math.abs(state.tempPier.height)
-                    };
-                    
-                    state.piers.push(newPier);
-                    savePiersToFirebase();
-                    state.tempPier = null;
-                    
-                    // Select the new pier
-                    state.selectedPier = newPier;
-                    state.selectedSlot = null;
-                    state.selectedBoat = null;
-                } else if (state.drawingMode === 'slot') {
-                    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
-                    if (slotName === null) return; // User cancelled
-                    
-                    const newSlot = {
-                        id: state.nextSlotId++,
-                        name: slotName || `Ligplaats ${state.nextSlotId}`,
-                        x: state.tempSlot.x,
-                        y: state.tempSlot.y,
-                        width: Math.abs(state.tempSlot.width),
-                        height: Math.abs(state.tempSlot.height),
-                        occupied: false,
-                        boatId: null
-                    };
-                    
-                    state.slots.push(newSlot);
-                    saveSlotsToFirebase();
-                    state.tempSlot = null;
-                    
-                    // Select the new slot
-                    state.selectedSlot = newSlot;
-                    state.selectedPier = null;
-                    state.selectedBoat = null;
-                }
-                
-                renderHarbor();
-                updateUI();
-            }
+    if (!state.isDrawing) return;
+    state.isDrawing = false;
+
+    if (state.drawingMode === 'pier' && state.tempPier) {
+        const newPier = {
+            id: state.nextPierId++,
+            name: `Steiger ${state.nextPierId}`,
+            type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
+            x: state.tempPier.x,
+            y: state.tempPier.y,
+            width: Math.abs(state.tempPier.width),
+            height: Math.abs(state.tempPier.height)
+        };
+        state.piers.push(newPier);
+        savePiersToFirebase();
+        state.tempPier = null;
+        state.selectedPier = newPier;
+        state.selectedSlot = null;
+        state.selectedBoat = null;
+    } else if (state.drawingMode === 'slot' && state.tempSlot) {
+        const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
+        if (slotName === null) return;
+        const newSlot = {
+            id: state.nextSlotId++,
+            name: slotName || `Ligplaats ${state.nextSlotId}`,
+            x: state.tempSlot.x,
+            y: state.tempSlot.y,
+            width: Math.abs(state.tempSlot.width),
+            height: Math.abs(state.tempSlot.height),
+            occupied: false,
+            boatId: null
+        };
+        state.slots.push(newSlot);
+        saveSlotsToFirebase();
+        state.tempSlot = null;
+        state.selectedSlot = newSlot;
+        state.selectedPier = null;
+        state.selectedBoat = null;
+    }
+
+    renderHarbor();
+    updateUI();
+}
+
 
             function handleHarborClick(e) {
                 if (e.target === harbor && state.drawingMode === 'select') {
