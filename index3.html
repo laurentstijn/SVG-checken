@@ -1,128 +1,133 @@
 <!DOCTYPE html>
 <html lang="nl">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Jachthaven Beheer
-  </title>
-  <style>
-   body {
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>
+        Jachthaven Beheer
+    </title>
+    <style>
+        body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
             background-color: #f5f9ff;
             color: #333;
         }
-        
+
         h1 {
             color: #0066cc;
             text-align: center;
             margin-bottom: 30px;
         }
-        
-.app-container {
-    display: flex;
-    gap: 20px;
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
 
-.drawing-panel {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 20px;
-    height: 90vh;
-    min-height: 600px;
-    min-width: 0;
-    overflow: hidden; /* voorkomt dat haven over de rand heen valt */
-    position: relative;
-}
-
-#harborWrapper {
-    z-index: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-        
-.drawing-controls {
-     display: flex;
-     gap: 10px;
-     margin-bottom: 15px;
+        .app-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
-        
-.harbor-container {
-    background-color: #87CEEB;
-    border-radius: 8px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    margin-top: 15px;
-}
 
-  #harbor {
-    flex: 1;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transform-origin: 0 0;
-    transition: transform 0.05s ease;
-    cursor: grab;
-}
+        .drawing-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 90vh;
+            min-height: 600px;
+            min-width: 0;
+            overflow: hidden;
+            /* voorkomt dat haven over de rand heen valt */
+            position: relative;
+        }
 
-  #harborCanvas {
+        #harborWrapper {
+            z-index: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .drawing-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .harbor-container {
+            background-color: #87CEEB;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        #harbor {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-origin: 0 0;
+            transition: transform 0.05s ease;
+            cursor: grab;
+        }
+
+        #harborCanvas {
+            border: 2px solid #ccc;
+            /* visuele canvasrand */
+
+            top: -2500px;
+            left: -2500px;
+            width: 10000px;
+            height: 10000px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 10px 10px;
+            /* rastergrootte van 20px */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5000px;
+            /* of nog groter indien nodig */
+            height: 5000px;
+            transform-origin: 0 0;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+
+
+
+
+        .pier,
+        .slot,
+        .boat {
+            pointer-events: auto;
+        }
+
+        /*   .harbor-container.show-grid #harborCanvas {
   border: 2px solid #ccc; /* visuele canvasrand */
 
-  top: -2500px;
-  left: -2500px;
-  width: 10000px;
-  height: 10000px;
-  background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-  background-size: 20px 20px; /* rastergrootte van 20px */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5000px; /* of nog groter indien nodig */
-  height: 5000px;
-  transform-origin: 0 0;
-  pointer-events: auto;
-  z-index: 10;
-}
+        background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
 
+        */ #harbor.panning {
+            cursor: grabbing;
+        }
 
-
-
-
-.pier, .slot, .boat {
-  pointer-events: auto;
-}
-
-/*   .harbor-container.show-grid #harborCanvas {
-  border: 2px solid #ccc; /* visuele canvasrand */
-
-    background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-}*/
-
-
-
-#harbor.panning {
-    cursor: grabbing;
-}
- 
         .pier {
             position: absolute;
             background-color: #8B4513;
@@ -130,12 +135,12 @@
             cursor: move;
             z-index: 1;
         }
-        
+
         .pier.selected {
-             box-shadow: 0 0 0 3px yellow;
+            box-shadow: 0 0 0 3px yellow;
             z-index: 5;
         }
-        
+
         .slot {
             position: absolute;
             background-color: rgba(255, 255, 255, 0.2);
@@ -148,15 +153,15 @@
             box-shadow: 0 0 0 3px yellow;
             z-index: 5;
         }
-        
+
         .slot.occupied {
             background-color: rgba(255, 0, 0, 0.2);
         }
-        
+
         .slot.available {
             background-color: rgba(0, 255, 0, 0.2);
         }
-        
+
         .boat {
             position: absolute;
             border-radius: 4px;
@@ -175,65 +180,67 @@
             box-sizing: border-box;
             word-break: break-word;
         }
-        
+
         .boat:hover {
             transform: scale(1.05);
             z-index: 10;
         }
-        
+
         .boat.selected {
             box-shadow: 0 0 0 3px yellow;
             z-index: 5;
         }
-        
+
         .boat-name {
             font-size: 11px;
             font-weight: bold;
             margin-bottom: 2px;
         }
-        
+
         .boat-type {
             font-size: 9px;
         }
-        
-.management-panel {
-    flex: 0 0 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-width: 400px;
-    max-width: 5000px;
-    z-index: 1;
-    position: relative;
-    height: 92vh;
-    overflow-y: auto;
-}
-        
-        .pier-management, .slot-management, .boat-management {
+
+        .management-panel {
+            flex: 0 0 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 400px;
+            max-width: 5000px;
+            z-index: 1;
+            position: relative;
+            height: 92vh;
+            overflow-y: auto;
+        }
+
+        .pier-management,
+        .slot-management,
+        .boat-management {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .section-title {
             color: #0066cc;
             margin-top: 0;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .control-group {
             margin-bottom: 15px;
         }
-        
+
         .control-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
             color: #0066cc;
         }
-        
+
         .control-group input,
         .control-group select {
             width: 100%;
@@ -242,13 +249,13 @@
             border-radius: 4px;
             font-size: 14px;
         }
-        
+
         .buttons {
             display: flex;
             gap: 10px;
             margin-top: 15px;
         }
-        
+
         button {
             padding: 8px 15px;
             color: white;
@@ -258,74 +265,81 @@
             font-size: 14px;
             transition: background-color 0.3s;
         }
-        
+
+        .toolbar-button.active {
+            background-color: #007bff;
+            color: white;
+            border: 2px solid #0056b3;
+        }
+
+
         button.primary {
             background-color: #0066cc;
         }
-        
+
         button.primary:hover {
             background-color: #0055aa;
         }
-        
+
         button.secondary {
             background-color: #6c757d;
         }
-        
+
         button.secondary:hover {
             background-color: #5a6268;
         }
-        
+
         button.success {
             background-color: #28a745;
         }
-        
+
         button.success:hover {
             background-color: #218838;
         }
-        
+
         button.danger {
             background-color: #dc3545;
         }
-        
+
         button.danger:hover {
             background-color: #c82333;
         }
-        
+
         .info-panel {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             flex-grow: 1;
         }
-        
+
         .info-grid {
             display: grid;
             grid-template-columns: 120px 1fr;
             gap: 10px;
             margin: 15px 0;
         }
-        
+
         .info-label {
             font-weight: bold;
             color: #555;
             align-self: center;
         }
-        
+
         .info-value {
             padding: 8px;
             background-color: #f8f9fa;
             border-radius: 4px;
             min-height: 20px;
         }
-        
+
         .no-selection {
             text-align: center;
             color: #666;
             padding: 50px 20px;
             font-style: italic;
         }
-        
+
         .edit-form {
             margin-top: 20px;
             padding: 15px;
@@ -333,23 +347,23 @@
             border-radius: 8px;
             border: 1px solid #ddd;
         }
-        
+
         .form-group {
             margin-bottom: 12px;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+
         .form-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
         }
-        
+
         .sync-status {
             position: fixed;
             bottom: 10px;
@@ -360,11 +374,11 @@
             border-radius: 4px;
             font-size: 12px;
         }
-        
+
         .drawing-mode-active {
             box-shadow: 0 0 0 3px #0066cc;
         }
-        
+
         .temp-element {
             opacity: 0.7;
             pointer-events: none;
@@ -386,12 +400,12 @@
             background: white;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             z-index: 100;
             padding: 10px;
             display: none;
         }
-        
+
         .slot-context-menu button {
             display: block;
             width: 100%;
@@ -403,342 +417,337 @@
             font-size: 8px;
             margin-top: 2px;
         }
-        
+
         .collision-warning {
             box-shadow: 0 0 5px 2px red;
         }
-  </style>
- </head>
- <body>
-  <h1>
-   Jachthaven Beheersysteem
-  </h1>
-  <div class="app-container">
-   <div class="drawing-panel">
-    <h2 class="section-title">
-     Haven Tekening
-    </h2>
-    <div class="drawing-controls">
-     <button class="primary" id="selectMode">Selectie Modus</button>
-     <button class="secondary" id="drawPierMode">Steiger Modus</button> 
-     <button class="secondary" id="drawSlotMode">Ligplaats Modus</button>
-     <button class="danger" id="deleteMode">Verwijder Modus</button>
-     <button class="secondary" id="resetZoomBtn">Reset Zoom</button>
-     <button class="secondary" id="toggleGridBtn">Raster Aan/Uit</button>
+    </style>
+</head>
+
+<body>
+    <h1>
+        Jachthaven Beheersysteem
+    </h1>
+    <div class="app-container">
+        <div class="drawing-panel">
+            <h2 class="section-title">
+                Haven Tekening
+            </h2>
+            <div class="drawing-controls">
+                <button class="primary" id="selectMode">Selectie Modus</button>
+                <button class="secondary" id="drawPierMode">Steiger Modus</button>
+                <button class="secondary" id="drawSlotMode">Ligplaats Modus</button>
+                <!--<button class="danger" id="deleteMode">Verwijder Modus</button>-->
+                <button class="secondary" id="resetZoomBtn">Reset Zoom</button>
+                <button class="secondary" id="toggleGridBtn">Raster Aan/Uit</button>
+            </div>
+            <div class="harbor-container" id="harbor">
+                <div id="harborCanvas"></div>
+            </div>
+        </div>
+        <div class="management-panel">
+            <div class="pier-management">
+                <div class="control-group">
+                    <h2 class="section-title">
+                        Steiger Beheer
+                    </h2>
+                    <label for="pierWidth">
+                        Steiger Breedte (m):
+                    </label>
+                    <input id="pierWidth" min="0.5" step="0.1" type="number" />
+                    <label for="pierHeight">
+                        Steiger Hoogte (m):
+                    </label>
+                    <input id="pierHeight" min="0.5" step="0.1" type="number" />
+                </div>
+
+                <div class="control-group">
+                    <label for="pierName">
+                        Steiger Naam:
+                    </label>
+                    <input id="pierName" placeholder="Bijv. Steiger A" type="text" />
+                </div>
+                <div class="buttons">
+                    <button class="success" id="savePier">
+                        Steiger Opslaan
+                    </button>
+                    <button class="danger" id="removePier">
+                        Verwijderen
+                    </button>
+                </div>
+            </div>
+            <div class="slot-management">
+                <div class="control-group">
+                    <h2 class="section-title">Ligplaats Beheer</h2>
+                    <div class="control-group">
+                        <label for="slotName">
+                            Ligplaats Naam:
+                        </label>
+                        <input id="slotName" placeholder="Bijv. Ligplaats 1" type="text" />
+                    </div>
+                    <label for="slotWidth">
+                        Ligplaats Breedte (m):
+                    </label>
+                    <input id="slotWidth" min="0.5" step="0.1" type="number" />
+                    <label for="slotHeight">
+                        Ligplaats Hoogte (m):
+                    </label>
+                    <input id="slotHeight" min="0.5" step="0.1" type="number" />
+                </div>
+
+                <div class="buttons">
+                    <button class="success" id="saveSlot">
+                        Ligplaats Opslaan
+                    </button>
+                    <button class="danger" id="removeSlot">
+                        Verwijderen
+                    </button>
+                </div>
+            </div>
+            <div class="boat-management">
+                <h2 class="section-title">
+                    Boot Beheer
+                </h2>
+                <div class="control-group">
+                    <label for="boatType">
+                        Type Boot:
+                    </label>
+                    <select id="boatType">
+                        <option value="sailboat">
+                            Zeilboot
+                        </option>
+                        <option value="motorboat">
+                            Motorboot
+                        </option>
+                        <option value="yacht">
+                            Jacht
+                        </option>
+                        <option value="small">
+                            Kleine boot
+                        </option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="boatSize">
+                        Grootte (m):
+                    </label>
+                    <input id="boatSize" max="30" min="5" type="number" value="10" />
+                </div>
+                <div class="control-group">
+                    <label for="boatName">
+                        Naam:
+                    </label>
+                    <input id="boatName" placeholder="Bijv. De Zeevaarder" type="text" />
+                </div>
+                <div class="buttons">
+                    <button class="primary" id="addBoat">
+                        Boot Toevoegen
+                    </button>
+                    <button class="danger" id="removeBoat">
+                        Verwijderen
+                    </button>
+                </div>
+            </div>
+            <div class="info-panel">
+                <h2 class="section-title">
+                    Details
+                </h2>
+                <div class="no-selection" id="noSelection">
+                    Selecteer een steiger, ligplaats of boot voor details
+                </div>
+                <div id="pierInfoDisplay" style="display: none;">
+                    <div class="info-grid">
+                        <div class="info-label">
+                            Naam:
+                        </div>
+                        <div class="info-value" id="pierInfoName">
+                        </div>
+                        <div class="info-label">
+                            Type:
+                        </div>
+                        <div class="info-value" id="pierInfoType">
+                        </div>
+                        <div class="info-label">
+                            Breedte:
+                        </div>
+                        <div class="info-value" id="pierInfoWidth">
+                        </div>
+                        <div class="info-label">
+                            Hoogte:
+                        </div>
+                        <div class="info-value" id="pierInfoHeight">
+                        </div>
+                    </div>
+                </div>
+                <div id="slotInfoDisplay" style="display: none;">
+                    <div class="info-grid">
+                        <div class="info-label">
+                            Naam:
+                        </div>
+                        <div class="info-value" id="slotInfoName">
+                        </div>
+                        <div class="info-label">
+                            Status:
+                        </div>
+                        <div class="info-value" id="slotInfoStatus">
+                        </div>
+                        <div class="info-label">
+                            Breedte:
+                        </div>
+                        <div class="info-value" id="slotInfoWidth">
+                        </div>
+                        <div class="info-label">
+                            Hoogte:
+                        </div>
+                        <div class="info-value" id="slotInfoHeight">
+                        </div>
+                        <div class="info-label">
+                            Boot:
+                        </div>
+                        <div class="info-value" id="slotInfoBoat">
+                        </div>
+                    </div>
+                </div>
+                <div id="boatInfoDisplay" style="display: none;">
+                    <div class="info-grid">
+                        <div class="info-label">
+                            Naam:
+                        </div>
+                        <div class="info-value" id="boatInfoName">
+                        </div>
+                        <div class="info-label">
+                            Type:
+                        </div>
+                        <div class="info-value" id="boatInfoType">
+                        </div>
+                        <div class="info-label">
+                            Lengte:
+                        </div>
+                        <div class="info-value" id="boatInfoSize">
+                        </div>
+                        <div class="info-label">
+                            Eigenaar:
+                        </div>
+                        <div class="info-value" id="boatInfoOwner">
+                        </div>
+                        <div class="info-label">
+                            Telefoon:
+                        </div>
+                        <div class="info-value" id="boatInfoPhone">
+                        </div>
+                        <div class="info-label">
+                            Email:
+                        </div>
+                        <div class="info-value" id="boatInfoEmail">
+                        </div>
+                        <div class="info-label">
+                            Ligplaats:
+                        </div>
+                        <div class="info-value" id="boatInfoLocation">
+                        </div>
+                    </div>
+                    <button class="secondary" id="editBoatInfo">
+                        Bewerken
+                    </button>
+                </div>
+                <!-- Bewerkformulier -->
+                <div class="edit-form" id="editBoatForm" style="display: none;">
+                    <h3>
+                        Bootgegevens Bewerken
+                    </h3>
+                    <div class="form-group">
+                        <label for="editBoatName">
+                            Boot Naam:
+                        </label>
+                        <input id="editBoatName" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatOwner">
+                            Eigenaar:
+                        </label>
+                        <input id="editBoatOwner" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatPhone">
+                            Telefoon:
+                        </label>
+                        <input id="editBoatPhone" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatEmail">
+                            Email:
+                        </label>
+                        <input id="editBoatEmail" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatType">
+                            Type Boot:
+                        </label>
+                        <select id="editBoatType">
+                            <option value="sailboat">
+                                Zeilboot
+                            </option>
+                            <option value="motorboat">
+                                Motorboot
+                            </option>
+                            <option value="yacht">
+                                Jacht
+                            </option>
+                            <option value="small">
+                                Kleine boot
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatSize">
+                            Grootte (m):
+                        </label>
+                        <input id="editBoatSize" max="30" min="5" type="number" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatWidth">
+                            Breedte (m):
+                        </label>
+
+                        <input id="editBoatWidth" min="5" type="number" />
+                    </div>
+                    <div class="form-group">
+                        <label for="editBoatSlot">
+                            Ligplaats:
+                        </label>
+                        <select id="editBoatSlot">
+                            <option value="">
+                                Geen ligplaats
+                            </option>
+                            <!-- Opties worden dynamisch ingevuld -->
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button class="success" id="saveBoatInfo">
+                            Opslaan
+                        </button>
+                        <button class="secondary" id="cancelBoatEdit">
+                            Annuleren
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="harbor-container" id="harbor">
-     <div id="harborCanvas"></div>
-    
-
-
-</div>
-   </div>
-   <div class="management-panel">
-    <div class="pier-management">
-     <div class="control-group">
-       <h2 class="section-title">
-      Steiger Beheer
-     </h2>
-      <label for="pierWidth">
-       Steiger Breedte (m):
-      </label>
-      <input id="pierWidth" min="0.5" step="0.1" type="number"/>
-      <label for="pierHeight">
-       Steiger Hoogte (m):
-      </label>
-      <input id="pierHeight" min="0.5" step="0.1" type="number"/>
-     </div>
-    
-     <div class="control-group">
-      <label for="pierName">
-       Steiger Naam:
-      </label>
-      <input id="pierName" placeholder="Bijv. Steiger A" type="text"/>
-     </div>
-     <div class="buttons">
-      <button class="success" id="savePier">
-       Steiger Opslaan
-      </button>
-      <button class="danger" id="removePier">
-       Verwijderen
-      </button>
-     </div>
+    <div class="sync-status" id="syncStatus">
+        Verbonden met Firebase
     </div>
-    <div class="slot-management">
-     <div class="control-group">
-          <h2 class="section-title">Ligplaats Beheer</h2>
-      <div class="control-group">
-      <label for="slotName">
-       Ligplaats Naam:
-      </label>
-      <input id="slotName" placeholder="Bijv. Ligplaats 1" type="text"/>
-     </div>
-      <label for="slotWidth">
-       Ligplaats Breedte (m):
-      </label>
-      <input id="slotWidth" min="0.5" step="0.1" type="number"/>
-      <label for="slotHeight">
-       Ligplaats Hoogte (m):
-      </label>
-      <input id="slotHeight" min="0.5" step="0.1" type="number"/>
-     </div>
-    
-     <div class="buttons">
-      <button class="success" id="saveSlot">
-       Ligplaats Opslaan
-      </button>
-      <button class="danger" id="removeSlot">
-       Verwijderen
-      </button>
-     </div>
-    </div>
-    <div class="boat-management">
-     <h2 class="section-title">
-      Boot Beheer
-     </h2>
-     <div class="control-group">
-      <label for="boatType">
-       Type Boot:
-      </label>
-      <select id="boatType">
-       <option value="sailboat">
-        Zeilboot
-       </option>
-       <option value="motorboat">
-        Motorboot
-       </option>
-       <option value="yacht">
-        Jacht
-       </option>
-       <option value="small">
-        Kleine boot
-       </option>
-      </select>
-     </div>
-     <div class="control-group">
-      <label for="boatSize">
-       Grootte (m):
-      </label>
-      <input id="boatSize" max="30" min="5" type="number" value="10"/>
-     </div>
-     <div class="control-group">
-      <label for="boatName">
-       Naam:
-      </label>
-      <input id="boatName" placeholder="Bijv. De Zeevaarder" type="text"/>
-     </div>
-     <div class="buttons">
-      <button class="primary" id="addBoat">
-       Boot Toevoegen
-      </button>
-      <button class="danger" id="removeBoat">
-       Verwijderen
-      </button>
-     </div>
-    </div>
-    <div class="info-panel">
-     <h2 class="section-title">
-      Details
-     </h2>
-     <div class="no-selection" id="noSelection">
-      Selecteer een steiger, ligplaats of boot voor details
-     </div>
-     <div id="pierInfoDisplay" style="display: none;">
-      <div class="info-grid">
-       <div class="info-label">
-        Naam:
-       </div>
-       <div class="info-value" id="pierInfoName">
-       </div>
-       <div class="info-label">
-        Type:
-       </div>
-       <div class="info-value" id="pierInfoType">
-       </div>
-       <div class="info-label">
-        Breedte:
-       </div>
-       <div class="info-value" id="pierInfoWidth">
-       </div>
-       <div class="info-label">
-        Hoogte:
-       </div>
-       <div class="info-value" id="pierInfoHeight">
-       </div>
-      </div>
-     </div>
-     <div id="slotInfoDisplay" style="display: none;">
-      <div class="info-grid">
-       <div class="info-label">
-        Naam:
-       </div>
-       <div class="info-value" id="slotInfoName">
-       </div>
-       <div class="info-label">
-        Status:
-       </div>
-       <div class="info-value" id="slotInfoStatus">
-       </div>
-       <div class="info-label">
-        Breedte:
-       </div>
-       <div class="info-value" id="slotInfoWidth">
-       </div>
-       <div class="info-label">
-        Hoogte:
-       </div>
-       <div class="info-value" id="slotInfoHeight">
-       </div>
-       <div class="info-label">
-        Boot:
-       </div>
-       <div class="info-value" id="slotInfoBoat">
-       </div>
-      </div>
-     </div>
-     <div id="boatInfoDisplay" style="display: none;">
-      <div class="info-grid">
-       <div class="info-label">
-        Naam:
-       </div>
-       <div class="info-value" id="boatInfoName">
-       </div>
-       <div class="info-label">
-        Type:
-       </div>
-       <div class="info-value" id="boatInfoType">
-       </div>
-       <div class="info-label">
-        Lengte:
-       </div>
-       <div class="info-value" id="boatInfoSize">
-       </div>
-       <div class="info-label">
-        Eigenaar:
-       </div>
-       <div class="info-value" id="boatInfoOwner">
-       </div>
-       <div class="info-label">
-        Telefoon:
-       </div>
-       <div class="info-value" id="boatInfoPhone">
-       </div>
-       <div class="info-label">
-        Email:
-       </div>
-       <div class="info-value" id="boatInfoEmail">
-       </div>
-       <div class="info-label">
-        Ligplaats:
-       </div>
-       <div class="info-value" id="boatInfoLocation">
-       </div>
-      </div>
-      <button class="secondary" id="editBoatInfo">
-       Bewerken
-      </button>
-     </div>
-     <!-- Bewerkformulier -->
-     <div class="edit-form" id="editBoatForm" style="display: none;">
-      <h3>
-       Bootgegevens Bewerken
-      </h3>
-      <div class="form-group">
-       <label for="editBoatName">
-        Boot Naam:
-       </label>
-       <input id="editBoatName" type="text"/>
-      </div>
-      <div class="form-group">
-       <label for="editBoatOwner">
-        Eigenaar:
-       </label>
-       <input id="editBoatOwner" type="text"/>
-      </div>
-      <div class="form-group">
-       <label for="editBoatPhone">
-        Telefoon:
-       </label>
-       <input id="editBoatPhone" type="text"/>
-      </div>
-      <div class="form-group">
-       <label for="editBoatEmail">
-        Email:
-       </label>
-       <input id="editBoatEmail" type="text"/>
-      </div>
-      <div class="form-group">
-       <label for="editBoatType">
-        Type Boot:
-       </label>
-       <select id="editBoatType">
-        <option value="sailboat">
-         Zeilboot
-        </option>
-        <option value="motorboat">
-         Motorboot
-        </option>
-        <option value="yacht">
-         Jacht
-        </option>
-        <option value="small">
-         Kleine boot
-        </option>
-       </select>
-      </div>
-      <div class="form-group">
-       <label for="editBoatSize">
-        Grootte (m):
-       </label>
-       <input id="editBoatSize" max="30" min="5" type="number"/>
-      </div>
-      <div class="form-group">
-  <label for="editBoatWidth">
-   Breedte (m):
-  </label>
-
-  <input id="editBoatWidth" min="5" type="number"/>
-</div>
-      <div class="form-group">
-       <label for="editBoatSlot">
-        Ligplaats:
-       </label>
-       <select id="editBoatSlot">
-        <option value="">
-         Geen ligplaats
-        </option>
-        <!-- Opties worden dynamisch ingevuld -->
-       </select>
-      </div>
-      <div class="form-actions">
-       <button class="success" id="saveBoatInfo">
-        Opslaan
-       </button>
-       <button class="secondary" id="cancelBoatEdit">
-        Annuleren
-       </button>
-      </div>
-     </div>
-    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js">
 
 
-</div>
-   </div>
-  </div>
-  <div class="sync-status" id="syncStatus">
-   Verbonden met Firebase
-  </div>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js">
-  
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js">
 
-</script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js">
-  
 
-</script>
-  <script>
-   document.addEventListener('DOMContentLoaded', function() {
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
             // Firebase configuratie
             const firebaseConfig = {
                 apiKey: "AIzaSyBrvdXyuMpgkC4lFKjQDeHNihzFRbzMANU",
@@ -763,10 +772,10 @@
             const boatInfoDisplay = document.getElementById('boatInfoDisplay');
             const syncStatus = document.getElementById('syncStatus');
 
-    const GRID_SIZE = 20;
-function snapToGrid(value) {
-  return Math.round(value / GRID_SIZE) * GRID_SIZE;
-}
+            const GRID_SIZE = 20;
+            function snapToGrid(value) {
+                return Math.round(value / GRID_SIZE) * GRID_SIZE;
+            }
 
 
             // Application state
@@ -793,9 +802,9 @@ function snapToGrid(value) {
                 yacht: { name: 'Jacht', color: '#9370DB', widthMultiplier: 2, height: 40 },
                 small: { name: 'Kleine boot', color: '#3CB371', widthMultiplier: 1, height: 20 }
             };
-    
+
             const SCALE = 10; // 1 meter = 10 pixels
-            
+
             // Sample owners
             const sampleOwners = [
                 { name: "Jan van Dijk", phone: "06-12345678", email: "jan@voorbeeld.nl" },
@@ -803,13 +812,13 @@ function snapToGrid(value) {
                 { name: "Piet Smit", phone: "06-11223344", email: "piet@voorbeeld.nl" },
                 { name: "Anna de Vries", phone: "06-44332211", email: "anna@voorbeeld.nl" }
             ];
-            
+
             // Create context menu for slots
             const slotContextMenu = document.createElement('div');
             slotContextMenu.className = 'slot-context-menu';
             slotContextMenu.setAttribute('aria-hidden', 'true');
             document.body.appendChild(slotContextMenu);
-            
+
             // Track clicked slot for context menu
             let clickedSlot = null;
 
@@ -822,77 +831,77 @@ function snapToGrid(value) {
                 updateDrawingModeUI();
             }
 
-          function setupEventListeners() {
-    // 🎯 Zorg dat tekenen ALTIJD werkt
-    harborCanvas.addEventListener('mousedown', startDrawing);
-    harborCanvas.addEventListener('mousemove', continueDrawing);
-    harborCanvas.addEventListener('mouseup', finishDrawing);
+            function setupEventListeners() {
+                // 🎯 Zorg dat tekenen ALTIJD werkt
+                harborCanvas.addEventListener('mousedown', startDrawing);
+                harborCanvas.addEventListener('mousemove', continueDrawing);
+                harborCanvas.addEventListener('mouseup', finishDrawing);
 
-    // 🔘 Modus-knoppen
-    document.getElementById('selectMode').addEventListener('click', () => {
-        state.drawingMode = 'select';
-        updateDrawingModeUI();
-    });
+                // 🔘 Modus-knoppen
+                document.getElementById('selectMode').addEventListener('click', () => {
+                    state.drawingMode = 'select';
+                    updateDrawingModeUI();
+                });
 
-    document.getElementById('drawPierMode').addEventListener('click', () => {
-        state.drawingMode = 'pier';
-        updateDrawingModeUI();
-    });
+                document.getElementById('drawPierMode').addEventListener('click', () => {
+                    state.drawingMode = 'pier';
+                    updateDrawingModeUI();
+                });
 
-    document.getElementById('drawSlotMode').addEventListener('click', () => {
-        state.drawingMode = 'slot';
-        updateDrawingModeUI();
-    });
+                document.getElementById('drawSlotMode').addEventListener('click', () => {
+                    state.drawingMode = 'slot';
+                    updateDrawingModeUI();
+                });
 
-    document.getElementById('deleteMode').addEventListener('click', () => {
-        state.drawingMode = 'delete';
-        updateDrawingModeUI();
-    });
+                // document.getElementById('deleteMode').addEventListener('click', () => {
+                //     state.drawingMode = 'delete';
+                //     updateDrawingModeUI();
+                // });
 
-    // ⛴️ Steigerbeheer
-    document.getElementById('savePier').addEventListener('click', savePierDetails);
-    document.getElementById('removePier').addEventListener('click', removeSelectedPier);
+                // ⛴️ Steigerbeheer
+                document.getElementById('savePier').addEventListener('click', savePierDetails);
+                document.getElementById('removePier').addEventListener('click', removeSelectedPier);
 
-    // ⚓ Ligplaatsbeheer
-    document.getElementById('saveSlot').addEventListener('click', saveSlotDetails);
-    document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
+                // ⚓ Ligplaatsbeheer
+                document.getElementById('saveSlot').addEventListener('click', saveSlotDetails);
+                document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
 
-    // 🚤 Bootbeheer
-    document.getElementById('addBoat').addEventListener('click', addBoat);
-    document.getElementById('removeBoat').addEventListener('click', removeSelectedBoat);
+                // 🚤 Bootbeheer
+                document.getElementById('addBoat').addEventListener('click', addBoat);
+                document.getElementById('removeBoat').addEventListener('click', removeSelectedBoat);
 
-    // ✏️ Bootbewerking
-    document.getElementById('editBoatInfo').addEventListener('click', showBoatEditForm);
-    document.getElementById('saveBoatInfo').addEventListener('click', saveBoatInfo);
-    document.getElementById('cancelBoatEdit').addEventListener('click', cancelBoatEdit);
+                // ✏️ Bootbewerking
+                document.getElementById('editBoatInfo').addEventListener('click', showBoatEditForm);
+                document.getElementById('saveBoatInfo').addEventListener('click', saveBoatInfo);
+                document.getElementById('cancelBoatEdit').addEventListener('click', cancelBoatEdit);
 
-    // 🔘 Zoom/reset/raster
-    document.getElementById('resetZoomBtn').addEventListener('click', () => {
-        scale = 1;
-        translateX = 0;
-        translateY = 0;
-        updateTransform();
-    });
+                // 🔘 Zoom/reset/raster
+                document.getElementById('resetZoomBtn').addEventListener('click', () => {
+                    scale = 1;
+                    translateX = 0;
+                    translateY = 0;
+                    updateTransform();
+                });
 
-    document.getElementById('toggleGridBtn').addEventListener('click', () => {
-        gridVisible = !gridVisible;
-        document.getElementById('harborCanvas').style.backgroundImage = gridVisible
-            ? `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                document.getElementById('toggleGridBtn').addEventListener('click', () => {
+                    gridVisible = !gridVisible;
+                    document.getElementById('harborCanvas').style.backgroundImage = gridVisible
+                        ? `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
                linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)`
-            : 'none';
-    });
+                        : 'none';
+                });
 
-    // ❌ Slot contextmenu sluiten
-    document.addEventListener('click', function (e) {
-        if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
-            slotContextMenu.style.display = 'none';
-            slotContextMenu.setAttribute('aria-hidden', 'true');
-        }
-    });
+                // ❌ Slot contextmenu sluiten
+                document.addEventListener('click', function (e) {
+                    if (e.target !== slotContextMenu && !slotContextMenu.contains(e.target)) {
+                        slotContextMenu.style.display = 'none';
+                        slotContextMenu.setAttribute('aria-hidden', 'true');
+                    }
+                });
 
-    // 🖱️ Klik op lege havenruimte
-    harbor.addEventListener('click', handleHarborClick);
-}
+                // 🖱️ Klik op lege havenruimte
+                harbor.addEventListener('click', handleHarborClick);
+            }
 
 
             function setupFirebaseListeners() {
@@ -928,6 +937,13 @@ function snapToGrid(value) {
                             if (state.slots.length > 0) {
                                 state.nextSlotId = Math.max(...state.slots.map(s => s.id)) + 1;
                             }
+                            // Voeg oriëntatie toe aan oude ligplaatsen
+                            state.slots.forEach(slot => {
+                                if (!slot.orientation) {
+                                    slot.orientation = slot.width > slot.height ? 'horizontal' : 'vertical';
+                                }
+                            });
+
                             updateUI();
                             updateSyncStatus('Ligplaatsen bijgewerkt');
                         }
@@ -967,12 +983,12 @@ function snapToGrid(value) {
                 document.querySelectorAll('.drawing-controls button').forEach(btn => {
                     btn.classList.remove('drawing-mode-active');
                 });
-                
+
                 if (state.drawingMode === 'pier') {
-    console.log('Creating new pier:', state.tempPier);
+                    console.log('Creating new pier:', state.tempPier);
                     document.getElementById('drawPierMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'slot') {
-    console.log('Creating new slot:', state.tempSlot);
+                    console.log('Creating new slot:', state.tempSlot);
                     document.getElementById('drawSlotMode').classList.add('drawing-mode-active');
                 } else if (state.drawingMode === 'delete') {
                     document.getElementById('deleteMode').classList.add('drawing-mode-active');
@@ -984,7 +1000,7 @@ function snapToGrid(value) {
             function updateSyncStatus(message, type = 'success') {
                 syncStatus.textContent = message;
                 syncStatus.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
-                
+
                 // Hide after 3 seconds
                 setTimeout(() => {
                     syncStatus.textContent = 'Verbonden met Firebase';
@@ -992,98 +1008,100 @@ function snapToGrid(value) {
                 }, 3000);
             }
 
-         function startDrawing(e) {
-    if (e.button !== 0) return; // Alleen linker muisknop
-    state.isDrawing = true;
+            function startDrawing(e) {
+                if (e.button !== 0) return; // Alleen linker muisknop
+                state.isDrawing = true;
 
-    const rect = harbor.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - translateX) / scale;
-    const mouseY = (e.clientY - rect.top - translateY) / scale;
+                const rect = harbor.getBoundingClientRect();
+                const mouseX = (e.clientX - rect.left - translateX) / scale;
+                const mouseY = (e.clientY - rect.top - translateY) / scale;
 
-    if (state.drawingMode === 'pier') {
-        state.tempPier = {
-            x: snapToGrid(mouseX),
-            y: snapToGrid(mouseY),
-            width: 0,
-            height: 0
-        };
-    } else if (state.drawingMode === 'slot') {
-        state.tempSlot = {
-            x: snapToGrid(mouseX),
-            y: snapToGrid(mouseY),
-            width: 0,
-            height: 0
-        };
-    }
+                if (state.drawingMode === 'pier') {
+                    state.tempPier = {
+                        x: snapToGrid(mouseX),
+                        y: snapToGrid(mouseY),
+                        width: 0,
+                        height: 0
+                    };
+                } else if (state.drawingMode === 'slot') {
+                    state.tempSlot = {
+                        x: snapToGrid(mouseX),
+                        y: snapToGrid(mouseY),
+                        width: 0,
+                        height: 0
+                    };
+                }
 
-    renderHarbor();
-}
+                renderHarbor();
+            }
 
 
-        function continueDrawing(e) {
-    if (!state.isDrawing) return;
+            function continueDrawing(e) {
+                if (!state.isDrawing) return;
 
-    const rect = harbor.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - translateX) / scale;
-    const mouseY = (e.clientY - rect.top - translateY) / scale;
+                const rect = harbor.getBoundingClientRect();
+                const mouseX = (e.clientX - rect.left - translateX) / scale;
+                const mouseY = (e.clientY - rect.top - translateY) / scale;
 
-    if (state.drawingMode === 'pier' && state.tempPier) {
-        state.tempPier.width = snapToGrid(mouseX) - state.tempPier.x;
-        state.tempPier.height = snapToGrid(mouseY) - state.tempPier.y;
-    } else if (state.drawingMode === 'slot' && state.tempSlot) {
-        state.tempSlot.width = snapToGrid(mouseX) - state.tempSlot.x;
-        state.tempSlot.height = snapToGrid(mouseY) - state.tempSlot.y;
-    }
+                if (state.drawingMode === 'pier' && state.tempPier) {
+                    state.tempPier.width = snapToGrid(mouseX) - state.tempPier.x;
+                    state.tempPier.height = snapToGrid(mouseY) - state.tempPier.y;
+                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                    state.tempSlot.width = snapToGrid(mouseX) - state.tempSlot.x;
+                    state.tempSlot.height = snapToGrid(mouseY) - state.tempSlot.y;
+                }
 
-    renderHarbor();
-}
+                renderHarbor();
+            }
 
 
 
             function finishDrawing(e) {
-    if (!state.isDrawing) return;
-    state.isDrawing = false;
+                if (!state.isDrawing) return;
+                state.isDrawing = false;
 
-    if (state.drawingMode === 'pier' && state.tempPier) {
-        const newPier = {
-            id: state.nextPierId++,
-            name: `Steiger ${state.nextPierId}`,
-            type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
-            x: state.tempPier.x,
-            y: state.tempPier.y,
-            width: Math.abs(state.tempPier.width),
-            height: Math.abs(state.tempPier.height)
-        };
-        state.piers.push(newPier);
-        savePiersToFirebase();
-        state.tempPier = null;
-        state.selectedPier = newPier;
-        state.selectedSlot = null;
-        state.selectedBoat = null;
-    } else if (state.drawingMode === 'slot' && state.tempSlot) {
-        const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
-        if (slotName === null) return;
-        const newSlot = {
-            id: state.nextSlotId++,
-            name: slotName || `Ligplaats ${state.nextSlotId}`,
-            x: state.tempSlot.x,
-            y: state.tempSlot.y,
-            width: Math.abs(state.tempSlot.width),
-            height: Math.abs(state.tempSlot.height),
-            occupied: false,
-            boatId: null
-        };
-        state.slots.push(newSlot);
-        saveSlotsToFirebase();
-        state.tempSlot = null;
-        state.selectedSlot = newSlot;
-        state.selectedPier = null;
-        state.selectedBoat = null;
-    }
+                if (state.drawingMode === 'pier' && state.tempPier) {
+                    const newPier = {
+                        id: state.nextPierId++,
+                        name: `Steiger ${state.nextPierId}`,
+                        type: Math.abs(state.tempPier.width) > Math.abs(state.tempPier.height) ? 'horizontal' : 'vertical',
+                        x: state.tempPier.x,
+                        y: state.tempPier.y,
+                        width: Math.abs(state.tempPier.width),
+                        height: Math.abs(state.tempPier.height)
+                    };
+                    state.piers.push(newPier);
+                    savePiersToFirebase();
+                    state.tempPier = null;
+                    state.selectedPier = newPier;
+                    state.selectedSlot = null;
+                    state.selectedBoat = null;
+                } else if (state.drawingMode === 'slot' && state.tempSlot) {
+                    const slotName = prompt("Geef een naam voor deze ligplaats:", `Ligplaats ${state.nextSlotId}`);
+                    if (slotName === null) return;
+                    const newSlot = {
+                        id: state.nextSlotId++,
+                        name: slotName || `Ligplaats ${state.nextSlotId}`,
+                        x: state.tempSlot.x,
+                        y: state.tempSlot.y,
+                        width: Math.abs(state.tempSlot.width),
+                        height: Math.abs(state.tempSlot.height),
+                        occupied: false,
+                        boatId: null,
+                        orientation: Math.abs(state.tempSlot.width) > Math.abs(state.tempSlot.height) ? 'horizontal' : 'vertical'
+                    };
 
-    renderHarbor();
-    updateUI();
-}
+                    state.slots.push(newSlot);
+                    saveSlotsToFirebase();
+                    state.tempSlot = null;
+                    state.selectedSlot = newSlot;
+                    state.selectedPier = null;
+                    state.selectedBoat = null;
+                }
+
+                renderHarbor();
+                updateUI();
+            }
 
 
             function handleHarborClick(e) {
@@ -1099,9 +1117,9 @@ function snapToGrid(value) {
             }
 
             function renderHarbor() {
-  console.log("renderHarbor called");
+                console.log("renderHarbor called");
                 harborCanvas.innerHTML = '';
-                
+
                 // Render piers
                 state.piers.forEach(pier => {
                     const pierEl = document.createElement('div');
@@ -1115,8 +1133,8 @@ function snapToGrid(value) {
                     pierEl.style.height = `${pier.height}px`;
                     pierEl.dataset.id = pier.id;
                     pierEl.setAttribute('aria-label', `Steiger ${pier.name}`);
-                    
-                    pierEl.addEventListener('click', function(e) {
+
+                    pierEl.addEventListener('click', function (e) {
                         e.stopPropagation();
                         if (state.drawingMode === 'select') {
                             state.selectedPier = pier;
@@ -1129,10 +1147,10 @@ function snapToGrid(value) {
                             }
                         }
                     });
-                    
+
                     harborCanvas.appendChild(pierEl);
                 });
-                
+
                 // Render slots
                 state.slots.forEach(slot => {
                     const slotEl = document.createElement('div');
@@ -1145,39 +1163,39 @@ function snapToGrid(value) {
                     slotEl.style.height = `${slot.height}px`;
                     slotEl.dataset.id = slot.id;
                     slotEl.setAttribute('aria-label', `Ligplaats ${slot.name}, ${slot.occupied ? 'bezet' : 'beschikbaar'}`);
-                    
+
                     // Add name
                     const nameEl = document.createElement('div');
                     nameEl.className = 'slot-name';
                     nameEl.textContent = slot.name;
                     slotEl.appendChild(nameEl);
-                    
+
                     // Add context menu on right click
-                    slotEl.addEventListener('contextmenu', function(e) {
-                        e.preventDefault();
-                        clickedSlot = slot;
-                        
-                        // Position the context menu
-                        slotContextMenu.style.left = `${e.pageX}px`;
-                        slotContextMenu.style.top = `${e.pageY}px`;
-                        slotContextMenu.style.display = 'block';
-                        slotContextMenu.setAttribute('aria-hidden', 'false');
-                        
-                        // Fill context menu
-                        slotContextMenu.innerHTML = `
-                            <button id="assignBoatToSlot">Boot toewijzen</button>
-                            <button id="renameSlot">Naam wijzigen</button>
-                            <button id="removeSlot">Ligplaats verwijderen</button>
-                        `;
-                        
-                        // Add event listeners for context menu
-                        document.getElementById('assignBoatToSlot').addEventListener('click', assignBoatToSelectedSlot);
-                        document.getElementById('renameSlot').addEventListener('click', renameSelectedSlot);
-                        document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
-                    });
-                    
+                    /*    slotEl.addEventListener('contextmenu', function (e) {
+                           e.preventDefault();
+                           clickedSlot = slot;
+   
+                           // Position the context menu
+                           slotContextMenu.style.left = `${e.pageX}px`;
+                           slotContextMenu.style.top = `${e.pageY}px`;
+                           slotContextMenu.style.display = 'block';
+                           slotContextMenu.setAttribute('aria-hidden', 'false');
+   
+                           // Fill context menu
+                           slotContextMenu.innerHTML = `
+                               <button id="assignBoatToSlot">Boot toewijzen</button>
+                               <button id="renameSlot">Naam wijzigen</button>
+                               <button id="removeSlot">Ligplaats verwijderen</button>
+                           `;
+   
+                           // Add event listeners for context menu
+                           document.getElementById('assignBoatToSlot').addEventListener('click', assignBoatToSelectedSlot);
+                           document.getElementById('renameSlot').addEventListener('click', renameSelectedSlot);
+                           document.getElementById('removeSlot').addEventListener('click', removeSelectedSlot);
+                       }); */
+
                     // Left click selects the slot
-                    slotEl.addEventListener('click', function(e) {
+                    slotEl.addEventListener('click', function (e) {
                         e.stopPropagation();
                         if (state.drawingMode === 'select') {
                             state.selectedSlot = slot;
@@ -1190,35 +1208,35 @@ function snapToGrid(value) {
                             }
                         }
                     });
-                    
+
                     harborCanvas.appendChild(slotEl);
                 });
-                
+
                 // Render temporary elements
                 if (state.tempPier) {
-        console.log('Rendering tempPier:', state.tempPier);
+                    console.log('Rendering tempPier:', state.tempPier);
                     const tempPierEl = document.createElement('div');
                     tempPierEl.className = 'pier temp-element';
-        tempPierEl.style.border = '3px dashed red';
+                    tempPierEl.style.border = '3px dashed red';
                     tempPierEl.style.left = `${state.tempPier.x}px`;
                     tempPierEl.style.top = `${state.tempPier.y}px`;
                     tempPierEl.style.width = `${Math.abs(state.tempPier.width)}px`;
                     tempPierEl.style.height = `${Math.abs(state.tempPier.height)}px`;
                     harborCanvas.appendChild(tempPierEl);
                 }
-                
+
                 if (state.tempSlot) {
-        console.log('Rendering tempSlot:', state.tempSlot);
+                    console.log('Rendering tempSlot:', state.tempSlot);
                     const slotEl = document.createElement('div');
                     slotEl.className = 'slot temp-element';
-        slotEl.style.border = '3px dashed blue';
+                    slotEl.style.border = '3px dashed blue';
                     slotEl.style.left = `${state.tempSlot.x}px`;
                     slotEl.style.top = `${state.tempSlot.y}px`;
                     slotEl.style.width = `${Math.abs(state.tempSlot.width)}px`;
                     slotEl.style.height = `${Math.abs(state.tempSlot.height)}px`;
                     harborCanvas.appendChild(slotEl);
                 }
-                
+
                 // Render boats
                 state.boats.forEach(boat => {
                     const boatEl = document.createElement('div');
@@ -1230,6 +1248,28 @@ function snapToGrid(value) {
                     boatEl.style.top = `${boat.y}px`;
                     boatEl.style.width = `${boat.width}px`;
                     boatEl.style.height = `${boat.height}px`;
+                    // Draai visueel als boot hoger is dan breed (dus "verticaal")
+                    // Draai alleen als boot in verticale ligplaats zit
+                    const slot = state.slots.find(s => s.id === boat.slotId);
+
+                    if (slot && slot.orientation === 'vertical' && boat.width > boat.height) {
+                        boatEl.style.transform = 'rotate(90deg)';
+                        boatEl.style.transformOrigin = 'top left';
+
+                        // Correcte positie: verplaats naar links (x - hoogte) zodat de boot draait om (x,y)
+                        boatEl.style.left = `${boat.x}px`;
+                        boatEl.style.top = `${boat.y}px`;
+
+                        // Verplaats naar links om breedteverlies op te vangen
+                        boatEl.style.transform = `rotate(90deg) translateY(-${boat.width}px)`;
+                    } else {
+                        boatEl.style.transform = 'none';
+                        boatEl.style.left = `${boat.x}px`;
+                        boatEl.style.top = `${boat.y}px`;
+                    }
+
+
+
                     boatEl.style.backgroundColor = boat.color;
                     boatEl.innerHTML = `
                         <div class="boat-name">${boat.name}</div>
@@ -1239,13 +1279,13 @@ function snapToGrid(value) {
                     `;
                     boatEl.dataset.id = boat.id;
                     boatEl.setAttribute('aria-label', `Boot ${boat.name}, type ${boat.typeName}`);
-                    
+
                     // Add collision warning if needed
                     if (checkCollision(boat)) {
                         boatEl.classList.add('collision-warning');
                     }
-                    
-                    boatEl.addEventListener('click', function(e) {
+
+                    boatEl.addEventListener('click', function (e) {
                         e.stopPropagation();
                         if (state.drawingMode === 'select') {
                             state.selectedBoat = boat;
@@ -1258,31 +1298,31 @@ function snapToGrid(value) {
                             }
                         }
                     });
-                    
+
                     harborCanvas.appendChild(boatEl);
                 });
-             enablePierDragging();
-             enableSlotDragging();
-             enableBoatDragging();
+                enablePierDragging();
+                enableSlotDragging();
+                enableBoatDragging();
 
             }
 
- 
+
 
             function checkCollision(boat) {
                 // Check if boat is outside slot bounds (if assigned to a slot)
                 if (boat.slotId) {
                     const slot = state.slots.find(s => s.id === boat.slotId);
                     if (slot) {
-                        if (boat.x < slot.x || 
-                            boat.x + boat.width > slot.x + slot.width || 
-                            boat.y < slot.y || 
+                        if (boat.x < slot.x ||
+                            boat.x + boat.width > slot.x + slot.width ||
+                            boat.y < slot.y ||
                             boat.y + boat.height > slot.y + slot.height) {
                             return true; // Collision with slot boundaries
                         }
                     }
                 }
-                
+
                 // Check for collisions with other boats
                 for (const otherBoat of state.boats) {
                     if (otherBoat.id !== boat.id) {
@@ -1294,60 +1334,60 @@ function snapToGrid(value) {
                         }
                     }
                 }
-                
+
                 return false; // No collisions
             }
-            
+
             function updateUI() {
-    document.querySelector('.pier-management').style.display = state.selectedPier ? 'block' : 'none';
-    document.querySelector('.slot-management').style.display = state.selectedSlot ? 'block' : 'none';
-    document.querySelector('.boat-management').style.display = state.selectedBoat ? 'block' : 'none';
+                document.querySelector('.pier-management').style.display = state.selectedPier ? 'block' : 'none';
+                document.querySelector('.slot-management').style.display = state.selectedSlot ? 'block' : 'none';
+                document.querySelector('.boat-management').style.display = state.selectedBoat ? 'block' : 'none';
                 renderHarbor();
                 updateInfoPanel();
-                
+
                 // Update pier name field
                 if (state.selectedPier) {
                     document.getElementById('pierName').value = state.selectedPier.name || '';
-                
-                // Update pier size fields
-                if (state.selectedPier) {
-                    const pierWidthField = document.getElementById('pierWidth');
-                    const pierHeightField = document.getElementById('pierHeight');
-                    if (pierWidthField && pierHeightField) {
-                        pierWidthField.value = (state.selectedPier.width / 10).toFixed(1);
-                        pierHeightField.value = (state.selectedPier.height / 10).toFixed(1);
+
+                    // Update pier size fields
+                    if (state.selectedPier) {
+                        const pierWidthField = document.getElementById('pierWidth');
+                        const pierHeightField = document.getElementById('pierHeight');
+                        if (pierWidthField && pierHeightField) {
+                            pierWidthField.value = (state.selectedPier.width / 10).toFixed(1);
+                            pierHeightField.value = (state.selectedPier.height / 10).toFixed(1);
+                        }
+                    } else {
+                        const pierWidthField = document.getElementById('pierWidth');
+                        const pierHeightField = document.getElementById('pierHeight');
+                        if (pierWidthField && pierHeightField) {
+                            pierWidthField.value = '';
+                            pierHeightField.value = '';
+                        }
                     }
                 } else {
-                    const pierWidthField = document.getElementById('pierWidth');
-                    const pierHeightField = document.getElementById('pierHeight');
-                    if (pierWidthField && pierHeightField) {
-                        pierWidthField.value = '';
-                        pierHeightField.value = '';
-                    }
-                }
-} else {
                     document.getElementById('pierName').value = '';
                 }
-                
+
                 // Update slot name field
                 if (state.selectedSlot) {
                     document.getElementById('slotName').value = state.selectedSlot.name || '';
-                
-                
 
-                // Update slot size fields
-                if (state.selectedSlot) {
-                    document.getElementById('slotWidth').value = (state.selectedSlot.width / 10).toFixed(1);
-                    document.getElementById('slotHeight').value = (state.selectedSlot.height / 10).toFixed(1);
+
+
+                    // Update slot size fields
+                    if (state.selectedSlot) {
+                        document.getElementById('slotWidth').value = (state.selectedSlot.width / 10).toFixed(1);
+                        document.getElementById('slotHeight').value = (state.selectedSlot.height / 10).toFixed(1);
+                    } else {
+                        document.getElementById('slotWidth').value = '';
+                        document.getElementById('slotHeight').value = '';
+                    }
                 } else {
-                    document.getElementById('slotWidth').value = '';
-                    document.getElementById('slotHeight').value = '';
-                }
-} else {
                     document.getElementById('slotName').value = '';
                 }
             }
-            
+
             function updateInfoPanel() {
                 if (state.selectedBoat) {
                     noSelection.style.display = 'none';
@@ -1355,14 +1395,14 @@ function snapToGrid(value) {
                     slotInfoDisplay.style.display = 'none';
                     boatInfoDisplay.style.display = 'block';
                     document.getElementById('editBoatForm').style.display = 'none';
-                    
+
                     document.getElementById('boatInfoName').textContent = state.selectedBoat.name;
                     document.getElementById('boatInfoType').textContent = state.selectedBoat.typeName;
                     document.getElementById('boatInfoSize').textContent = `${state.selectedBoat.size} meter`;
                     document.getElementById('boatInfoOwner').textContent = state.selectedBoat.owner;
                     document.getElementById('boatInfoPhone').textContent = state.selectedBoat.phone;
                     document.getElementById('boatInfoEmail').textContent = state.selectedBoat.email;
-                    
+
                     const slot = state.slots.find(s => s.id === state.selectedBoat.slotId);
                     document.getElementById('boatInfoLocation').textContent = slot ? `Ligplaats ${slot.name}` : 'Geen ligplaats toegewezen';
                 } else if (state.selectedSlot) {
@@ -1370,12 +1410,12 @@ function snapToGrid(value) {
                     pierInfoDisplay.style.display = 'none';
                     boatInfoDisplay.style.display = 'none';
                     slotInfoDisplay.style.display = 'block';
-                    
+
                     document.getElementById('slotInfoName').textContent = state.selectedSlot.name;
                     document.getElementById('slotInfoStatus').textContent = state.selectedSlot.occupied ? 'Bezet' : 'Beschikbaar';
                     document.getElementById('slotInfoWidth').textContent = `${state.selectedSlot.width}px`;
                     document.getElementById('slotInfoHeight').textContent = `${state.selectedSlot.height}px`;
-                    
+
                     if (state.selectedSlot.occupied) {
                         const boat = state.boats.find(b => b.id === state.selectedSlot.boatId);
                         document.getElementById('slotInfoBoat').textContent = boat ? boat.name : 'Onbekende boot';
@@ -1387,7 +1427,7 @@ function snapToGrid(value) {
                     boatInfoDisplay.style.display = 'none';
                     slotInfoDisplay.style.display = 'none';
                     pierInfoDisplay.style.display = 'block';
-                    
+
                     document.getElementById('pierInfoName').textContent = state.selectedPier.name;
                     document.getElementById('pierInfoType').textContent = state.selectedPier.type === 'horizontal' ? 'Horizontaal' : 'Verticaal';
                     document.getElementById('pierInfoWidth').textContent = `${state.selectedPier.width}px`;
@@ -1402,30 +1442,30 @@ function snapToGrid(value) {
             }
 
             // Pier management functions
-            
-function savePierDetails() {
-    if (!state.selectedPier) return;
 
-    const pierWidth = parseFloat(document.getElementById('pierWidth').value) * 10;
-    const pierHeight = parseFloat(document.getElementById('pierHeight').value) * 10;
-    const pierName = document.getElementById('pierName').value;
+            function savePierDetails() {
+                if (!state.selectedPier) return;
 
-    state.selectedPier.width = pierWidth;
-    state.selectedPier.height = pierHeight;
-    state.selectedPier.name = pierName;
+                const pierWidth = parseFloat(document.getElementById('pierWidth').value) * 10;
+                const pierHeight = parseFloat(document.getElementById('pierHeight').value) * 10;
+                const pierName = document.getElementById('pierName').value;
 
-    savePiersToFirebase();
-    renderHarbor();
+                state.selectedPier.width = pierWidth;
+                state.selectedPier.height = pierHeight;
+                state.selectedPier.name = pierName;
 
-    // Herselecteer object
-    const id = state.selectedPier.id;
-    const updatedPier = state.piers.find(p => p.id === id);
-    state.selectedPier = updatedPier;
+                savePiersToFirebase();
+                renderHarbor();
+
+                // Herselecteer object
+                const id = state.selectedPier.id;
+                const updatedPier = state.piers.find(p => p.id === id);
+                state.selectedPier = updatedPier;
 
                 updateSyncStatus('Steiger opgeslagen');
                 updateUI();
-    renderHarbor();
-renderHarbor();
+                renderHarbor();
+                renderHarbor();
             }
 
             function removeSelectedPier() {
@@ -1433,11 +1473,11 @@ renderHarbor();
                     alert('Selecteer eerst een steiger');
                     return;
                 }
-                
+
                 if (!confirm(`Weet u zeker dat u ${state.selectedPier.name} wilt verwijderen?`)) {
                     return;
                 }
-                
+
                 removePier(state.selectedPier.id);
             }
 
@@ -1445,12 +1485,12 @@ renderHarbor();
                 try {
                     // Remove the pier
                     state.piers = state.piers.filter(p => p.id !== pierId);
-                    
+
                     // Deselect
                     if (state.selectedPier && state.selectedPier.id === pierId) {
                         state.selectedPier = null;
                     }
-                    
+
                     // Save to Firebase
                     database.ref('piers').set(state.piers)
                         .then(() => {
@@ -1477,30 +1517,30 @@ renderHarbor();
             }
 
             // Slot management functions
-            
-function saveSlotDetails() {
-    if (!state.selectedSlot) return;
 
-    const slotWidth = parseFloat(document.getElementById('slotWidth').value) * 10;
-    const slotHeight = parseFloat(document.getElementById('slotHeight').value) * 10;
-    const slotName = document.getElementById('slotName').value;
+            function saveSlotDetails() {
+                if (!state.selectedSlot) return;
 
-    state.selectedSlot.width = slotWidth;
-    state.selectedSlot.height = slotHeight;
-    state.selectedSlot.name = slotName;
+                const slotWidth = parseFloat(document.getElementById('slotWidth').value) * 10;
+                const slotHeight = parseFloat(document.getElementById('slotHeight').value) * 10;
+                const slotName = document.getElementById('slotName').value;
 
-    saveSlotsToFirebase();
-    renderHarbor();
+                state.selectedSlot.width = slotWidth;
+                state.selectedSlot.height = slotHeight;
+                state.selectedSlot.name = slotName;
 
-    // Herselecteer object
-    const id = state.selectedSlot.id;
-    const updatedSlot = state.slots.find(s => s.id === id);
-    state.selectedSlot = updatedSlot;
+                saveSlotsToFirebase();
+                renderHarbor();
+
+                // Herselecteer object
+                const id = state.selectedSlot.id;
+                const updatedSlot = state.slots.find(s => s.id === id);
+                state.selectedSlot = updatedSlot;
 
                 updateSyncStatus('Ligplaats opgeslagen');
                 updateUI();
-    renderHarbor();
-renderHarbor();
+                renderHarbor();
+                renderHarbor();
             }
 
             function removeSelectedSlot() {
@@ -1508,11 +1548,11 @@ renderHarbor();
                     alert('Selecteer eerst een ligplaats');
                     return;
                 }
-                
+
                 if (!confirm(`Weet u zeker dat u ${state.selectedSlot.name} wilt verwijderen?`)) {
                     return;
                 }
-                
+
                 removeSlot(state.selectedSlot.id);
             }
 
@@ -1523,15 +1563,15 @@ renderHarbor();
                     if (slot && slot.occupied) {
                         state.boats = state.boats.filter(b => b.id !== slot.boatId);
                     }
-                    
+
                     // Remove the slot
                     state.slots = state.slots.filter(s => s.id !== slotId);
-                    
+
                     // Deselect
                     if (state.selectedSlot && state.selectedSlot.id === slotId) {
                         state.selectedSlot = null;
                     }
-                    
+
                     // Save to Firebase
                     Promise.all([
                         database.ref('slots').set(state.slots),
@@ -1559,113 +1599,109 @@ renderHarbor();
             }
 
             // Boat management functions
-     function addBoat() {
-    if (state.slots.length === 0) {
-        alert('Voeg eerst een ligplaats toe!');
-        return;
-    }
-
-    const type = document.getElementById('boatType').value;
-    const size = parseFloat(document.getElementById('boatSize').value); // in meters
-    const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
-    const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
-    const boatTypeConfig = boatTypes[type];
-
-    const widthMeters = size * boatTypeConfig.widthMultiplier;
-
-    const newBoat = {
-        id: state.nextBoatId++,
-        type: type,
-        size: size, // lengte in meters
-        name: name,
-        owner: randomOwner.name,
-        phone: randomOwner.phone,
-        email: randomOwner.email,
-        notes: "",
-        slotId: null,
-        width: widthMeters * SCALE,          // in pixels
-        height: size * SCALE,                // lengte in pixels
-        color: boatTypeConfig.color,
-        typeName: boatTypeConfig.name
-    };
-
-    if (assignBoatToSlot(newBoat)) {
-        state.boats.push(newBoat);
-        document.getElementById('boatName').value = "";
-
-        Promise.all([
-            database.ref('boats').set(state.boats),
-            database.ref('slots').set(state.slots)
-        ]).then(() => {
-            updateSyncStatus('Boot toegevoegd');
-            state.selectedBoat = newBoat;
-            updateUI();
-        }).catch(error => {
-            console.error("Error saving boat:", error);
-            updateSyncStatus('Fout bij opslaan boot', 'error');
-        });
-    }
-}
-
-            
-            function assignBoatToSlot(boat) {
-                // Try to find a suitable slot
-                for (const slot of state.slots) {
-                    if (!slot.occupied && 
-                        boat.width <= slot.width && 
-                        boat.height <= slot.height) {
-                        
-                        // Assign boat to slot
-                        slot.occupied = true;
-                        slot.boatId = boat.id;
-                        boat.slotId = slot.id;
-                        boat.x = slot.x;
-                        boat.y = slot.y;
-                        
-                        return true;
-                    }
+            function addBoat() {
+                if (state.slots.length === 0) {
+                    alert('Voeg eerst een ligplaats toe!');
+                    return;
                 }
-                
-                // If no slot found, place boat in harbor without slot
-                boat.x = 50 + Math.random() * 300;
-                boat.y = 50 + Math.random() * 300;
-                return true;
+
+                const type = document.getElementById('boatType').value;
+                const size = parseFloat(document.getElementById('boatSize').value); // in meters
+                const name = document.getElementById('boatName').value.trim() || `Boot ${state.nextBoatId}`;
+                const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
+                const boatTypeConfig = boatTypes[type];
+
+                const widthMeters = size * boatTypeConfig.widthMultiplier;
+
+                const newBoat = {
+                    id: state.nextBoatId++,
+                    type: type,
+                    size: size, // lengte in meters
+                    name: name,
+                    owner: randomOwner.name,
+                    phone: randomOwner.phone,
+                    email: randomOwner.email,
+                    notes: "",
+                    slotId: null,
+                    width: widthMeters * SCALE,          // in pixels
+                    height: size * SCALE,                // lengte in pixels
+                    color: boatTypeConfig.color,
+                    typeName: boatTypeConfig.name
+                };
+
+                const assigned = assignBoatToSlot(newBoat);
+                if (assigned) {
+                    state.boats.push(newBoat);
+                    document.getElementById('boatName').value = "";
+
+                    Promise.all([
+                        database.ref('boats').set(state.boats),
+                        database.ref('slots').set(state.slots)
+                    ]).then(() => {
+                        updateSyncStatus('Boot toegevoegd');
+                        state.selectedBoat = newBoat;
+                        updateUI();
+                    }).catch(error => {
+                        console.error("Error saving boat:", error);
+                        updateSyncStatus('Fout bij opslaan boot', 'error');
+                    });
+                } else {
+                    alert("Er is geen geschikte ligplaats beschikbaar voor deze boot.");
+                }
+
             }
-            
+
+
             function assignBoatToSelectedSlot() {
                 slotContextMenu.style.display = 'none';
                 slotContextMenu.setAttribute('aria-hidden', 'true');
-                
+
                 if (!state.selectedBoat) {
                     alert('Selecteer eerst een boot om toe te wijzen');
                     return;
                 }
-                
+
                 if (!clickedSlot) return;
-                
-                // Check if boat fits
-                if (state.selectedBoat.width > clickedSlot.width || state.selectedBoat.height > clickedSlot.height) {
+
+                const boat = state.selectedBoat;
+
+                // Probeer zowel normale als gedraaide vorm
+                const fitsNormal = boat.width <= clickedSlot.width && boat.height <= clickedSlot.height;
+                const fitsRotated = boat.height <= clickedSlot.width && boat.width <= clickedSlot.height;
+
+                let rotated = false;
+
+                if (clickedSlot.orientation === 'vertical' && fitsRotated && boat.width > boat.height) {
+                    [boat.width, boat.height] = [boat.height, boat.width];
+                    rotated = true;
+                } else if (clickedSlot.orientation === 'horizontal' && fitsRotated && boat.height > boat.width) {
+                    [boat.width, boat.height] = [boat.height, boat.width];
+                    rotated = true;
+                } else if (!fitsNormal && fitsRotated) {
+                    [boat.width, boat.height] = [boat.height, boat.width];
+                    rotated = true;
+                } else if (!fitsNormal && !fitsRotated) {
                     alert('De boot past niet in deze ligplaats!');
                     return;
                 }
-                
-                // Remove boat from previous slot if needed
-                if (state.selectedBoat.slotId) {
-                    const oldSlot = state.slots.find(s => s.id === state.selectedBoat.slotId);
+
+                // Huidige ligplaats vrijgeven
+                if (boat.slotId) {
+                    const oldSlot = state.slots.find(s => s.id === boat.slotId);
                     if (oldSlot) {
                         oldSlot.occupied = false;
                         oldSlot.boatId = null;
                     }
                 }
-                
-                // Assign to new slot
+
+                // Nieuwe ligplaats toewijzen
                 clickedSlot.occupied = true;
-                clickedSlot.boatId = state.selectedBoat.id;
-                state.selectedBoat.slotId = clickedSlot.id;
-                state.selectedBoat.x = clickedSlot.x;
-                state.selectedBoat.y = clickedSlot.y;
-                
-                // Save changes
+                clickedSlot.boatId = boat.id;
+                boat.slotId = clickedSlot.id;
+                boat.x = clickedSlot.x;
+                boat.y = clickedSlot.y;
+
+                // Opslaan en hertekenen
                 Promise.all([
                     database.ref('slots').set(state.slots),
                     database.ref('boats').set(state.boats)
@@ -1679,16 +1715,18 @@ renderHarbor();
                 });
             }
 
+
+
             function removeSelectedBoat() {
                 if (!state.selectedBoat) {
                     alert('Selecteer eerst een boot');
                     return;
                 }
-                
+
                 if (!confirm(`Weet u zeker dat u ${state.selectedBoat.name} wilt verwijderen?`)) {
                     return;
                 }
-                
+
                 removeBoat(state.selectedBoat.id);
             }
 
@@ -1697,7 +1735,7 @@ renderHarbor();
                     // Find boat
                     const boat = state.boats.find(b => b.id === boatId);
                     if (!boat) return;
-                    
+
                     // Free slot if assigned to one
                     if (boat.slotId) {
                         const slot = state.slots.find(s => s.id === boat.slotId);
@@ -1706,15 +1744,15 @@ renderHarbor();
                             slot.boatId = null;
                         }
                     }
-                    
+
                     // Remove boat from state
                     state.boats = state.boats.filter(b => b.id !== boatId);
-                    
+
                     // Deselect
                     if (state.selectedBoat && state.selectedBoat.id === boatId) {
                         state.selectedBoat = null;
                     }
-                    
+
                     // Save to Firebase and update UI
                     Promise.all([
                         database.ref('boats').set(state.boats),
@@ -1748,7 +1786,7 @@ renderHarbor();
                     alert('Selecteer eerst een boot om te bewerken');
                     return;
                 }
-                
+
                 // Fill basic info
                 document.getElementById('editBoatName').value = state.selectedBoat.name;
                 document.getElementById('editBoatOwner').value = state.selectedBoat.owner;
@@ -1759,118 +1797,144 @@ renderHarbor();
                 document.getElementById('editBoatWidth').value = (state.selectedBoat.width / SCALE).toFixed(1);
 
 
-                
+
                 // Fill slot dropdown
                 const slotSelect = document.getElementById('editBoatSlot');
                 slotSelect.innerHTML = '<option value="">Geen ligplaats</option>';
-                
+
                 state.slots.forEach(slot => {
                     const option = document.createElement('option');
                     option.value = slot.id;
                     option.textContent = `${slot.name} (${slot.occupied && slot.boatId !== state.selectedBoat.id ? 'bezet' : 'beschikbaar'})`;
                     option.disabled = slot.occupied && slot.boatId !== state.selectedBoat.id;
-                    
+
                     if (slot.id === state.selectedBoat.slotId) {
                         option.selected = true;
                     }
                     slotSelect.appendChild(option);
                 });
-                
+
                 // Show form
                 boatInfoDisplay.style.display = 'none';
                 document.getElementById('editBoatForm').style.display = 'block';
             }
 
- function saveBoatInfo() {
-    if (!state.selectedBoat) {
-        alert('Geen boot geselecteerd om op te slaan');
-        return;
-    }
-
-    try {
-        const oldSlotId = state.selectedBoat.slotId;
-
-        // Invoer ophalen
-        const name = document.getElementById('editBoatName').value;
-        const owner = document.getElementById('editBoatOwner').value;
-        const phone = document.getElementById('editBoatPhone').value;
-        const email = document.getElementById('editBoatEmail').value;
-        const type = document.getElementById('editBoatType').value;
-        const size = parseFloat(document.getElementById('editBoatSize').value); // lengte in meters
-        const widthInput = parseFloat(document.getElementById('editBoatWidth').value); // breedte in meters
-        const slotSelectValue = document.getElementById('editBoatSlot').value;
-        const newSlotId = slotSelectValue ? parseInt(slotSelectValue) : null;
-
-        const boatTypeConfig = boatTypes[type];
-        const widthMeters = (!isNaN(widthInput) && widthInput > 0)
-            ? widthInput
-            : size * boatTypeConfig.widthMultiplier;
-
-        // Boot bijwerken
-        state.selectedBoat.name = name;
-        state.selectedBoat.owner = owner;
-        state.selectedBoat.phone = phone;
-        state.selectedBoat.email = email;
-        state.selectedBoat.type = type;
-        state.selectedBoat.size = size;
-        state.selectedBoat.width = widthMeters * SCALE;
-        state.selectedBoat.height = size * SCALE;
-        state.selectedBoat.typeName = boatTypeConfig.name;
-        state.selectedBoat.color = boatTypeConfig.color;
-
-        // Oude slot vrijgeven
-        if (oldSlotId !== null) {
-            const oldSlot = state.slots.find(s => s.id === oldSlotId);
-            if (oldSlot) {
-                oldSlot.occupied = false;
-                oldSlot.boatId = null;
-            }
-        }
-
-        // Nieuwe slot toewijzen
-        if (newSlotId !== null && !isNaN(newSlotId)) {
-            const newSlot = state.slots.find(s => s.id === newSlotId);
-            if (newSlot) {
-                if (state.selectedBoat.width > newSlot.width || state.selectedBoat.height > newSlot.height) {
-                    alert('De boot past niet in deze ligplaats!');
+            function saveBoatInfo() {
+                if (!state.selectedBoat) {
+                    alert('Geen boot geselecteerd om op te slaan');
                     return;
                 }
 
-                if (newSlot.occupied && newSlot.boatId !== state.selectedBoat.id) {
-                    alert('Deze ligplaats is al bezet!');
-                    return;
+                try {
+                    const oldSlotId = state.selectedBoat.slotId;
+
+                    // Invoer ophalen
+                    const name = document.getElementById('editBoatName').value;
+                    const owner = document.getElementById('editBoatOwner').value;
+                    const phone = document.getElementById('editBoatPhone').value;
+                    const email = document.getElementById('editBoatEmail').value;
+                    const type = document.getElementById('editBoatType').value;
+                    const size = parseFloat(document.getElementById('editBoatSize').value);
+                    const widthInput = parseFloat(document.getElementById('editBoatWidth').value);
+                    const slotSelectValue = document.getElementById('editBoatSlot').value;
+                    const newSlotId = slotSelectValue ? parseInt(slotSelectValue) : null;
+
+                    const boatTypeConfig = boatTypes[type];
+                    const widthMeters = (!isNaN(widthInput) && widthInput > 0)
+                        ? widthInput
+                        : size * boatTypeConfig.widthMultiplier;
+
+                    // Boot bijwerken (tijdelijk afmetingen nog niet gebruiken voor plaatsing)
+                    const updatedBoat = {
+                        ...state.selectedBoat,
+                        name,
+                        owner,
+                        phone,
+                        email,
+                        type,
+                        size,
+                        width: widthMeters * SCALE,
+                        height: size * SCALE,
+                        typeName: boatTypeConfig.name,
+                        color: boatTypeConfig.color
+                    };
+
+                    // Oude slot vrijgeven
+                    if (oldSlotId !== null && oldSlotId !== undefined) {
+                        const oldSlot = state.slots.find(s => s.id === oldSlotId);
+                        if (oldSlot) {
+                            oldSlot.occupied = false;
+                            oldSlot.boatId = null;
+                        }
+                    }
+
+                    // Nieuwe slot toewijzen
+                    if (newSlotId !== null && !isNaN(newSlotId)) {
+                        const newSlot = state.slots.find(s => s.id === newSlotId);
+                        if (newSlot) {
+                            const SLOT_MARGIN = 80;
+
+                            // Probeer zowel normale als gedraaide vorm
+                            const fitsNormal = updatedBoat.width <= newSlot.width + SLOT_MARGIN &&
+                                updatedBoat.height <= newSlot.height + SLOT_MARGIN;
+                            const fitsRotated = updatedBoat.height <= newSlot.width + SLOT_MARGIN &&
+                                updatedBoat.width <= newSlot.height + SLOT_MARGIN;
+
+                            if (newSlot.orientation === 'vertical' && fitsRotated && updatedBoat.width > updatedBoat.height) {
+                                [updatedBoat.width, updatedBoat.height] = [updatedBoat.height, updatedBoat.width];
+                            } else if (newSlot.orientation === 'horizontal' && fitsRotated && updatedBoat.height > updatedBoat.width) {
+                                [updatedBoat.width, updatedBoat.height] = [updatedBoat.height, updatedBoat.width];
+                            } else if (!fitsNormal && fitsRotated) {
+                                [updatedBoat.width, updatedBoat.height] = [updatedBoat.height, updatedBoat.width];
+                            } else if (!fitsNormal && !fitsRotated) {
+                                alert('De boot past niet in deze ligplaats!');
+                                return;
+                            }
+
+                            if (newSlot.occupied && newSlot.boatId !== updatedBoat.id) {
+                                alert('Deze ligplaats is al bezet!');
+                                return;
+                            }
+
+                            newSlot.occupied = true;
+                            newSlot.boatId = updatedBoat.id;
+                            updatedBoat.slotId = newSlot.id;
+                            updatedBoat.x = newSlot.x;
+                            updatedBoat.y = newSlot.y;
+                        }
+                    } else {
+                        // Geen slot → plaats boot willekeurig in haven
+                        updatedBoat.slotId = null;
+                        updatedBoat.x = 50 + Math.random() * 300;
+                        updatedBoat.y = 50 + Math.random() * 300;
+                    }
+
+                    // Opslaan naar state
+                    const index = state.boats.findIndex(b => b.id === updatedBoat.id);
+                    if (index !== -1) {
+                        state.boats[index] = updatedBoat;
+                    }
+
+                    state.selectedBoat = updatedBoat;
+
+                    // Opslaan in Firebase
+                    Promise.all([
+                        database.ref('boats').set(state.boats),
+                        database.ref('slots').set(state.slots)
+                    ]).then(() => {
+                        updateSyncStatus('Bootgegevens opgeslagen');
+                        updateUI();
+                    }).catch(error => {
+                        console.error("Error saving boat info:", error);
+                        updateSyncStatus('Fout bij opslaan gegevens', 'error');
+                    });
+
+                } catch (error) {
+                    console.error("Error in saveBoatInfo:", error);
+                    updateSyncStatus('Fout bij opslaan bootgegevens', 'error');
                 }
-
-                newSlot.occupied = true;
-                newSlot.boatId = state.selectedBoat.id;
-                state.selectedBoat.slotId = newSlot.id;
-                state.selectedBoat.x = newSlot.x;
-                state.selectedBoat.y = newSlot.y;
             }
-        } else {
-            // Geen slot → plaats willekeurig
-            state.selectedBoat.slotId = null;
-            state.selectedBoat.x = 50 + Math.random() * 300;
-            state.selectedBoat.y = 50 + Math.random() * 300;
-        }
 
-        // Opslaan in Firebase
-        Promise.all([
-            database.ref('boats').set(state.boats),
-            database.ref('slots').set(state.slots)
-        ]).then(() => {
-            updateSyncStatus('Bootgegevens opgeslagen');
-            updateUI();
-        }).catch(error => {
-            console.error("Error saving boat info:", error);
-            updateSyncStatus('Fout bij opslaan gegevens', 'error');
-        });
-
-    } catch (error) {
-        console.error("Error in saveBoatInfo:", error);
-        updateSyncStatus('Fout bij opslaan bootgegevens', 'error');
-    }
-}
 
 
 
@@ -1882,11 +1946,11 @@ renderHarbor();
             function renameSelectedSlot() {
                 slotContextMenu.style.display = 'none';
                 slotContextMenu.setAttribute('aria-hidden', 'true');
-                
+
                 if (!clickedSlot) return;
-                
+
                 const newName = prompt('Nieuwe naam voor deze ligplaats:', clickedSlot.name);
-                
+
                 if (newName && newName !== clickedSlot.name) {
                     clickedSlot.name = newName;
                     saveSlotsToFirebase();
@@ -1895,357 +1959,416 @@ renderHarbor();
                 }
             }
 
-    // Zoom & pan instellingen
+            // Zoom & pan instellingen
 
-let scale = 1;
-let translateX = 0;
-let translateY = 0;
-let isPanning = false;
-let isDragging = false;
-let startX = 0;
-let startY = 0;
+            let scale = 1;
+            let translateX = 0;
+            let translateY = 0;
+            let isPanning = false;
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let gridVisible = true;
 
-function updateTransform() {
-    harborCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-}
-
-// Zoomen met muiswiel
-harbor.addEventListener('wheel', function (e) {
-    if (e.ctrlKey) return;
-    e.preventDefault();
-    const zoomIntensity = 0.1;
-    const delta = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
-    const rect = harbor.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    const zoomX = (offsetX - translateX) / scale;
-    const zoomY = (offsetY - translateY) / scale;
-
-    scale *= delta;
-    translateX = offsetX - zoomX * scale;
-    translateY = offsetY - zoomY * scale;
-
-    updateTransform();
-}, { passive: false });
-
-// Start panning met middelste muisknop
-
-
-window.addEventListener('mousemove', function (e) {
-    if (isPanning) {
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        updateTransform();
-    }
-});
-
-window.addEventListener('mouseup', function (e) {
-    if (isPanning && e.button === 1) {
-        isPanning = false;
-        harbor.classList.remove('panning');
-    }
-});
-harbor.addEventListener('mousedown', function (e) {
-    if (e.button === 1) {
-        isPanning = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        harbor.classList.add('panning');
-        e.preventDefault();
-    }
-});
-
-window.addEventListener('mousemove', function (e) {
-            if (!isDragging) return;
-
-            const harborRect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - harborRect.left - translateX) / scale;
-            const mouseY = (e.clientY - harborRect.top - translateY) / scale;
-
-            pier.x = snapToGrid(mouseX - offsetX);
-            pier.y = snapToGrid(mouseY - offsetY);
-
-            state.selectedPier = pier;
-            state.selectedSlot = null;
-            state.selectedBoat = null;
-
-            renderHarbor();
-            moved = true;
-        });
-
-window.addEventListener('mouseup', function (e) {
-    if (e.button === 1) {
-        isPanning = false;
-        harbor.classList.remove('panning');
-    }
-});
-
-    document.getElementById('resetZoomBtn').addEventListener('click', () => {
-    scale = 1;
-    translateX = 0;
-    translateY = 0;
-    updateTransform();
-});
-
-let gridVisible = true;
-
-document.getElementById('toggleGridBtn').addEventListener('click', () => {
-    gridVisible = !gridVisible;
-    document.getElementById('harborCanvas').style.backgroundImage = gridVisible
-        ? `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-           linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)`
-        : 'none';
-});
-
-
-function enablePierDragging() {
-    const piers = document.querySelectorAll('.pier');
-
-    piers.forEach(pierEl => {
-        let isDragging = false;
-        let moved = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        let startX = 0;
-        let startY = 0;
-        const pierId = parseInt(pierEl.dataset.id);
-        const pier = state.piers.find(p => p.id === pierId);
-
-     pierEl.addEventListener('mousedown', function (e) {
-    if (state.drawingMode !== 'select' || e.button !== 0) return;
-
-    state.selectedPier = pier;
-    state.selectedSlot = null;
-    state.selectedBoat = null;
-    updateUI();
-
-    isDragging = true;
-    moved = false;
-
-    const harborRect = harbor.getBoundingClientRect();
-    const mouseX = (e.clientX - harborRect.left - translateX) / scale;
-    const mouseY = (e.clientY - harborRect.top - translateY) / scale;
-
-    offsetX = mouseX - pier.x;
-    offsetY = mouseY - pier.y;
-});
-
-
-        window.addEventListener('mousemove', function (e) {
-            if (!isDragging) return;
-
-            const harborRect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - harborRect.left - translateX) / scale;
-            const mouseY = (e.clientY - harborRect.top - translateY) / scale;
-
-            pier.x = snapToGrid(mouseX - offsetX);
-            pier.y = snapToGrid(mouseY - offsetY);
-
-            state.selectedPier = pier;
-            state.selectedSlot = null;
-            state.selectedBoat = null;
-
-            renderHarbor();
-            moved = true;
-        });
-
-        window.addEventListener('mouseup', function (e) {
-            if (isDragging && moved) {
-                savePiersToFirebase();
+            function updateTransform() {
+                harborCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
             }
-            isDragging = false;
-            moved = false;
-        });
 
-        pierEl.addEventListener('click', function (e) {
-            if (moved) {
-                e.stopPropagation();
+            // Zoomen met muiswiel
+            harbor.addEventListener('wheel', function (e) {
+                if (e.ctrlKey) return;
                 e.preventDefault();
-                return;
-            }
+                const zoomIntensity = 0.1;
+                const delta = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+                const rect = harbor.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
 
-            if (state.drawingMode === 'select') {
+                const zoomX = (offsetX - translateX) / scale;
+                const zoomY = (offsetY - translateY) / scale;
+
+                scale *= delta;
+                translateX = offsetX - zoomX * scale;
+                translateY = offsetY - zoomY * scale;
+
+                updateTransform();
+            }, { passive: false });
+
+            // Start panning met middelste muisknop
+
+
+            window.addEventListener('mousemove', function (e) {
+                if (isPanning) {
+                    translateX = e.clientX - startX;
+                    translateY = e.clientY - startY;
+                    updateTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', function (e) {
+                if (isPanning && e.button === 1) {
+                    isPanning = false;
+                    harbor.classList.remove('panning');
+                }
+            });
+            harbor.addEventListener('mousedown', function (e) {
+                if (e.button === 1) {
+                    isPanning = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                    harbor.classList.add('panning');
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener('mousemove', function (e) {
+                if (!isDragging) return;
+
+                const harborRect = harbor.getBoundingClientRect();
+                const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+                const mouseY = (e.clientY - harborRect.top - translateY) / scale;
+
+                pier.x = snapToGrid(mouseX - offsetX);
+                pier.y = snapToGrid(mouseY - offsetY);
+
                 state.selectedPier = pier;
                 state.selectedSlot = null;
                 state.selectedBoat = null;
-                updateUI();
-            }
-        });
-    });
-}
 
+                renderHarbor();
+                moved = true;
+            });
 
-        
-function enableSlotDragging() {
-    const slots = document.querySelectorAll('.slot');
-
-    slots.forEach(slotEl => {
-        let isDragging = false;
-        let moved = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        const slotId = parseInt(slotEl.dataset.id);
-        const slot = state.slots.find(s => s.id === slotId);
-
-        slotEl.addEventListener('mousedown', function (e) {
-            if (state.drawingMode !== 'select' || e.button !== 0) return;
-
-            state.selectedSlot = slot;
-            state.selectedPier = null;
-            state.selectedBoat = null;
-            updateUI();
-
-            isDragging = true;
-            moved = false;
-
-            const rect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left - translateX) / scale;
-            const mouseY = (e.clientY - rect.top - translateY) / scale;
-
-            offsetX = mouseX - slot.x;
-            offsetY = mouseY - slot.y;
-        });
-
-        window.addEventListener('mousemove', function (e) {
-            if (!isDragging) return;
-
-            const rect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left - translateX) / scale;
-            const mouseY = (e.clientY - rect.top - translateY) / scale;
-
-            slot.x = snapToGrid(mouseX - offsetX);
-            slot.y = snapToGrid(mouseY - offsetY);
-
-            state.selectedSlot = slot;
-            renderHarbor();
-            moved = true;
-        });
-
-        window.addEventListener('mouseup', function (e) {
-            if (isDragging && moved) {
-                saveSlotsToFirebase();
-            }
-            isDragging = false;
-            moved = false;
-        });
-    });
-}
-
-function enableBoatDragging() {
-    const boats = document.querySelectorAll('.boat');
-
-    boats.forEach(boatEl => {
-        let isDragging = false;
-        let moved = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        const boatId = parseInt(boatEl.dataset.id);
-        const boat = state.boats.find(b => b.id === boatId);
-
-        boatEl.addEventListener('mousedown', function (e) {
-            if (state.drawingMode !== 'select' || e.button !== 0) return;
-
-            state.selectedBoat = boat;
-            state.selectedPier = null;
-            state.selectedSlot = null;
-            updateUI();
-
-            isDragging = true;
-            moved = false;
-
-            const rect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left - translateX) / scale;
-            const mouseY = (e.clientY - rect.top - translateY) / scale;
-
-            offsetX = mouseX - boat.x;
-            offsetY = mouseY - boat.y;
-        });
-
-        window.addEventListener('mousemove', function (e) {
-            if (!isDragging) return;
-
-            const rect = harbor.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left - translateX) / scale;
-            const mouseY = (e.clientY - rect.top - translateY) / scale;
-
-            boat.x = snapToGrid(mouseX - offsetX);
-            boat.y = snapToGrid(mouseY - offsetY);
-
-            state.selectedBoat = boat;
-            renderHarbor();
-            moved = true;
-        });
-
-        window.addEventListener('mouseup', function (e) {
-            if (isDragging && moved) {
-                const previousSlot = state.slots.find(s => s.id === boat.slotId);
-                let newAssignedSlot = null;
-
-                // Zoek vrije slot waar boot in past
-                for (const slot of state.slots) {
-                    const fits = !slot.occupied &&
-                        boat.x >= slot.x &&
-                        boat.y >= slot.y &&
-                        boat.x + boat.width <= slot.x + slot.width &&
-                        boat.y + boat.height <= slot.y + slot.height;
-
-                    if (fits) {
-                        newAssignedSlot = slot;
-                        break;
-                    }
+            window.addEventListener('mouseup', function (e) {
+                if (e.button === 1) {
+                    isPanning = false;
+                    harbor.classList.remove('panning');
                 }
+            });
 
-                if (newAssignedSlot) {
-                    // ✅ Boot koppelen aan nieuwe slot
-                    if (previousSlot && previousSlot.id !== newAssignedSlot.id) {
-                        previousSlot.occupied = false;
-                        previousSlot.boatId = null;
-                    }
+            document.getElementById('resetZoomBtn').addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+            });
 
-                    newAssignedSlot.occupied = true;
-                    newAssignedSlot.boatId = boat.id;
-                    boat.slotId = newAssignedSlot.id;
-                    boat.x = newAssignedSlot.x;
-                    boat.y = newAssignedSlot.y;
-                } else {
-                    // ❌ Boot past nergens → losmaken
-                    if (previousSlot) {
-                        const stillInside = (
-                            boat.x >= previousSlot.x &&
-                            boat.y >= previousSlot.y &&
-                            boat.x + boat.width <= previousSlot.x + previousSlot.width &&
-                            boat.y + boat.height <= previousSlot.y + previousSlot.height
-                        );
+            function enablePierDragging() {
+                const piers = document.querySelectorAll('.pier');
 
-                        if (!stillInside) {
-                            previousSlot.occupied = false;
-                            previousSlot.boatId = null;
-                            boat.slotId = null;
+                piers.forEach(pierEl => {
+                    let isDragging = false;
+                    let moved = false;
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    let startX = 0;
+                    let startY = 0;
+                    const pierId = parseInt(pierEl.dataset.id);
+                    const pier = state.piers.find(p => p.id === pierId);
+
+                    pierEl.addEventListener('mousedown', function (e) {
+                        if (state.drawingMode !== 'select' || e.button !== 0) return;
+
+                        state.selectedPier = pier;
+                        state.selectedSlot = null;
+                        state.selectedBoat = null;
+                        updateUI();
+
+                        isDragging = true;
+                        moved = false;
+
+                        const harborRect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+                        const mouseY = (e.clientY - harborRect.top - translateY) / scale;
+
+                        offsetX = mouseX - pier.x;
+                        offsetY = mouseY - pier.y;
+                    });
+
+
+                    window.addEventListener('mousemove', function (e) {
+                        if (!isDragging) return;
+
+                        const harborRect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - harborRect.left - translateX) / scale;
+                        const mouseY = (e.clientY - harborRect.top - translateY) / scale;
+
+                        pier.x = snapToGrid(mouseX - offsetX);
+                        pier.y = snapToGrid(mouseY - offsetY);
+
+                        state.selectedPier = pier;
+                        state.selectedSlot = null;
+                        state.selectedBoat = null;
+
+                        renderHarbor();
+                        moved = true;
+                    });
+
+                    window.addEventListener('mouseup', function (e) {
+                        if (isDragging && moved) {
+                            savePiersToFirebase();
                         }
-                    } else {
-                        boat.slotId = null;
+                        isDragging = false;
+                        moved = false;
+                    });
+
+                    pierEl.addEventListener('click', function (e) {
+                        if (moved) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            return;
+                        }
+
+                        if (state.drawingMode === 'select') {
+                            state.selectedPier = pier;
+                            state.selectedSlot = null;
+                            state.selectedBoat = null;
+                            updateUI();
+                        }
+                    });
+                });
+            }
+
+
+
+            function enableSlotDragging() {
+                const slots = document.querySelectorAll('.slot');
+
+                slots.forEach(slotEl => {
+                    let isDragging = false;
+                    let moved = false;
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    const slotId = parseInt(slotEl.dataset.id);
+                    const slot = state.slots.find(s => s.id === slotId);
+
+                    slotEl.addEventListener('mousedown', function (e) {
+                        if (state.drawingMode !== 'select' || e.button !== 0) return;
+
+                        state.selectedSlot = slot;
+                        state.selectedPier = null;
+                        state.selectedBoat = null;
+                        updateUI();
+
+                        isDragging = true;
+                        moved = false;
+
+                        const rect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - rect.left - translateX) / scale;
+                        const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+                        offsetX = mouseX - slot.x;
+                        offsetY = mouseY - slot.y;
+                    });
+
+                    window.addEventListener('mousemove', function (e) {
+                        if (!isDragging) return;
+
+                        const rect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - rect.left - translateX) / scale;
+                        const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+                        slot.x = snapToGrid(mouseX - offsetX);
+                        slot.y = snapToGrid(mouseY - offsetY);
+
+                        state.selectedSlot = slot;
+                        renderHarbor();
+                        moved = true;
+                    });
+
+                    window.addEventListener('mouseup', function (e) {
+                        if (isDragging && moved) {
+                            saveSlotsToFirebase();
+                        }
+                        isDragging = false;
+                        moved = false;
+                    });
+                });
+            }
+
+            function enableBoatDragging() {
+                const boats = document.querySelectorAll('.boat');
+                const SLOT_MARGIN = 30; // aantal pixels speling bij passen
+
+                boats.forEach(boatEl => {
+                    let isDragging = false;
+                    let moved = false;
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    const boatId = parseInt(boatEl.dataset.id);
+                    const boat = state.boats.find(b => b.id === boatId);
+
+                    boatEl.addEventListener('mousedown', function (e) {
+                        if (state.drawingMode !== 'select' || e.button !== 0) return;
+
+                        state.selectedBoat = boat;
+                        state.selectedPier = null;
+                        state.selectedSlot = null;
+                        updateUI();
+
+                        isDragging = true;
+                        moved = false;
+
+                        const rect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - rect.left - translateX) / scale;
+                        const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+                        offsetX = mouseX - boat.x;
+                        offsetY = mouseY - boat.y;
+                    });
+
+                    window.addEventListener('mousemove', function (e) {
+                        if (!isDragging) return;
+
+                        const rect = harbor.getBoundingClientRect();
+                        const mouseX = (e.clientX - rect.left - translateX) / scale;
+                        const mouseY = (e.clientY - rect.top - translateY) / scale;
+
+                        boat.x = snapToGrid(mouseX - offsetX);
+                        boat.y = snapToGrid(mouseY - offsetY);
+
+                        state.selectedBoat = boat;
+                        renderHarbor();
+                        moved = true;
+                    });
+
+                    window.addEventListener('mouseup', function (e) {
+                        if (isDragging && moved) {
+                            const previousSlot = state.slots.find(s => s.id === boat.slotId);
+                            let newAssignedSlot = null;
+
+                            for (const slot of state.slots) {
+                                if (slot.occupied) continue;
+
+                                // Probeer normale plaatsing
+                                const fitsNormal = (
+                                    boat.x >= slot.x - SLOT_MARGIN &&
+                                    boat.y >= slot.y - SLOT_MARGIN &&
+                                    boat.x + boat.width <= slot.x + slot.width + SLOT_MARGIN &&
+                                    boat.y + boat.height <= slot.y + slot.height + SLOT_MARGIN
+                                );
+
+
+                                // Probeer plaatsing na rotatie
+                                const fitsRotated = (
+                                    boat.x >= slot.x - SLOT_MARGIN &&
+                                    boat.y >= slot.y - SLOT_MARGIN &&
+                                    boat.x + boat.height <= slot.x + slot.width + SLOT_MARGIN &&
+                                    boat.y + boat.width <= slot.y + slot.height + SLOT_MARGIN
+                                );
+
+
+                                if (slot.orientation === 'vertical' && fitsRotated && boat.width > boat.height) {
+                                    [boat.width, boat.height] = [boat.height, boat.width];
+                                    newAssignedSlot = slot;
+                                    break;
+                                } else if (slot.orientation === 'horizontal' && fitsRotated && boat.height > boat.width) {
+                                    [boat.width, boat.height] = [boat.height, boat.width];
+                                    newAssignedSlot = slot;
+                                    break;
+                                } else if (slot.orientation === 'horizontal' && fitsNormal) {
+                                    newAssignedSlot = slot;
+                                    break;
+                                }
+                                else if (fitsNormal) {
+                                    newAssignedSlot = slot;
+                                    break;
+                                } else if (fitsRotated) {
+                                    [boat.width, boat.height] = [boat.height, boat.width];
+                                    newAssignedSlot = slot;
+                                    break;
+                                }
+                            }
+
+                            if (newAssignedSlot) {
+                                if (previousSlot && previousSlot.id !== newAssignedSlot.id) {
+                                    previousSlot.occupied = false;
+                                    previousSlot.boatId = null;
+                                }
+
+                                newAssignedSlot.occupied = true;
+                                newAssignedSlot.boatId = boat.id;
+                                boat.slotId = newAssignedSlot.id;
+                                boat.x = newAssignedSlot.x;
+                                boat.y = newAssignedSlot.y;
+                            } else {
+                                // Niet passend → reset slotId
+                                if (previousSlot) {
+                                    const stillInside = (
+                                        boat.x >= previousSlot.x &&
+                                        boat.y >= previousSlot.y &&
+                                        boat.x + boat.width <= previousSlot.x + previousSlot.width &&
+                                        boat.y + boat.height <= previousSlot.y + previousSlot.height
+                                    );
+
+                                    if (!stillInside) {
+                                        previousSlot.occupied = false;
+                                        previousSlot.boatId = null;
+                                        boat.slotId = null;
+                                    }
+                                } else {
+                                    boat.slotId = null;
+                                }
+                            }
+
+                            saveBoatsToFirebase();
+                            saveSlotsToFirebase();
+                            updateSyncStatus('Ligplaatsen bijgewerkt na slepen');
+                            updateUI();
+                        }
+
+                        isDragging = false;
+                        moved = false;
+                    });
+                });
+            }
+
+            function assignBoatToSlot(boat) {
+                const SLOT_MARGIN = 30;
+
+                for (const slot of state.slots) {
+                    if (!slot.occupied) {
+                        const fitsNormal = boat.width <= slot.width + SLOT_MARGIN &&
+                            boat.height <= slot.height + SLOT_MARGIN;
+
+                        const fitsRotated = boat.height <= slot.width + SLOT_MARGIN &&
+                            boat.width <= slot.height + SLOT_MARGIN;
+
+                        if (slot.orientation === 'vertical' && fitsRotated && boat.width > boat.height) {
+                            [boat.width, boat.height] = [boat.height, boat.width];
+                        } else if (slot.orientation === 'horizontal' && fitsRotated && boat.height > boat.width) {
+                            [boat.width, boat.height] = [boat.height, boat.width];
+                        } else if (!fitsNormal && fitsRotated) {
+                            [boat.width, boat.height] = [boat.height, boat.width];
+                        } else if (!fitsNormal && !fitsRotated) {
+                            continue;
+                        }
+
+                        slot.occupied = true;
+                        slot.boatId = boat.id;
+                        boat.slotId = slot.id;
+                        boat.x = slot.x;
+                        boat.y = slot.y;
+
+                        return true;
                     }
                 }
 
-                // Opslaan
-                saveBoatsToFirebase();
-                saveSlotsToFirebase();
-                updateSyncStatus('Ligplaatsen bijgewerkt na slepen');
-                updateUI();
+                // 🔁 Geen passende ligplaats → plaats ergens los in de haven
+                boat.slotId = null;
+                boat.x = 100 + Math.random() * 300;
+                boat.y = 100 + Math.random() * 300;
+                return true;
             }
 
-            isDragging = false;
-            moved = false;
+
+
+
         });
-    });
-}
 
-});
-  
 
-</script>
- 
+    </script>
+
 </body>
 
 </html>
