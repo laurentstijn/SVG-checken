@@ -118,13 +118,14 @@
         }
 
         /*   .harbor-container.show-grid #harborCanvas {
-  border: 2px solid #ccc; /* visuele canvasrand */
+  border: 2px solid #ccc; /* visuele canvasrand 
 
         background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-        }
+        }*/
 
-        */ #harbor.panning {
+        
+        #harbor.panning {
             cursor: grabbing;
         }
 
@@ -425,6 +426,17 @@
 </head>
 
 <body>
+
+<div style="padding:10px; background:#eef;">
+  <label for="roleSelect"><strong>Rol:</strong></label>
+  <select id="roleSelect">
+    <option value="viewer">Viewer</option>
+    <option value="havenmeester">Havenmeester</option>
+    <option value="admin" selected>Admin</option>
+  </select>
+  <span id="roleStatus" style="margin-left:20px; font-weight:bold;"></span>
+</div>
+
     <h1>
         Jachthaven Beheersysteem
     </h1>
@@ -437,6 +449,7 @@
                 <button class="primary" id="selectMode">Selectie Modus</button>
                 <button class="secondary" id="drawPierMode">Steiger Modus</button>
                 <button class="secondary" id="drawSlotMode">Ligplaats Modus</button>
+                <button class="secondary" id="boatModeBtn">Boot Modus</button>
                 <!--<button class="danger" id="deleteMode">Verwijder Modus</button>-->
                 <button class="secondary" id="resetZoomBtn">Reset Zoom</button>
                 <button class="secondary" id="toggleGridBtn">Raster Aan/Uit</button>
@@ -513,26 +526,22 @@
                         Type Boot:
                     </label>
                     <select id="boatType">
-                        <option value="sailboat">
-                            Zeilboot
-                        </option>
-                        <option value="motorboat">
-                            Motorboot
-                        </option>
-                        <option value="yacht">
-                            Jacht
-                        </option>
-                        <option value="small">
-                            Kleine boot
-                        </option>
+                        <option value="sailboat">Zeilboot</option>
+                        <option value="motorboat">Motorboot</option>              
                     </select>
                 </div>
                 <div class="control-group">
                     <label for="boatSize">
                         Grootte (m):
                     </label>
-                    <input id="boatSize" max="30" min="5" type="number" value="10" />
+                    <input id="boatSize" max="30" min="5" type="number" placeholder="Bijv. 10" />
                 </div>
+                <div class="control-group">
+                    <label for="boatWidth">
+                        Breedte (m):
+                    </label>
+                    <input id="boatWidth" min="1" step="0.1" type="number" placeholder="Bijv. 3.5" />
+                </div>                
                 <div class="control-group">
                     <label for="boatName">
                         Naam:
@@ -684,19 +693,9 @@
                             Type Boot:
                         </label>
                         <select id="editBoatType">
-                            <option value="sailboat">
-                                Zeilboot
-                            </option>
-                            <option value="motorboat">
-                                Motorboot
-                            </option>
-                            <option value="yacht">
-                                Jacht
-                            </option>
-                            <option value="small">
-                                Kleine boot
-                            </option>
-                        </select>
+                            <option value="sailboat">Zeilboot</option>
+                            <option value="motorboat">Motorboot</option>
+                        </select>                        
                     </div>
                     <div class="form-group">
                         <label for="editBoatSize">
@@ -772,11 +771,12 @@
             const boatInfoDisplay = document.getElementById('boatInfoDisplay');
             const syncStatus = document.getElementById('syncStatus');
 
-            const GRID_SIZE = 20;
+            const GRID_SIZE = 5;
             function snapToGrid(value) {
                 return Math.round(value / GRID_SIZE) * GRID_SIZE;
             }
 
+            let currentUserRole = 'viewer'; // standaardrol
 
             // Application state
             const state = {
@@ -825,6 +825,36 @@
             // Initialize the application
             init();
 
+            
+function updateUIBasedOnRole() {
+  const isViewer = currentUserRole === 'viewer';
+  const isHavenmeester = currentUserRole === 'havenmeester';
+  const isAdmin = currentUserRole === 'admin';
+
+  const drawPierBtn = document.getElementById('drawPierMode');
+  const drawSlotBtn = document.getElementById('drawSlotMode');
+  const boatModeBtn = document.getElementById('boatModeBtn');
+  const selectModeBtn = document.getElementById('selectMode');
+  const pierPanel = document.querySelector('.pier-management');
+  const slotPanel = document.querySelector('.slot-management');
+  const boatPanel = document.querySelector('.boat-management');
+  const infoPanel = document.querySelector('.info-panel');
+  const roleStatus = document.getElementById('roleStatus');
+
+  if (drawPierBtn) drawPierBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  if (drawSlotBtn) drawSlotBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  if (boatModeBtn) boatModeBtn.style.display = (isAdmin || isHavenmeester) ? 'inline-block' : 'none';
+  if (selectModeBtn) selectModeBtn.style.display = isAdmin ? 'inline-block' : 'none';
+
+  if (pierPanel) pierPanel.style.display = isAdmin ? 'block' : 'none';
+  if (slotPanel) slotPanel.style.display = isAdmin ? 'block' : 'none';
+  if (boatPanel) boatPanel.style.display = (isAdmin || isHavenmeester) ? 'block' : 'none';
+  if (infoPanel) infoPanel.style.display = isViewer ? 'none' : 'block';
+  if (roleStatus) roleStatus.textContent = 'Actieve rol: ' + currentUserRole;
+}
+
+
+
             function init() {
                 setupEventListeners();
                 setupFirebaseListeners();
@@ -852,6 +882,34 @@
                     state.drawingMode = 'slot';
                     updateDrawingModeUI();
                 });
+
+                document.getElementById('boatModeBtn').addEventListener('click', () => {
+                // Reset selectie
+                
+                    state.drawingMode = 'boat';
+                    state.selectedPier = null;
+                    state.selectedPier = null;
+                    state.selectedSlot = null;
+
+                // Selecteer een lege boot (of toon paneel zonder selectie)
+                    state.selectedBoat = {
+                        id: null,
+                        name: '',
+                        type: '',
+                        size: '',
+                        owner: '',
+                        phone: '',
+                        email: '',
+                        slotId: null,
+                        width: '',
+                        height: '',
+                        color: '',
+                        typeName: ''
+                    };
+                    updateDrawingModeUI();
+                    updateUI();
+                });
+
 
                 // document.getElementById('deleteMode').addEventListener('click', () => {
                 //     state.drawingMode = 'delete';
@@ -990,9 +1048,14 @@
                 } else if (state.drawingMode === 'slot') {
                     console.log('Creating new slot:', state.tempSlot);
                     document.getElementById('drawSlotMode').classList.add('drawing-mode-active');
-                } else if (state.drawingMode === 'delete') {
-                    document.getElementById('deleteMode').classList.add('drawing-mode-active');
-                } else {
+                } else if (state.drawingMode === 'boat') {
+                    document.getElementById('boatModeBtn').classList.add('drawing-mode-active');
+                }
+
+                // else if (state.drawingMode === 'delete') {
+                //     document.getElementById('deleteMode').classList.add('drawing-mode-active');
+                // } 
+                else {
                     document.getElementById('selectMode').classList.add('drawing-mode-active');
                 }
             }
@@ -1105,8 +1168,11 @@
 
 
             function handleHarborClick(e) {
-                if (e.target === harbor && state.drawingMode === 'select') {
-                    // Click on empty area - hide context menu and deselect
+                const clickedOnEmpty =
+                    (e.target === harbor || e.target === harborCanvas) &&
+                    state.drawingMode === 'select';
+
+                if (clickedOnEmpty) {
                     slotContextMenu.style.display = 'none';
                     slotContextMenu.setAttribute('aria-hidden', 'true');
                     state.selectedPier = null;
@@ -1115,6 +1181,7 @@
                     updateUI();
                 }
             }
+
 
             function renderHarbor() {
                 console.log("renderHarbor called");
@@ -1341,7 +1408,24 @@
             function updateUI() {
                 document.querySelector('.pier-management').style.display = state.selectedPier ? 'block' : 'none';
                 document.querySelector('.slot-management').style.display = state.selectedSlot ? 'block' : 'none';
-                document.querySelector('.boat-management').style.display = state.selectedBoat ? 'block' : 'none';
+                const boatManagementPanel = document.querySelector('.boat-management');
+                if (state.drawingMode === 'boat') {
+                    boatManagementPanel.style.display = 'block';
+                } else {
+                    boatManagementPanel.style.display = 'none';
+                }
+
+                // Info-panel (onderste deel) alleen tonen als een boot is geselecteerd
+                const infoPanel = document.querySelector('.info-panel');
+// Info-panel tonen zolang we niet in bootmodus zitten
+if (state.drawingMode !== 'boat') {
+    infoPanel.style.display = 'block';
+} else {
+    infoPanel.style.display = 'none';
+}
+
+
+
                 renderHarbor();
                 updateInfoPanel();
 
@@ -1389,6 +1473,47 @@
             }
 
             function updateInfoPanel() {
+                // Verberg alles
+pierInfoDisplay.style.display = 'none';
+slotInfoDisplay.style.display = 'none';
+boatInfoDisplay.style.display = 'none';
+document.getElementById('editBoatForm').style.display = 'none';
+noSelection.style.display = 'none';
+
+// Toon alleen info als we niet in bootmodus zitten
+if (state.drawingMode !== 'boat') {
+    if (state.selectedBoat) {
+        boatInfoDisplay.style.display = 'block';
+        document.getElementById('boatInfoName').textContent = state.selectedBoat.name;
+        document.getElementById('boatInfoType').textContent = state.selectedBoat.typeName;
+        document.getElementById('boatInfoSize').textContent = `${state.selectedBoat.size} `;
+        document.getElementById('boatInfoOwner').textContent = state.selectedBoat.owner;
+        document.getElementById('boatInfoPhone').textContent = state.selectedBoat.phone;
+        document.getElementById('boatInfoEmail').textContent = state.selectedBoat.email;
+
+        const slot = state.slots.find(s => s.id === state.selectedBoat.slotId);
+        document.getElementById('boatInfoLocation').textContent = slot ? `Ligplaats ${slot.name}` : 'Geen ligplaats toegewezen';
+    } else if (state.selectedSlot) {
+        slotInfoDisplay.style.display = 'block';
+        document.getElementById('slotInfoName').textContent = state.selectedSlot.name;
+        document.getElementById('slotInfoStatus').textContent = state.selectedSlot.occupied ? 'Bezet' : 'Beschikbaar';
+        document.getElementById('slotInfoWidth').textContent = `${(state.selectedSlot.width / SCALE).toFixed(1)} m`;
+        document.getElementById('slotInfoHeight').textContent = `${(state.selectedSlot.height / SCALE).toFixed(1)} m`;
+        document.getElementById('slotInfoBoat').textContent = state.selectedSlot.occupied
+            ? (state.boats.find(b => b.id === state.selectedSlot.boatId)?.name || 'Onbekende boot')
+            : 'Geen boot';
+    } else if (state.selectedPier) {
+        pierInfoDisplay.style.display = 'block';
+        document.getElementById('pierInfoName').textContent = state.selectedPier.name;
+        document.getElementById('pierInfoType').textContent = state.selectedPier.type === 'horizontal' ? 'Horizontaal' : 'Verticaal';
+        document.getElementById('pierInfoWidth').textContent = `${(state.selectedPier.width / SCALE).toFixed(1)} m`;
+        document.getElementById('pierInfoHeight').textContent = `${(state.selectedPier.height / SCALE).toFixed(1)} m`;
+    } else {
+        // Niets geselecteerd
+        noSelection.style.display = 'block';
+    }
+}
+
                 if (state.selectedBoat) {
                     noSelection.style.display = 'none';
                     pierInfoDisplay.style.display = 'none';
@@ -1398,7 +1523,7 @@
 
                     document.getElementById('boatInfoName').textContent = state.selectedBoat.name;
                     document.getElementById('boatInfoType').textContent = state.selectedBoat.typeName;
-                    document.getElementById('boatInfoSize').textContent = `${state.selectedBoat.size} meter`;
+                    document.getElementById('boatInfoSize').textContent = `${state.selectedBoat.size} `;
                     document.getElementById('boatInfoOwner').textContent = state.selectedBoat.owner;
                     document.getElementById('boatInfoPhone').textContent = state.selectedBoat.phone;
                     document.getElementById('boatInfoEmail').textContent = state.selectedBoat.email;
@@ -1413,8 +1538,9 @@
 
                     document.getElementById('slotInfoName').textContent = state.selectedSlot.name;
                     document.getElementById('slotInfoStatus').textContent = state.selectedSlot.occupied ? 'Bezet' : 'Beschikbaar';
-                    document.getElementById('slotInfoWidth').textContent = `${state.selectedSlot.width}px`;
-                    document.getElementById('slotInfoHeight').textContent = `${state.selectedSlot.height}px`;
+                    document.getElementById('slotInfoWidth').textContent = `${(state.selectedSlot.width / SCALE).toFixed(1)} m`;
+                    document.getElementById('slotInfoHeight').textContent = `${(state.selectedSlot.height / SCALE).toFixed(1)} m`;
+
 
                     if (state.selectedSlot.occupied) {
                         const boat = state.boats.find(b => b.id === state.selectedSlot.boatId);
@@ -1430,15 +1556,21 @@
 
                     document.getElementById('pierInfoName').textContent = state.selectedPier.name;
                     document.getElementById('pierInfoType').textContent = state.selectedPier.type === 'horizontal' ? 'Horizontaal' : 'Verticaal';
-                    document.getElementById('pierInfoWidth').textContent = `${state.selectedPier.width}px`;
-                    document.getElementById('pierInfoHeight').textContent = `${state.selectedPier.height}px`;
-                } else {
-                    noSelection.style.display = 'block';
-                    pierInfoDisplay.style.display = 'none';
-                    slotInfoDisplay.style.display = 'none';
-                    boatInfoDisplay.style.display = 'none';
-                    document.getElementById('editBoatForm').style.display = 'none';
-                }
+                    document.getElementById('pierInfoWidth').textContent = `${(state.selectedPier.width / SCALE).toFixed(1)} m`;
+                    document.getElementById('pierInfoHeight').textContent = `${(state.selectedPier.height /SCALE).toFixed(1)} m`;
+               } else {
+    // Toon alleen 'no selection' melding als we NIET in bootmodus zitten
+    if (state.drawingMode !== 'boat') {
+        noSelection.style.display = 'block';
+    } else {
+        noSelection.style.display = 'none';
+    }
+    pierInfoDisplay.style.display = 'none';
+    slotInfoDisplay.style.display = 'none';
+    boatInfoDisplay.style.display = 'none';
+    document.getElementById('editBoatForm').style.display = 'none';
+}
+
             }
 
             // Pier management functions
@@ -1611,7 +1743,10 @@
                 const randomOwner = sampleOwners[Math.floor(Math.random() * sampleOwners.length)];
                 const boatTypeConfig = boatTypes[type];
 
-                const widthMeters = size * boatTypeConfig.widthMultiplier;
+                const manualWidth = parseFloat(document.getElementById('boatWidth').value);
+                const widthMeters = (!isNaN(manualWidth) && manualWidth > 0)
+                    ? manualWidth
+                    : size * boatTypeConfig.widthMultiplier;
 
                 const newBoat = {
                     id: state.nextBoatId++,
@@ -2368,6 +2503,64 @@
 
 
     </script>
+
+
+<script>
+// 1. Rolvariabele en helperfuncties
+let currentUserRole = 'admin';
+
+function userIs(role) {
+  return currentUserRole === role;
+}
+
+function userIsAtLeast(role) {
+  const roles = ['viewer', 'havenmeester', 'admin'];
+  return roles.indexOf(currentUserRole) >= roles.indexOf(role);
+}
+
+// 2. UI aanpassen op basis van rol
+
+function updateUIBasedOnRole() {
+  const isViewer = currentUserRole === 'viewer';
+  const isHavenmeester = currentUserRole === 'havenmeester';
+  const isAdmin = currentUserRole === 'admin';
+
+  const drawPierBtn = document.getElementById('drawPierMode');
+  const drawSlotBtn = document.getElementById('drawSlotMode');
+  const boatModeBtn = document.getElementById('boatModeBtn');
+  const selectModeBtn = document.getElementById('selectMode');
+  const pierPanel = document.querySelector('.pier-management');
+  const slotPanel = document.querySelector('.slot-management');
+  const boatPanel = document.querySelector('.boat-management');
+  const infoPanel = document.querySelector('.info-panel');
+  const roleStatus = document.getElementById('roleStatus');
+
+  if (drawPierBtn) drawPierBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  if (drawSlotBtn) drawSlotBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  if (boatModeBtn) boatModeBtn.style.display = (isAdmin || isHavenmeester) ? 'inline-block' : 'none';
+  if (selectModeBtn) selectModeBtn.style.display = isAdmin ? 'inline-block' : 'none';
+
+  if (pierPanel) pierPanel.style.display = isAdmin ? 'block' : 'none';
+  if (slotPanel) slotPanel.style.display = isAdmin ? 'block' : 'none';
+  if (boatPanel) boatPanel.style.display = (isAdmin || isHavenmeester) ? 'block' : 'none';
+  if (infoPanel) infoPanel.style.display = isViewer ? 'none' : 'block';
+  if (roleStatus) roleStatus.textContent = 'Actieve rol: ' + currentUserRole;
+}
+
+
+// 3. Pas UI aan bij laden én rolwissel
+document.addEventListener('DOMContentLoaded', () => {
+  const roleSelect = document.getElementById('roleSelect');
+  if (roleSelect) {
+    roleSelect.value = currentUserRole;
+    roleSelect.addEventListener('change', () => {
+      currentUserRole = roleSelect.value;
+      updateUIBasedOnRole();
+    });
+  }
+  updateUIBasedOnRole();
+});
+</script>
 
 </body>
 
